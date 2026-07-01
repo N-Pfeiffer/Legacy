@@ -1,0 +1,30 @@
+---
+description: 'Safety doctrine and self-review hooks'
+globs: ['**/*']
+alwaysApply: true
+---
+
+# Safety Doctrine
+
+## Automatic Hooks
+
+The following hooks are active for all sessions:
+
+### Session Start
+Read `.cursor/hooks/doctrine.md` and follow all principles.
+
+### After File Edits
+Read `.cursor/hooks/post-edit-review.md` and perform the review.
+
+### Before Shell Commands
+Read `.cursor/hooks/pre-shell-gate.md` and verify safety.
+
+### Task Completion
+Read `.cursor/hooks/completion-review.md` and perform final audit.
+
+## Override Protocol
+If a user explicitly requests a dangerous operation:
+1. Warn about the risk
+2. Ask for explicit confirmation
+3. Suggest safer alternatives
+4. Only proceed after clear "yes" response

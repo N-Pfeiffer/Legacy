@@ -1,0 +1,16 @@
+{
+  "name": "legacy-vite",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test:smoke": "node scripts/smoke-test.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0",
+    "vite": "^8.0.12"
+  }
+}

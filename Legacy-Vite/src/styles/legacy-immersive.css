@@ -1,0 +1,265 @@
+/* Immersive event popups — in-character blocking narrative overlays. */
+
+#immersive-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 5, 4, 0.88);
+  backdrop-filter: blur(6px);
+  z-index: 275;
+  align-items: flex-start;
+  justify-content: center;
+  padding: max(12px, env(safe-area-inset-top, 0px)) 16px max(12px, env(safe-area-inset-bottom, 0px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#immersive-overlay.active {
+  display: flex;
+}
+
+.immersive-modal {
+  width: 100%;
+  min-width: 0;
+  max-width: min(calc(100vw - 32px), 560px);
+  max-height: min(calc(100dvh - 24px), calc(100vh - 24px), 92vh);
+  margin: auto;
+  flex-shrink: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  background: linear-gradient(165deg, #2a2218 0%, #1a140c 48%, #120e08 100%);
+  border: 1px solid #c9a86a55;
+  border-radius: 2px;
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(201, 168, 106, 0.12);
+  padding: 32px 28px 28px;
+  color: #efe4cd;
+}
+
+.immersive-modal.immersive-modal--humor-grid {
+  min-width: min(100%, 680px);
+  max-width: min(calc(100vw - 32px), 860px);
+  padding: 28px 26px 26px;
+}
+
+.immersive-eyebrow {
+  font-family: var(--display);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #c9a86a;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.immersive-title {
+  font-family: var(--heading);
+  font-size: 26px;
+  font-weight: 500;
+  color: #f5ecd8;
+  text-align: center;
+  line-height: 1.25;
+  margin-bottom: 20px;
+}
+
+.immersive-body {
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.65;
+  color: #d8cbb0;
+}
+
+.immersive-body p {
+  margin: 0 0 1em;
+}
+
+.immersive-body p:last-child {
+  margin-bottom: 0;
+}
+
+.immersive-acquisition {
+  margin-top: 20px;
+  padding: 10px 14px;
+  border: 1px solid #c9a86a44;
+  background: rgba(201, 168, 106, 0.08);
+  font-family: var(--display);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #c9a86a;
+}
+
+.immersive-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.immersive-choice {
+  font-family: var(--heading);
+  font-size: 15px;
+  padding: 10px 18px;
+  border: 1px solid #c9a86a55;
+  border-radius: 2px;
+  background: rgba(201, 168, 106, 0.06);
+  color: #efe4cd;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.12s;
+}
+
+.immersive-choice:hover {
+  background: rgba(201, 168, 106, 0.14);
+  border-color: #c9a86a99;
+}
+
+.immersive-choice--humor {
+  border-top: 3px solid var(--humor-accent, #c9a86a);
+  min-width: 120px;
+}
+
+.immersive-choice--humor:hover {
+  border-color: var(--humor-accent, #c9a86a);
+  background: rgba(201, 168, 106, 0.1);
+}
+
+.immersive-humor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.immersive-humor-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
+  text-align: left;
+  border: 1px solid color-mix(in srgb, var(--humor-accent, #c9a86a) 38%, transparent);
+  border-radius: 2px;
+  padding: 0 0 16px;
+  background: color-mix(in srgb, var(--humor-accent, #c9a86a) 7%, #1a140c);
+  color: #efe4cd;
+  cursor: pointer;
+  overflow: hidden;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.immersive-humor-card:hover {
+  background: color-mix(in srgb, var(--humor-accent, #c9a86a) 14%, #1a140c);
+  border-color: var(--humor-accent, #c9a86a);
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--humor-accent, #c9a86a) 28%, transparent);
+}
+
+.immersive-humor-name-wrap {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--humor-accent, #8a6b3a) 88%, #ffffff) 0%,
+    var(--humor-accent, #8a6b3a) 100%
+  );
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.immersive-humor-name {
+  font-family: var(--display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--humor-label, #f5ecd8);
+  line-height: 1.2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.immersive-humor-tagline {
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: none;
+  /* nameTextColor (--humor-label) is for the bright accent strip only */
+  color: color-mix(in srgb, var(--humor-accent, #c9a86a) 55%, #f5ecd8);
+  line-height: 1.3;
+  padding: 0 14px 6px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.immersive-humor-desc {
+  font-family: var(--heading);
+  font-size: 16px;
+  line-height: 1.5;
+  color: #e8dcc8;
+  padding: 0 14px;
+}
+
+.immersive-step {
+  opacity: 1;
+}
+
+.immersive-step--fade-out {
+  animation: immersiveFadeOut 0.35s ease forwards;
+}
+
+.immersive-step--fade-in {
+  animation: immersiveFadeIn 0.45s ease forwards;
+}
+
+@keyframes immersiveFadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-8px); }
+}
+
+@keyframes immersiveFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 720px) {
+  .immersive-modal.immersive-modal--humor-grid {
+    min-width: 0;
+    max-width: min(calc(100vw - 24px), 560px);
+  }
+
+  .immersive-humor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .immersive-humor-desc {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  #immersive-overlay {
+    padding: max(8px, env(safe-area-inset-top, 0px)) 12px max(8px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .immersive-modal {
+    max-width: calc(100vw - 24px);
+    max-height: min(calc(100dvh - 16px), calc(100vh - 16px), 94vh);
+    padding: 24px 18px 20px;
+  }
+
+  .immersive-title {
+    font-size: 22px;
+  }
+
+  .immersive-body {
+    font-size: 16px;
+  }
+
+  .immersive-choices {
+    flex-direction: column;
+  }
+
+  .immersive-choice {
+    width: 100%;
+  }
+}

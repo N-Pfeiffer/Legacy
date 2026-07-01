@@ -1,0 +1,37 @@
+Bar 1: Disposition
+	Instead of "Friendship," frame this as the NPC's overall stance toward you. It ranges from negative to positive and dictates what social actions you can successfully execute.
+
+	Scale: -100 (Vendetta) to +100 (Loyal).
+
+	Mortal Function: A highly negative Disposition means they might report you to the Constabulary or hire Rookery thugs to jump you.
+
+	Vampire Function: Remains largely the same. If you fail a vampiric interaction against someone with low disposition, it could lead to them hunting you or hiring vampire hunters.
+
+Bar 2: Intimacy
+	Instead of a standard "Romance" bar, frame this as a measure of how deeply entangled their mind and heart are with yours. A negative value may mean they hold deep seated disgust/internally detest you.
+
+	Scale: -100 (Repulsed) to 100 (Obsessed).
+
+	Mortal Function: Represents traditional courtship, romance, and allure. High Intimacy unlocks marriage and ensures loyalty even if their Disposition drops due to your terrible actions.
+
+Bar 3 [Vampire Only ]: Enthrallment
+	Instead of natural affection, this frames the unnatural, magically enforced subjugation of one's mind and body. It represents how strongly you have enslaved them to your will.
+	
+	Scale: 0 (Free will) to 100 (Absolute Thrall)
+	
+	Mortal function: Completely hidden from UI, does nothing.
+	
+	Vampire function: Can be increased through various means, such as the blood bond (giving a vampire your blood over time, creating an addiction and compulsion for them to obey), ghouling (giving a mortal your blood, turning them into an immortal thrall. This sets Enthrallment's minimum to 75.), or other magical means such as the Presence or Dominate disciplines.
+
+Mechanical Interactions Between the Bars
+	The beauty of this system is how the three bars can contradict each other to create incredible storytelling:
+
+	High Disposition, Low Intimacy: A reliable business partner, a loyal family member (like Uncle Edmund), or a solid informant.
+
+	Low Disposition, High Intimacy: A toxic, dangerous romance. They actively dislike you, but they cannot stay away from your bed (or your Bite). 
+	
+	Negative Disposition, Negative Intimacy, High Dominion: The Resentful Slave. They absolutely loathe you and are deeply repulsed by your true nature. They are potentially aware they are a prisoner in their own mind, yet the blood compels them to physically throw themselves in front of a musket ball to save your life. The moment this Dominion drops below the safe threshold, they will immediately try to murder you or flee to the nearest Hunter.
+	
+	High Intimacy, High Dominion: The Fanatic. A terrifyingly perfect cultist. They worship you not just because of the magic, but because their heart genuinely believes you are a god. They require zero maintenance and will happily orchestrate atrocities in your name without being asked.
+	
+	To make this work within the UI, interacting with an NPC would require you to choose actions that specifically target one bar or the other (e.g., "Discuss Politics" raises Disposition, while "Flirt" raises Intimacy).

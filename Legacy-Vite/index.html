@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Legacy</title>
+  </head>
+  <body>
+<!-- ══════════════════════════════════════════════════════════
+     TITLE SCREEN
+     First thing the player sees. Routes to New Game (creation),
+     Continue (autosave), or Load (slot picker). Hidden once the
+     player commits to a path; cannot be returned to mid-game
+     except by hard reload — that's intentional.
+══════════════════════════════════════════════════════════════ -->
+<div id="title-screen" class="active">
+  <div class="title-mark">
+    <h1>LEGACY</h1>
+    <p>A chronicle waits to be written.</p>
+  </div>
+  <div class="title-menu">
+    <button class="title-btn" id="title-new-game">
+      New Game
+    </button>
+    <button class="title-btn" id="title-continue">
+      Continue
+      <span class="title-btn-sub" id="title-continue-sub">—</span>
+    </button>
+    <button class="title-btn" id="title-load">
+      Load Game
+      <span class="title-btn-sub" id="title-load-sub">—</span>
+    </button>
+    <button class="title-btn" id="title-import">
+      Import Save
+      <span class="title-btn-sub">from a file</span>
+    </button>
+    <button class="title-btn title-btn-secondary" id="title-settings">
+      Settings
+    </button>
+  </div>
+  <input type="file" id="title-import-input" accept=".json,.legacy" style="display:none;">
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     CHARACTER CREATION SCREEN
+══════════════════════════════════════════════════════════════ -->
+<div id="creation-screen">
+  <button class="creation-return-btn" id="creation-return-menu" type="button">← Return to Main Menu</button>
+
+  <div class="birth-certificate-doc">
+
+    <div class="steps-bar">
+      <div class="step-dot active" id="dot-1">1</div>
+      <div class="step-line"></div>
+      <div class="step-dot" id="dot-2">2</div>
+    </div>
+
+    <!-- ── STEP 1: PARISH REGISTRY SHEET ───────────────────── -->
+    <div class="step-panel active" id="step-1">
+      <article class="birth-certificate">
+        <header class="cert-header">
+          <div class="cert-corner cert-corner-tl" aria-hidden="true"></div>
+          <div class="cert-corner cert-corner-tr" aria-hidden="true"></div>
+          <div class="cert-ornament">❦</div>
+          <h1 class="cert-title">Parish Registry of Births</h1>
+          <p class="cert-subtitle">City of London, Year of Our Lord 1800</p>
+          <div class="cert-double-rule"></div>
+          <p class="cert-form-id">Form No. XIV — Registry Entry</p>
+        </header>
+
+        <div class="cert-body">
+          <h2 class="cert-section-title">Part I — Particulars of the Child</h2>
+
+          <div class="cc-row cc-row--names">
+            <div class="field">
+              <label>Surname</label>
+              <input type="text" id="cc-lastname" value="Smith" placeholder="" maxlength="24">
+            </div>
+            <div class="field">
+              <label>Christian Name</label>
+              <input type="text" id="cc-firstname" value="John" placeholder="" maxlength="24">
+            </div>
+          </div>
+
+          <div class="cc-row cc-row--facts">
+            <div class="field">
+              <label>Sex of Child</label>
+              <select id="cc-sex">
+                <option value="M" selected>Male</option>
+                <option value="F">Female</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Descent of the Parents</label>
+              <select id="cc-heritage">
+                <option value="English" selected>English</option>
+                <option value="Irish">Irish</option>
+                <option value="Scottish">Scottish</option>
+                <option value="Welsh">Welsh</option>
+                <option value="French">French</option>
+                <option value="German">German</option>
+                <option value="Dutch">Dutch</option>
+                <option value="Flemish">Flemish</option>
+                <option value="Italian">Italian</option>
+                <option value="Spanish">Spanish</option>
+                <option value="Portuguese">Portuguese</option>
+                <option value="Scandinavian">Scandinavian</option>
+                <option value="Polish">Polish</option>
+                <option value="Russian">Russian</option>
+                <option value="Greek">Greek</option>
+                <option value="Turkish">Turkish</option>
+                <option value="Armenian">Armenian</option>
+                <option value="Persian">Persian</option>
+                <option value="Levantine">Levantine</option>
+                <option value="Jewish">Jewish</option>
+                <option value="Romani">Romani</option>
+                <option value="West African">West African</option>
+                <option value="West Indian">West Indian</option>
+                <option value="Indian">Indian</option>
+                <option value="Chinese">Chinese</option>
+                <option value="American">American</option>
+                <option value="Mixed">Mixed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="cert-rule"></div>
+
+          <h2 class="cert-section-title">Part II — Natural Gifts &amp; Deficits</h2>
+
+          <div class="budget-bar">
+            <div class="budget-bar-top">
+              <div class="budget-stat-block">
+                <div class="pts pts-split">
+                  <span id="pts-remaining">100</span><span class="pts-sep">/</span><span id="budget-total">100</span>
+                </div>
+                <div class="pts-label">Remaining / Allotted</div>
+              </div>
+              <div class="budget-epithet-wrap">
+                <div class="budget-epithet" id="budget-epithet">Difficulty: A Bitter Lot</div>
+                <div class="budget-epithet-alt" id="budget-epithet-alt"></div>
+              </div>
+            </div>
+            <div class="budget-stepper-block">
+              <div class="stat-field budget-stepper-field">
+                <label>Allotted points</label>
+                <div class="cc-stepper cc-stepper--budget" data-stepper="sl-stat-budget">
+                  <button type="button" class="cc-stepper-btn" data-step="-10" aria-label="Reduce allotted points by 10">−</button>
+                  <span class="cc-stepper-value" id="lbl-stat-budget" aria-live="polite">100</span>
+                  <button type="button" class="cc-stepper-btn" data-step="10" aria-label="Increase allotted points by 10">+</button>
+                  <input type="hidden" id="sl-stat-budget" value="100">
+                </div>
+              </div>
+              <p class="budget-intended-note" id="budget-intended-note"><em>As the game was intended to be played</em></p>
+            </div>
+          </div>
+
+          <div class="cc-stats-grid">
+            <div class="stat-block">
+              <div class="stat-field">
+                <label>Charisma</label>
+                <div class="cc-stepper" data-stepper="sl-charisma">
+                  <button type="button" class="cc-stepper-btn" data-step="-1" aria-label="Decrease Charisma">−</button>
+                  <span class="cc-stepper-value" id="lbl-charisma" aria-live="polite">0</span>
+                  <button type="button" class="cc-stepper-btn" data-step="1" aria-label="Increase Charisma">+</button>
+                  <input type="hidden" id="sl-charisma" value="0">
+                </div>
+              </div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-field">
+                <label>Intelligence</label>
+                <div class="cc-stepper" data-stepper="sl-intelligence">
+                  <button type="button" class="cc-stepper-btn" data-step="-1" aria-label="Decrease Intelligence">−</button>
+                  <span class="cc-stepper-value" id="lbl-intelligence" aria-live="polite">0</span>
+                  <button type="button" class="cc-stepper-btn" data-step="1" aria-label="Increase Intelligence">+</button>
+                  <input type="hidden" id="sl-intelligence" value="0">
+                </div>
+              </div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-field">
+                <label>Insight</label>
+                <div class="cc-stepper" data-stepper="sl-insight">
+                  <button type="button" class="cc-stepper-btn" data-step="-1" aria-label="Decrease Insight">−</button>
+                  <span class="cc-stepper-value" id="lbl-insight" aria-live="polite">0</span>
+                  <button type="button" class="cc-stepper-btn" data-step="1" aria-label="Increase Insight">+</button>
+                  <input type="hidden" id="sl-insight" value="0">
+                </div>
+              </div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-field">
+                <label>Prowess</label>
+                <div class="cc-stepper" data-stepper="sl-prowess">
+                  <button type="button" class="cc-stepper-btn" data-step="-1" aria-label="Decrease Prowess">−</button>
+                  <span class="cc-stepper-value" id="lbl-prowess" aria-live="polite">0</span>
+                  <button type="button" class="cc-stepper-btn" data-step="1" aria-label="Increase Prowess">+</button>
+                  <input type="hidden" id="sl-prowess" value="0">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="field field--social-class">
+            <label>Social Class</label>
+            <select id="cc-social-class"></select>
+          </div>
+
+          <div class="cert-rule"></div>
+
+          <h2 class="cert-section-title">Part III — Congenital Peculiarities / Afflictions</h2>
+          <div class="trait-points-bar">
+            <span class="pts" id="trait-pts-remaining">2</span>
+            <span class="pts-label">remaining</span>
+          </div>
+          <div class="cc-trait-grid" id="cc-trait-grid"></div>
+        </div>
+
+        <footer class="cert-footer">
+          <div class="step-nav">
+            <button type="button" class="btn-next" id="btn-cc-proceed">Proceed to Family Record →</button>
+          </div>
+        </footer>
+
+        <div class="cert-corner cert-corner-bl" aria-hidden="true"></div>
+        <div class="cert-corner cert-corner-br" aria-hidden="true"></div>
+      </article>
+    </div>
+
+    <!-- ── STEP 2: FAMILY RECORD ─────────────────────────── -->
+    <div class="step-panel" id="step-2">
+      <article class="birth-certificate">
+        <header class="cert-header">
+          <div class="cert-corner cert-corner-tl" aria-hidden="true"></div>
+          <div class="cert-corner cert-corner-tr" aria-hidden="true"></div>
+          <div class="cert-ornament">❦</div>
+          <h1 class="cert-title">Family Record</h1>
+          <p class="cert-subtitle">Supplement to the Registry Entry — City of London, 1800</p>
+          <div class="cert-double-rule"></div>
+        </header>
+
+        <div class="cert-body">
+          <h2 class="cert-section-title">Part IV — Age of Parents at Birth</h2>
+          <div class="cc-row cc-row--parents">
+            <div class="field">
+              <label>Age of the Father</label>
+              <select id="cc-father-age"></select>
+            </div>
+            <div class="field">
+              <label>Age of the Mother</label>
+              <select id="cc-mother-age"></select>
+            </div>
+          </div>
+
+          <div class="cert-rule"></div>
+
+          <h2 class="cert-section-title">Part V — Issue of the Union</h2>
+
+          <div class="sibling-list" id="sibling-list"></div>
+          <button type="button" class="add-sib-btn" onclick="addSibling()">+ Record a sibling</button>
+
+          <p class="cert-closing">
+            The child shall begin life as a newborn in London. Age up each year and watch the chronicle unfold.
+          </p>
+        </div>
+
+        <footer class="cert-footer">
+          <div class="step-nav">
+            <button class="btn-back" onclick="goStep(1)">← Return to Registry</button>
+            <button class="btn-start" onclick="startGame()">Begin the Legacy ❦</button>
+          </div>
+        </footer>
+
+        <div class="cert-corner cert-corner-bl" aria-hidden="true"></div>
+        <div class="cert-corner cert-corner-br" aria-hidden="true"></div>
+      </article>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     GAME SCREEN
+══════════════════════════════════════════════════════════════ -->
+<div id="game-screen">
+
+  <aside>
+    <div class="sidebar-brand">
+      <h1>Legacy</h1>
+      <div class="sidebar-year" id="year-display">Year <span id="current-year">1990</span></div>
+    </div>
+
+    <div class="panel player-section">
+      <button type="button" class="player-card" id="player-panel" title="View your family">
+        <span class="player-card-label" data-vocab="panel.thyself">You</span>
+        <span class="player-card-name" id="player-name-label">—</span>
+        <span class="player-card-age" id="player-age-label">Age: —</span>
+      </button>
+      <div class="stat stat-action-points player-section-ap">
+        <div class="stat-label">
+          <span data-vocab="stat.actionPoints">Action Points</span>
+          <span id="sv-action-points">—</span>
+        </div>
+        <div class="stat-bar"><div class="stat-fill" id="sb-action-points" style="background:var(--gold)"></div></div>
+      </div>
+    </div>
+
+    <!-- Year-advance button lives in the sidebar so the scrolling main
+         column doesn't bump it around as the chronicle grows. -->
+    <button class="action-btn primary sidebar-action" id="btn-age-up" data-vocab="btn.passYear">Pass the Year ▶</button>
+
+    <div class="panel">
+      <div class="panel-heading" data-vocab="panel.attributes">Attributes</div>
+
+      <!-- ── Core attributes ──────────────────────────────────
+           The "what defines you" group. These are the character's
+           capabilities — what they can do — as opposed to their
+           situation (which lives below). -->
+      <div class="stat">
+        <div class="stat-label"><span>Health</span><span id="sv-health">—</span></div>
+        <div class="stat-bar"><div class="stat-fill" id="sb-health" style="background:var(--green)"></div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label"><span>Prowess</span><span id="sv-prowess">—</span></div>
+        <div class="stat-bar"><div class="stat-fill" id="sb-prowess" style="background:var(--red)"></div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label"><span>Charisma</span><span id="sv-charisma">—</span></div>
+        <div class="stat-bar"><div class="stat-fill" id="sb-charisma" style="background:var(--accent2)"></div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label"><span>Intelligence</span><span id="sv-intelligence">—</span></div>
+        <div class="stat-bar"><div class="stat-fill" id="sb-intelligence" style="background:var(--blue)"></div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label"><span data-vocab="stat.insight">Insight</span><span id="sv-insight">—</span></div>
+        <div class="stat-bar"><div class="stat-fill" id="sb-insight" style="background:var(--gold)"></div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label"><span data-vocab="stat.cunning">Cunning</span><span id="sv-cunning">—</span></div>
+        <div class="stat-bar"><div class="stat-fill" id="sb-cunning" style="background:var(--accent2)"></div></div>
+      </div>
+
+      <!-- ── Circumstance group ───────────────────────────────
+           The "what your life looks like right now" group. Wealth
+           (social standing) and Fertility (biological condition).
+           Player traits/modifiers live in the person profile panels. -->
+      <div class="attribute-subgroup">Circumstance</div>
+
+      <div class="stat">
+        <div class="stat-label">
+          <span>Wealth</span>
+          <span id="sv-wealth">—</span>
+        </div>
+        <div class="stat-bar"><div class="stat-fill" id="sb-wealth" style="background:var(--green)"></div></div>
+        <!-- Tier label sits below the bar in dim italic so it
+             complements rather than competes with the numeric value.
+             Populated by render() from wealthTierLabel(). -->
+        <div class="stat-tier" id="sv-wealth-tier">—</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-label"><span>Fertility</span><span id="sv-fertility">—</span></div>
+        <div class="stat-bar"><div class="stat-fill" id="sb-fertility" style="background:var(--accent2)"></div></div>
+      </div>
+    </div>
+
+    <!-- Save / Load opens the save overlay. -->
+    <button class="action-btn sidebar-action" id="btn-save-load" type="button">Save / Load</button>
+
+    <!-- Settings opens the settings overlay. Houses display preferences
+         (motion, grain) and debug affordances (Embrace
+         toggle, until that becomes a real in-game event). -->
+    <button class="action-btn sidebar-action" id="btn-settings" type="button">Settings</button>
+  </aside>
+
+  <main>
+    <div class="main-frame">
+    <!-- Section nav: four top-level areas. The first opens to its default
+         sub-tab (Family); subsequent sections currently hold placeholders
+         that we'll flesh out in following turns. -->
+    <nav class="section-nav" id="section-nav">
+      <button class="section-tab active" data-section="bloodline" data-vocab="section.bloodline">Bloodline</button>
+      <button class="section-tab" data-section="vocation" data-vocab="section.vocation">Station</button>
+      <button class="section-tab" data-section="estate" data-vocab="section.estate">Particulars</button>
+      <button class="section-tab" data-section="decisions" data-vocab="section.decisions">Journal</button>
+    </nav>
+
+    <!-- Secondary nav — populated by JS based on the active section. -->
+    <nav class="sub-nav" id="sub-nav"></nav>
+
+    <div id="prison-panel" class="prison-panel" style="display:none" aria-hidden="true"></div>
+
+    <div class="main-body">
+    <!-- ── Bloodline section ─────────────────────────────────── -->
+    <div class="section" id="section-bloodline">
+      <div id="bloodline-container">
+        <div class="bloodline-header">
+          <div class="bl-breadcrumb-wrap">
+            <div class="bl-breadcrumb-scroll" id="bl-breadcrumb-scroll">
+              <div class="bl-breadcrumb" id="bl-breadcrumb"></div>
+            </div>
+            <button type="button" class="bl-breadcrumb-clear" id="bl-breadcrumb-clear" title="Clear trail and return to yourself" aria-label="Clear bloodline trail">↺</button>
+          </div>
+        </div>
+
+        <div class="bl-focal-row">
+          <div class="bl-focal" id="bl-focal">
+            <div class="bl-focal-body">
+              <div class="bl-focal-portrait-col">
+                <div class="bl-focal-portrait" id="bl-focal-portrait">👶</div>
+                <div class="bl-focal-hint person-info-hint" id="bl-focal-hint"></div>
+              </div>
+              <div class="bl-focal-info">
+                <div class="bl-focal-name" id="bl-focal-name">—</div>
+                <div class="bl-focal-meta" id="bl-focal-meta">—</div>
+                <div class="bl-focal-career" id="bl-focal-career"></div>
+                <div class="bl-focal-rel" id="bl-focal-rel"></div>
+              </div>
+            </div>
+            <div class="bl-focal-actions" id="bl-focal-actions"></div>
+          </div>
+          <div class="bl-focal-partner" id="bl-focal-partner"></div>
+        </div>
+
+        <div class="bloodline-scroll">
+          <!-- Focal stats panel. Populated by renderBloodline() with the
+               NPC's stat readout when the focal isn't the player. Hidden
+               when the focal IS the player (their stats live in the sidebar). -->
+          <div class="bl-focal-stats" id="bl-focal-stats"></div>
+
+          <!-- Sub-panels for each Bloodline view. Sub-nav above switches them. -->
+          <div class="sub-panel" id="bl-panel-family"></div>
+          <div class="sub-panel" id="bl-panel-relations" style="display:none;"></div>
+          <div class="sub-panel" id="bl-panel-childer" style="display:none;"></div>
+          <div class="sub-panel" id="bl-panel-minions" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Vocation section (Station / Domain & Disciplines) ─ -->
+    <div class="section" id="section-vocation" style="display:none;">
+      <div class="sub-panel" id="voc-panel-career">
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">✦</div>
+          <div class="placeholder-text" data-vocab="vocation.career_empty">
+            A path will open in time. Few work before eighteen.
+          </div>
+        </div>
+      </div>
+      <div class="sub-panel" id="voc-panel-education" style="display:none;">
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">✦</div>
+          <div class="placeholder-text" data-vocab="vocation.edu_empty">
+            You are still a child. School begins at age 6.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Estate section (Particulars / Relics & Pursuits) ─ -->
+    <div class="section" id="section-estate" style="display:none;">
+      <div class="sub-panel" id="est-panel-hobbies" style="display:none;">
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">♛</div>
+          <div class="placeholder-text" data-vocab="estate.hobbies_empty">
+            No pastimes taken up. Idle hands are the devil's workshop.
+          </div>
+        </div>
+      </div>
+      <div class="sub-panel" id="est-panel-equipment" style="display:none;"></div>
+      <div class="sub-panel" id="est-panel-possessions" style="display:none;">
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">♛</div>
+          <div class="placeholder-text" data-vocab="estate.possessions_empty">
+            You own nothing yet. The world is still your parents'.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Decisions section ────────────────────────────────────── -->
+    <!-- ── Decisions / Journal / Ambitions section ────────────────
+         Five sub-panels: Focus, Decisions, Goals/Plots,
+         Situations/Reckonings, Memories/Chronicle. Each tab is a
+         placeholder for now — the labels and flavor text differ
+         between mortal and vampire modes via the vocab table. -->
+    <div class="section" id="section-decisions" style="display:none;">
+      <div class="sub-panel" id="dec-panel-focus">
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">⊙</div>
+          <div class="placeholder-text" data-vocab="dec.focus_empty">
+            No singular focus consumes you. The mind drifts where it will.
+          </div>
+        </div>
+      </div>
+      <div class="sub-panel" id="dec-panel-decisions" style="display:none;">
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">✧</div>
+          <div class="placeholder-text" data-vocab="dec.decisions_empty">
+            No decisions weigh upon you. Life is, for now, simply lived.
+          </div>
+        </div>
+      </div>
+      <div class="sub-panel" id="dec-panel-goals" style="display:none;">
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">✦</div>
+          <div class="placeholder-text" data-vocab="dec.goals_empty">
+            You have set yourself no ambition. The road is open in every direction.
+          </div>
+        </div>
+      </div>
+      <div class="sub-panel" id="dec-panel-situations" style="display:none;">
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">⚜</div>
+          <div class="placeholder-text" data-vocab="dec.situations_empty">
+            No matter presses upon you. The world is, for the moment, quiet.
+          </div>
+        </div>
+      </div>
+      <div class="sub-panel" id="dec-panel-memories" style="display:none;">
+        <!-- Search section — collapsed by default; expanding reveals
+             a free-text name field, multi-select chip filters, and
+             a results list of matching people. -->
+        <div class="search-section" id="search-section">
+          <button class="search-toggle" id="search-toggle" type="button" aria-expanded="false">
+            <span class="search-toggle-icon">⌕</span>
+            <span class="search-toggle-label" data-vocab="search.toggle">Search People</span>
+            <span class="search-toggle-caret">▾</span>
+          </button>
+
+          <div class="search-body" id="search-body" hidden>
+            <div class="search-input-row">
+              <input type="text" id="search-input" class="search-input" placeholder="Search by name…" autocomplete="off" />
+              <button class="search-clear" id="search-clear" type="button" title="Clear search">×</button>
+            </div>
+
+            <div class="search-filters">
+              <div class="search-filter-group">
+                <div class="search-filter-label">Sex</div>
+                <div class="search-chips" data-filter="sex">
+                  <button class="search-chip active" data-value="any">Any</button>
+                  <button class="search-chip" data-value="M">Male</button>
+                  <button class="search-chip" data-value="F">Female</button>
+                </div>
+              </div>
+
+              <div class="search-filter-group">
+                <div class="search-filter-label">Status</div>
+                <div class="search-chips" data-filter="status">
+                  <button class="search-chip active" data-value="any">Any</button>
+                  <button class="search-chip" data-value="alive">Living</button>
+                  <button class="search-chip" data-value="dead">Deceased</button>
+                </div>
+              </div>
+
+              <div class="search-filter-group">
+                <div class="search-filter-label">Relation</div>
+                <!-- Multi-select chips. "Any" is a clear-all; selecting any
+                     specific chip auto-clears Any. Selecting all chips reverts
+                     back to Any. -->
+                <div class="search-chips multi" data-filter="relation">
+                  <button class="search-chip active" data-value="any">Any</button>
+                  <button class="search-chip" data-value="family">Family</button>
+                  <button class="search-chip" data-value="spouse">Spouse</button>
+                  <button class="search-chip" data-value="lover">Lover</button>
+                  <button class="search-chip" data-value="friend">Friend</button>
+                  <button class="search-chip" data-value="enemy">Enemy</button>
+                  <button class="search-chip" data-value="ex">Ex</button>
+                  <button class="search-chip" data-value="sire">Sire</button>
+                  <button class="search-chip" data-value="childe">Childe</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="search-meta" id="search-meta">—</div>
+            <div class="search-results" id="search-results"></div>
+          </div>
+        </div>
+
+        <div class="memories-section">
+          <div class="bl-sub-label" data-vocab="dec.memories">Memories</div>
+          <div id="memories-list"></div>
+        </div>
+      </div>
+    </div>
+    </div>
+    </div>
+  </main>
+
+  <aside id="annals-sidebar">
+    <div id="log-container">
+      <div class="annals-heading-row">
+        <div class="panel-heading">Annals</div>
+        <button class="annals-search-btn" id="header-search-btn" type="button" title="Search people">⌕</button>
+      </div>
+      <ul id="event-log"></ul>
+    </div>
+  </aside>
+</div>
+
+<!-- ── End of game screen ─────────────────────────────────────── -->
+
+<!-- ══════════════════════════════════════════════════════════
+     SAVE / LOAD OVERLAY
+     Full-screen modal. Shown via openSaveOverlay(mode), hidden
+     via closeSaveOverlay(). Renders dynamically from save state.
+══════════════════════════════════════════════════════════════ -->
+<div id="save-overlay">
+  <div class="save-modal">
+    <div class="save-modal-header">
+      <div class="save-modal-title" id="save-modal-title">Save / Load</div>
+      <button class="save-modal-close" id="save-modal-close" type="button" title="Close">×</button>
+    </div>
+    <div class="save-modal-actions">
+      <button class="save-action-btn" id="save-action-export" type="button">Export to File</button>
+      <button class="save-action-btn" id="save-action-import" type="button">Import from File</button>
+    </div>
+    <div class="save-storage-meter">
+      <span>Storage</span>
+      <div class="save-storage-bar"><div class="save-storage-fill" id="save-storage-fill" style="width:0%"></div></div>
+      <span class="save-storage-text" id="save-storage-text">— / 5 MB</span>
+    </div>
+    <div class="save-slots" id="save-slots"></div>
+    <!-- Footer: return-to-menu lives at the bottom because spatially "I'm
+         done here, take me out" is end-of-flow. The action requires two
+         clicks: first click expands the confirm strip, second click on
+         the strip commits. This avoids stacking a confirm modal on top
+         of the save modal. -->
+    <div class="save-modal-footer" id="save-modal-footer">
+      <button class="save-return-btn" id="save-return-btn" type="button">Return to Main Menu</button>
+      <div class="save-return-confirm" id="save-return-confirm">
+        <span class="save-return-confirm-text">Return now? Your last autosave will be preserved.</span>
+        <div class="save-return-confirm-actions">
+          <button class="save-action-btn" id="save-return-cancel" type="button">Cancel</button>
+          <button class="save-action-btn primary" id="save-return-yes" type="button">Yes, return</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <input type="file" id="save-import-input" accept=".json,.legacy" style="display:none;">
+</div>
+
+<div class="save-toast" id="save-toast"></div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SETTINGS OVERLAY
+     Full-screen modal. Shown via openSettings(), hidden via
+     closeSettings(). Body content rendered dynamically by
+     renderSettings() so controls reflect live G_SETTINGS state.
+══════════════════════════════════════════════════════════════ -->
+<div id="settings-overlay">
+  <div class="settings-modal">
+    <div class="settings-modal-header">
+      <div class="settings-modal-title">Settings</div>
+      <button class="save-modal-close" id="settings-modal-close" type="button" title="Close">×</button>
+    </div>
+    <div class="settings-modal-body" id="settings-modal-body">
+      <!-- populated by renderSettings() -->
+    </div>
+    <div class="save-modal-footer" id="settings-modal-footer">
+      <button class="save-return-btn" id="settings-return-btn" type="button">Return to Main Menu</button>
+      <div class="save-return-confirm" id="settings-return-confirm">
+        <span class="save-return-confirm-text">Return now? Your last autosave will be preserved.</span>
+        <div class="save-return-confirm-actions">
+          <button class="save-action-btn" id="settings-return-cancel" type="button">Cancel</button>
+          <button class="save-action-btn primary" id="settings-return-yes" type="button">Yes, return</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Person info modal — opens when clicking a person card. Portrait click
+     navigates to their bloodline view. -->
+<div id="person-info-overlay">
+  <div class="person-info-modal" id="person-info-modal">
+    <button class="person-info-close" id="person-info-close" type="button" title="Close">×</button>
+    <div id="person-info-content"></div>
+  </div>
+</div>
+
+<!-- Career confirm modal — opens when the player clicks a career card
+     in the Vocation > Career picker. Content is built dynamically by
+     openCareerConfirmModal() and replaced each time the modal opens. -->
+<div id="career-confirm-overlay">
+  <div class="career-confirm-modal" id="career-confirm-modal"></div>
+</div>
+
+<!-- Immersive event popup — in-character blocking narrative scenes. -->
+<div id="immersive-overlay">
+  <div class="immersive-modal" id="immersive-modal"></div>
+</div>
+
+<!-- Situation detail popup — opened from the Situations list. -->
+<div id="situation-overlay">
+  <div class="situation-modal" id="situation-modal"></div>
+</div>
+
+<!-- Item detail popup — Assets / Relics grid -->
+<div id="item-overlay">
+  <div class="item-modal" id="item-modal"></div>
+</div>
+
+<!-- Decision action popup — e.g. Open Mudlark's Lockbox -->
+<div id="decision-overlay">
+  <div class="decision-modal situation-modal" id="decision-modal"></div>
+</div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

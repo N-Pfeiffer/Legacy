@@ -1,0 +1,386 @@
+
+Vampires:
+for daytime hobbies they will be required to build out/ghoul for the relevant hobby decision
+The Annals Descriptions should list what items were gained from the specific endeavor, such as: You foraged and gained 2 Nightshade and 1 Grass
+
+
+
+Hobby - Description
+Botany - (Gathering, Crafting Foraging herbs, craft herbal remedies, grow and study plants
+    Alchemy[Requires Botany 50] - (Crafting) Combine a wide range of ingredients into specific potions and concoctions
+Metallurgy - (Gathering, Crafting) Gather Ores, Scavenge metals, smith weapons, tools and armor
+    Artificing [Requires Metallurgy 50, Mysticism 25] - (Crafting) Create jewelry, unique devices, or even mystical artifacts
+Hunting - (Gathering) Hunt and track wildlife, skin pelts
+    Stalking [Requires 50 Hunting] - Stalk and kill people and monsters, spy on NPC's 
+Tailoring - (Crafting) Use leathers, skins, pelts, and plant fibers to create clothing, armor, and other fabrics
+Scholarship - (Crafting/Int) Translate languages, study relics, and create tomes
+Mysticism - Read the stars, interpret the omens, use artifacts, and even commune with spirits
+Angling - (Gathering and Health) Fish the waters of Brittania and ease your stress
+Performance - (Charisma) Play instruments, dance like a refined member of the elite
+
+
+
+
+Botany 
+    Material Foraging zones: 
+        The Thames 1AP(Marshes, Riverbanks)
+            Rushes (Stabalizing/Clarifying Agent) (Common)
+            Flax (Tall, reedy, fibrous) (Common)
+            Willow Bark (Numbing, Pain Relief) (Uncommon)
+            Valerian Root (Calming, Sedative, Mysticism) (Rare) 
+           
+
+        The Outlands 2AP(Roadways, Plains, Trails)
+            Foxglove (Adrenaline, Stamina) (Common)
+            Yarrow (Staunches Bleeding, Mysticism) (Common)
+            Mugwort (Psycadelic, Dreaming, Mysticism) (Uncommon)
+
+        The Deep Forest 3AP(Dense, Dark Forest far from London)
+            Belladonna (Toxic Berries and Leaves) (Common)
+            Wolfsbane (Paralyzing Agent against mortals, Mysticism, deadly to werewolves) (Uncommon)
+
+
+
+Alchemy
+    Components
+        Apothecary's Solvent
+            Cost 4 Rushes (adapt for balance)
+
+        Analgesic extract
+            Cost Willow Bark + Apothecary's Solvent
+        
+        Yarrow Tincture
+            Cost Yarrow + Apothecary's Solvent
+
+        Neurotoxin Alkaloid
+            Cost Belladonna + Wolfsbane + Apothecary's Solvent
+
+
+        
+    Crafting (Consumables)
+        Oneiric Resin 
+            Cost 2 Mugwort + Apothecary's Solvent 
+
+        The Elixir of Comprehension (+1 Intelligence)
+            Cost Mugwort  + Valerian Root + Yarrow Tincture + Liquid Silver
+
+        The Stalkers Brew (+1 Prowess)
+            Cost Werewolf Fang + Great Animal Heart + Apothecary's Solvent
+
+        Blood Vial (Replenishes Blood for Vampires, Heals mortals) — NEEDS IMPLEMENTATION (Hunting drop only; not crafted)
+
+        Wolfsbane Poison 
+            Wolfsbane + Neurotoxin Alkaloid + ? — NEEDS IMPLEMENTATION
+
+
+Metallurgy
+    Material Foraging Zones:
+        Industrial Scrapyards 1AP (No Skill Requirement)
+            Copper Scrap (Common)
+            Tin Scrap (Uncommon)
+
+        Chalk and Clay Pits 1AP (Req: 25 Skill)
+            Clay (Common)
+            Lead (Uncommon)
+            Limestone (Uncommon)
+            Wrought Iron Ore (Rare)
+
+        The Weald 2AP (Req: 50 Skill)
+            Wrought Iron Ore (Common)
+            Silver Ore (Uncommon)
+            Quartz (Uncommon)
+            Lodestone (Rare)
+        
+        The Cornwall Deeps 4AP (Req: 75 Skill)
+            Raw Gold (Uncommon)
+            Raw Gemstone (Uncommon)
+            Bismuth (Rare)
+            Quicksilver (Rare)
+
+    Components
+        Bronze
+            Cost Copper Scrap + Tin Scrap
+
+        Iron
+            Cost 2 Wrought Iron Ore
+        
+        Vessel
+            Cost 2 Clay
+
+        Glass
+            Cost Quartz +  Limestone
+
+        Steel
+            Cost Wrought Iron Ore + AlchemyIngredient
+        
+        Silver
+            Cost 2 Silver Ore
+
+        Gold
+            Cost 2 Raw Gold
+        
+        Liquid Silver
+            Cost Silver + Quicksilver
+
+        Polished Bismuth
+            Cost 2 Bismuth
+
+
+Artificing 
+    
+    Components
+        Polished Gem 
+            Cost Raw Gemstone + Bone Meal
+        
+        Jewel Setting
+            Cost Gold OR Silver
+
+    Crafting 
+       
+        Ornate Cane (Concealed Sword) (Req: Artificing 30)
+            Cost 2 Iron + Tusk 
+
+        Noble Signet Ring (Req: Artificing 35)
+            Cost Jewel Setting + Polished Gem
+
+        Telescope (Req: Artificing 40)
+            Cost Glass + Steel
+        
+        Bismuth Aegis Ring (Req: Artificing 50)
+            Cost Jewel Setting + Polished Bismuth + Polished Gem
+
+        Bloodstone Amulet (Req: Artificing 50, Mysticism 50)
+            Cost Jewel Setting + Great Animal Heart OR Human Heart + Steel 
+
+        
+
+Hunting 
+    Material Zones: 
+        The Moors 1AP (Shrublands, Roadways)
+            Foxes, Small Deer, Rabbit (Common)
+                Simple pelt
+                Bone 
+
+            Sheep (Common)
+                Raw Wool 
+                Bone 
+
+            Pheasants, Grouse (Common)
+                Feather
+                Bone
+            
+            Badgers (uncommon)
+                simple pelt
+                Bone
+                Badger claw
+
+            Mortals (Uncommon)(Requires Stalking) (Small Chance for Witness Event)
+                Human Heart
+                Vial of Blood (Or if Vampire: Drain for Blood choice)
+
+        The Forest 2AP (Req: 25 Hunting)
+            Elk, Foxes, Rabbit (Uncommon)
+                Fine Pelt
+                2 Bone
+                Animal Heart
+
+            Boar (Uncommon)
+                Fine Pelt 
+                2 Bone 
+                Animal Heart 
+                Tusk 
+
+            Bandit or Hunter (Uncommon) (Requires Stalking, 50 Prowess OR 40 Cunning)
+                Vial of Blood (Or if Vampire: Drain for Blood choice)
+                Human Heart 
+                25% Chance each of: 
+                    Copper Scrap
+                    Tin Scrap 
+                    Mid Tier Bow
+                    Fine Pelt 
+                    Animal Heart 
+
+
+            Black Bear (Uncommon) (Requires Hunting 40 OR Prowess 30)
+                Fine Pelt 
+                2 Bone 
+                Animal Heart 
+                Bear Fat
+
+            Brown Bear  (Uncommon) (Requires Hunting 75 OR Prowess 50)
+                Fine Pelt
+                2 Bone
+                Great Animal Heart
+                Bear Fat
+
+            Great White Stag (Very Rare)(Req: 50 hunting)
+                Legendary White Pelt 
+                4 Bone 
+                Great Animal Heart
+
+        The Deep Weald 4AP (Req: Hunting 100 Quest) (Deepest Primordial Forest, Extremely Hidden)
+            Wolves, Dire Stags (Common)
+                Fine Pelt
+                2 Bone 
+                Animal Heart
+
+            Dark Boar (Uncommon, Req: 50 Prowess)
+                Exceptional Pelt 
+                2 Bone 
+                Animal Heart 
+                Tusk 
+
+            Direwolf (Uncommon, Req: 100 Prowess)
+                Exceptional Pelt 
+                4 Bone 
+                Lycanthrope Heart 
+            
+            Werewolf (Uncommon, Req: 150 Prowess) (Susceptible to Wolfsbane Poison, Silver Weapon)
+                Legendary Wolf Pelt 
+                4 Bone 
+                Lycanthrope Heart
+                Werewolf Fang
+
+    Components: 
+        Cured Leather 
+            Cost 2 Simple Pelt
+        
+        Thick Hide 
+            Cost 2 Fine Pelt
+        
+        Pristine Leather 
+            Cost 2 Exceptional Pelt 
+        
+        Bone Meal 
+            Cost 2 Bone
+
+        Bone Fasteners 
+            Cost Bone 
+
+        Insulating Down 
+            Cost 2 Feather 
+        
+        Parchment
+            Cost Fine Pelt + Limestone + Bone Meal 
+
+
+        
+        
+
+Stalking — NEEDS IMPLEMENTATION (spy on NPCs)
+
+
+Tailoring 
+
+    Components
+        Linen Thread
+            Cost Flax
+        
+        Wool Yarn
+            Cost Raw Wool
+
+        Buckles 
+            Cost Iron
+        
+        Leather Straps 
+            Cost Cured Leather
+        
+
+    Crafting 
+        Bone Needle
+            Cost Bone 
+        
+        Leather Armor (Body)
+            Cost 3 Cured Leather + 2 Leather Straps + Linen Thread
+
+        Footpad's Cloak 
+            Cost 2 Wool Yarn + Leather Straps 
+
+Scholarship 
+
+    Components 
+        
+        Notes 
+            Cost 1 Blank Vellum
+
+        Candles
+            Cost Bear Fat
+
+    Crafting 
+        Study Mysterious Relic 
+            Gain a semi-random Relic/Trinket/Jewelry
+        
+        Study Ominious Relic (Req: Scholarship 75)
+            Gain a special unique item 
+        
+        Translate Tome (Req: Scholarship 25)
+            Cost Notes (Req: Foreign Tome) 
+                Gives Translate Tome decision (which will cost Notes, increase language knowledge up to fluency over time,
+                                                and give a powerful tome/book/journal/discipline)
+
+        Create Tome  (Req: Scholarship 50) 
+            Cost 5 Blank Vellum + Notes . Tome item gives Decision to write various tomes. 
+
+Mysticism 
+        Mechanics:
+            Divination
+                Read the Stars (Req: Telescope)
+                    
+            Séance (Req: 50 Mysticism)
+                Summon a spirit for 5 years (Appears in Mortal Relations Or Vampire Minions)
+                    Cost Bone Meal + Oneiric Resin + Candles
+                Commit heinous acts for power. painfully shapeshift a ghoul or rival, ritualistically empower a minion, etc
+                    Cost a lot 
+                
+           
+		   
+Items
+
+Skinny Dagger
+Type: Common
+Melee Damage: +2
+Description: A thin, dull blade that wiggles in its loose
+wooden handle. 
+
+Rapier
+Type: Uncommon
+Prowess: +4
+Description: A finely balanced, elegant blade favored by duelists. It demands precision over brute strength, making it lethal in a trained hand.
+
+Single Shot Flintlock
+Type: Uncommon
+Prowess: +3
+Description: A heavy pistol that packs a devastating punch, provided the omnipresent London damp hasn't fouled the powder. Its accuracy is notoriously unreliable past a few paces.
+
+Hidden Sword Cane
+Type: Uncommon
+Prowess: +2
+Charisma: +1
+Description: A distinguished malacca walking cane that conceals a length of sharpened steel. Perfect for the gentleman who expects trouble but respects appearances.
+
+Peasant's Longbow
+Type: Common
+Prowess: +3
+Description: A rough-hewn yew bow, functional but crude. It requires significant strength to draw and lacks the polished balance of aristocratic sporting models.
+
+Noble's Longbow
+Type: Rare
+Prowess: +5
+Description: A masterpiece of tension and lacquered wood crafted for Toxophilite societies. It strikes with lethal, silent precision from frightening range.
+
+Mysterious Relic - +1 insight
+Type: Common
+Description: "A mysterious relic of the ancient past."
+Vampire Use: Can study to uncover artifact
+
+
+Artifact - +2 insight
+Type: Uncommon
+Description: "Artifacts of deeper lore discovered from mysterious relics."
+Vampire Use: Required to improve some disciplines, in goals, and in crafting.
+
+
+Mudlark's Lockbox - Unique Situation
+Type: Uncommon
+Description: A heavy, rusted iron lockbox recovered from the Thames at low tide. The locking mechanism is seized by river mud and time. It rattles slightly when shaken.
+        

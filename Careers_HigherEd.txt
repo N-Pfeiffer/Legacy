@@ -1,0 +1,40 @@
+Ideas:
+    Two universities, Oxford and Cambridge that are fiercly elitist,
+    deeply traditional, required to swear oath to church of england
+
+    Then enter: The "Godless" institution, University College London 
+    Taught cutting edge education, medicine, chemistry, engineering, language 
+
+    Upon graduating Secondary School player gets couple options 
+        If wealthy and intelligent: invited to Oxford 
+            else 
+        If not-wealthy and very intelligent: invited to Oxford with scholarship
+            else 
+        If Very wealthy: invited to oxford 
+            else 
+        Player can apply to Oxford but must pass difficult exam
+
+
+
+Use existing Baccalaureate system for applying to UCL as path for lower/middle class to 
+high society jobs?
+
+
+    Careers and Jobs 
+        High Society
+            Law 
+                Entry: Bar-Student 
+                    Studies on their own in the great hall of the Inn of the Court (NO PROFIT)
+                Junior: Junior Barrister 
+                    Attends court outside of the bar, costs money to live in the Inn of the Court. 
+                    Wait for solicitor to give them legal briefs/work (Cost wealth) 
+                Official: Kings Counsel 
+                    Formal silk gown upgrade, attends court inside the bar and leads prosecution or defense 
+                    and makes money from clients (gain wealth)
+                Elite: Sejeant-At-Law 
+                    UElite order of senior barristers. Strict monopolo on cases in Court of Common Pleas 
+                    (highest court). (Lot of money)
+                Pinacle: Judiciary 
+                    Judges, heavily political. Appointments made by Crown/prime minister. Highly Specific
+                    titles: The Lord Chief Justice(biggest dog), Master of the Rolls (Second biggest), 
+                    Baron of the Exchequer (financial/tax disputes) (Mucho Dinero)

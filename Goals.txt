@@ -1,0 +1,60 @@
+!Goal Ideas
+
+Mortals:
+
+The Matriarch/Patriarch
+	Grow your Legacy
+	T1: Have a spouse with at least 80 relationship and 3 Children
+	T2: Have at least 80 relationship with 6 children, and have at least 1 grandchild
+	T2: Have at least 15 grandchildren all with wealth 30 or above
+
+The Socialite
+	Mingle man!
+	T1: Have at least 70 appearance, 2 lovers, and 10 friends
+	T2: Have at least 5 lovers, and 5 friends in high places (judge, lawyer, politician, celebrity, etc)
+	and 1 best friend
+	T3: 5 lovers, 8 friends in high places, 2 best friends, and 100 appearance
+	
+The Book Worm
+	Smartz
+	T1: Earn a bachelors degree, 60 Intelligence
+	T2: Earn a Masters, 80 Intelligence
+	T3 (hidden for mortals, requires archivist/linguist combo): Study translated ancient relic, 100 int
+
+Both/Hybrid:
+
+The Cunning Linguist
+	Master languages 
+	T1: Fluent in 3
+	T2: Fluent in 10
+	T3 COMBO Archivist: Fluent in Ancient language (Latin, Old Norse, Old English, Etc)
+	and translate an ancient tablet/relic
+ 
+The Archivist
+	Collect Unique Books or Relics
+	T1: 3 Unique Books/relics
+	T2: Construct a Library and house 10 Unique Books/relics
+	T3 COMBO Linguist: Fluent in Ancient language (Latin, Old Norse, Old English, Etc)
+	and translate an ancient tablet/relic
+	
+
+Rich or Wealthy?
+	Net Worth
+	1m: T1
+	10m: T2
+	100m: T3
+	
+The Prodigal Son
+	Raise a worthy heir
+	T1: Have a child with 90 in two stats
+	T2: Child has a child with 90 in at least one stat, MORE?
+	T3: Embrace the child and make them your heir/regent in Domain (hidden from mortals)
+	
+
+Vampires:
+
+Dominion over Mortals
+	Dominate the Mortals
+	T1: Have 2 ghouls in high places (judge, lawyer, politician, celebrity, etc), 4 mortals herded
+	T2:  (additional) ghouled business CEO's, 10 Mortals Herded
+	T3: 

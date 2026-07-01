@@ -1,0 +1,29 @@
+---
+description: Keep CHANGELOG.md updated whenever you change the Legacy game codebase
+alwaysApply: true
+---
+
+# Changelog maintenance
+
+When you **add, change, fix, or remove** anything in `Legacy-Vite/` (or shared project files that affect the game), update **`CHANGELOG.md`** at the repo root before finishing the task.
+
+## Required steps
+
+1. Open `CHANGELOG.md` and edit the **`[Unreleased]`** section.
+2. Add one bullet per meaningful change under `Added`, `Changed`, `Fixed`, or `Removed`.
+3. Use **`⚠ **High impact** —`** for changes that could break saves, imports, or runtime behavior. Always add **`Watch for:`** with the concrete risk (e.g. moved module, schema bump, changed API).
+4. Do **not** log trivial edits (typos, comments-only, formatting-only) unless the user asked for them.
+
+## High-impact examples (always flag)
+
+- Save schema / `SAVE_SCHEMA` / `migrateSave` / `migratePerson`
+- `createPerson`, `PERSON_DEFAULTS`, `personFactory`, inheritance, or `G.people` wiring
+- Marriage, birth, pregnancy, family generation
+- Year tick order, annals, journal flags
+- Renamed or relocated modules that other files import
+
+## Style
+
+- Present tense or past tense — be consistent within a session.
+- One line per bullet; link file paths with backticks when helpful.
+- If you bump save schema, note the new schema number in the changelog entry.

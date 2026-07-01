@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <!-- Hobbies -->
+  <symbol id="hobby-botany" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12 22c-1-4-3-7-5-9 2-1 4-2 5-5 1 3 3 4 5 5-2 2-4 5-5 9z"/>
+    <path fill="currentColor" d="M12 8V3M9 5l3-2 3 2" stroke="currentColor" stroke-width="1.2" fill="none"/>
+  </symbol>
+  <symbol id="hobby-alchemy" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M8 4h8v2l-4 14-4-14V4zm1 4h6l-2 7-2-7z"/>
+  </symbol>
+  <symbol id="hobby-metallurgy" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M4 18h16v2H4v-2zm2-2 3-8h6l3 8H6zm5-6 1-3h0l1 3h-2z"/>
+  </symbol>
+  <symbol id="hobby-artificing" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 16l-4.9 2.2.9-5.5-4-3.9 5.5-.8L12 3z"/>
+  </symbol>
+  <symbol id="hobby-woodworking" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M5 18h14v2H5v-2zm2-3 2-9h6l2 9H7zm3-7 1 5h2l1-5H10z"/>
+  </symbol>
+  <symbol id="hobby-angling" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M18 3v8c0 3-2 5-5 5h-1l-3 5-1.5-1 2.8-4.5C8 14 6 11 6 7V3h2v4c0 3 2 5 4 5s4-2 4-5V3h2z"/>
+  </symbol>
+  <symbol id="hobby-hunting" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M4 20l16-8-4-2 2-6-6 2-2-4-6 18z"/>
+  </symbol>
+  <symbol id="hobby-archery" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <circle cx="12" cy="12" r="2" fill="currentColor"/>
+    <path fill="currentColor" d="M12 4v3M12 17v3M4 12h3M17 12h3"/>
+  </symbol>
+  <symbol id="hobby-stalking" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <circle cx="12" cy="12" r="2" fill="currentColor"/>
+    <path fill="currentColor" d="M12 4v3M12 17v3M4 12h3M17 12h3"/>
+  </symbol>
+  <symbol id="hobby-tailoring" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12 2l3 4h5l-4 3 1.5 5L12 11 6.5 14 8 9 4 6h5L12 2z"/>
+    <path fill="currentColor" d="M8 16h8v2H8v-2zm0 3h8v2H8v-2z" opacity="0.7"/>
+  </symbol>
+  <symbol id="hobby-performance" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M8 4v12c0 2 1.5 3 4 3s4-1 4-3V4h-2v12c0 1-.5 1.5-2 1.5S10 17 10 16V4H8zm-2 14h12v2H6v-2z"/>
+  </symbol>
+  <symbol id="hobby-scholarship" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M4 6l8-3 8 3-8 3-8-3zm0 3v9l8 3 8-3V9l-8 3-8-3z"/>
+  </symbol>
+  <symbol id="hobby-mysticism" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12 2l1.5 6 6 1.5-4.5 4 1 6.5L12 17l-4 3 1-6.5L4.5 9.5 10.5 8 12 2z"/>
+    <circle cx="12" cy="12" r="1.5" fill="currentColor" opacity="0.5"/>
+  </symbol>
+
+  <!-- Items (equipment + notable consumables) -->
+  <symbol id="item-ominous_relic" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12 2l3 6 6 1-4.5 4.5 1 6.5L12 16l-5.5 4 1-6.5L3 9l6-1 3-6z"/>
+  </symbol>
+  <symbol id="item-mysterious_relic" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12 3a9 9 0 100 18 9 9 0 000-18zm0 3a6 6 0 110 12 6 6 0 010-12z"/>
+  </symbol>
+  <symbol id="item-artifact" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M8 4h8l2 16H6l2-16zm2 4h4l-.5 4h-3L10 8zm1 6h2v6h-2v-6z"/>
+  </symbol>
+  <symbol id="item-mudlarks_lockbox" viewBox="0 0 24 24">
+    <rect x="5" y="8" width="14" height="11" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <path fill="currentColor" d="M9 8V6a3 3 0 016 0v2M12 13v2"/>
+  </symbol>
+  <symbol id="item-skinny_dagger" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12 2l1 14-1 6-1-6 1-14z"/>
+  </symbol>
+  <symbol id="item-rapier" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12 2l.5 15-2 5h3l-2-5 .5-15z"/>
+    <circle cx="12" cy="19" r="1.5" fill="currentColor"/>
+  </symbol>
+  <symbol id="item-single_shot_flintlock" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M4 14h12l2 2v2H4v-4zm14-2 2-4 2 1-3 5-1-1z"/>
+  </symbol>
+  <symbol id="item-hidden_sword_cane" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M11 3h2v16h-2V3zm-2 16h6v2H9v-2z"/>
+    <path fill="currentColor" d="M12 6l4 4-1 1-3-3-3 3-1-1 4-4z" opacity="0.6"/>
+  </symbol>
+  <symbol id="item-peasants_longbow" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="1.5" d="M6 20c8-16 8-16 12-16"/>
+    <path fill="currentColor" d="M17 4l1 2-2 1 1-3z"/>
+  </symbol>
+  <symbol id="item-nobles_longbow" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="1.8" d="M5 21c10-18 10-18 14-18"/>
+    <path fill="currentColor" d="M18 3l1.5 2.5-2.5 1 1-3.5z"/>
+    <circle cx="10" cy="12" r="1" fill="currentColor"/>
+  </symbol>
+
+  <!-- Gathering / hunting zones -->
+  <symbol id="zone-the_thames" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M3 14c3-2 6-2 9 0s6 2 9 0v3H3v-3z" opacity="0.5"/>
+    <path fill="none" stroke="currentColor" stroke-width="1.2" d="M4 10c2 3 5 4 8 4s6-1 8-4"/>
+    <path fill="currentColor" d="M8 6c0 2 1 3 2 3s2-1 2-3H8z"/>
+  </symbol>
+  <symbol id="zone-the_outlands" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M2 18h20v2H2v-2z"/>
+    <path fill="currentColor" d="M5 16l2-8h2l1 8H5zm6 0l3-10h2l-1 10h-4zm7 0l2-6h2l1 6h-5z" opacity="0.85"/>
+  </symbol>
+  <symbol id="zone-the_deep_forest" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12 2l2 5h5l-4 3 1.5 5.5L12 12l-4.5 3.5L9 10 5 7h5l2-5z"/>
+    <path fill="currentColor" d="M4 20c2-3 5-4 8-4s6 1 8 4H4z" opacity="0.45"/>
+  </symbol>
+  <symbol id="zone-industrial_scrapyards" viewBox="0 0 24 24">
+    <rect x="3" y="10" width="8" height="10" fill="currentColor" opacity="0.5"/>
+    <rect x="13" y="6" width="8" height="14" fill="currentColor" opacity="0.7"/>
+    <path fill="none" stroke="currentColor" stroke-width="1.2" d="M3 20h18"/>
+  </symbol>
+  <symbol id="zone-chalk_clay_pits" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M3 18h18l-2-8H5l-2 8zm2-10h14l1-4H4l1 4z" opacity="0.75"/>
+  </symbol>
+  <symbol id="zone-the_weald" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12 3l1.5 4.5H18l-3.5 2.5 1.5 4.5L12 11 7 14.5 8.5 10 5 7.5h4.5L12 3z"/>
+    <path fill="currentColor" d="M2 20c3-4 7-6 10-6s7 2 10 6H2z" opacity="0.4"/>
+  </symbol>
+  <symbol id="zone-the_cornwall_deeps" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M4 20h16v2H4v-2zm2-4 3-8h2l1 8H6zm5 0 2-12h2l-2 12h-2zm5 0 3-6h2l-1 6h-4z"/>
+  </symbol>
+  <symbol id="zone-the_riverbank" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M2 16c4-2 8-2 12 0s8 2 12 0v4H2v-4z" opacity="0.45"/>
+    <path fill="none" stroke="currentColor" stroke-width="1.5" d="M6 4v8M6 12c2 2 4 2 6 0"/>
+    <circle cx="6" cy="3" r="1.5" fill="currentColor"/>
+  </symbol>
+</svg>

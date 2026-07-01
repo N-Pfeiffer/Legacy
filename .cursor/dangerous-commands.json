@@ -1,0 +1,46 @@
+{
+  "blocked_patterns": [
+    {
+      "pattern": "rm\\s+-rf\\s+/",
+      "severity": "critical",
+      "reason": "Can delete entire filesystem"
+    },
+    {
+      "pattern": "curl\\s+.*\\|\\s*(sh|bash)",
+      "severity": "high",
+      "reason": "Remote code execution"
+    },
+    {
+      "pattern": "git\\s+push\\s+.*(--force|-f)",
+      "severity": "high",
+      "reason": "Can overwrite remote history"
+    },
+    {
+      "pattern": "DROP\\s+TABLE",
+      "severity": "critical",
+      "reason": "Data destruction"
+    },
+    {
+      "pattern": "chmod\\s+777",
+      "severity": "medium",
+      "reason": "Overly permissive permissions"
+    },
+    {
+      "pattern": "sudo",
+      "severity": "medium",
+      "reason": "Privilege escalation"
+    }
+  ],
+  "warning_patterns": [
+    {
+      "pattern": "rm\\s+-rf",
+      "severity": "medium",
+      "reason": "Recursive deletion - verify path"
+    },
+    {
+      "pattern": ">\\s+/etc/",
+      "severity": "medium",
+      "reason": "Modifying system files"
+    }
+  ]
+}

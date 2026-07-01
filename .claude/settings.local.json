@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /c/Users/Nathan/Downloads/Legacy/Legacy-Vite; echo \"=== UI mentions in the plan ===\"; grep -n \"UI\\\\|ui/\\\\|render\\\\|CSS\\\\|css\\\\|panel\\\\|popup\\\\|grid\\\\|slot\\\\|tab\\\\|button\\\\|markup\\\\|layout\" ../old_plans/Item_Hobby_Implementation_Plan.md | head -50)",
+      "Bash(npm --version)",
+      "Read(//c/c/Users/Nathan/Downloads/Legacy/Legacy-Vite/**)",
+      "Bash(npm run *)",
+      "Bash(cd /c/Users/Nathan/Downloads/Legacy/Legacy-Vite; npm run build 2>&1 | tail -5)"
+    ]
+  }
+}

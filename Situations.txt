@@ -1,0 +1,24 @@
+Marked by the Rookeries (-1)
+		Trait gives Situation: 
+		The Syndicate Searches
+		Description: "The rookeries have a long memory and a far reach. The crime syndicate you crossed has not forgiven your debt. Enforcers keep one eye out for you, and so do the bounty hunters after the small sum on your head"
+		
+		
+	Every year is a 10% chance to fire event:
+		The Syndicate Collects
+		"You hear the heavy, scraping scuff of boots behind you before you see them. Three men have silently blocked the narrow exit of the alley, cutting off your route to the main thoroughfare. There are no dramatic threats. One of them, reeking of stale gin and wet wool, simply taps a lead-weighted leather sap against his palm while the others fan out into the shadows. The syndicate has found you, and your debt is due."
+		
+		Resolutions:
+			[ Prowess ] Fight like a cornered rat: There is no honor here, only survival. You draw whatever weapon you have and rush them, aiming for throats and kneecaps in the cold mud.
+
+				Success: You leave them bleeding and groaning on the wet stones, but not without taking a few blows yourself. (-5 Health)
+
+				Failure: A heavy blow from a sap catches the back of your skull. You wake up hours later, freezing, bruised, and with your pockets turned inside out. (-25 Health, -10 Wealth)
+
+			[ Required: Single Shot Flintlock ] Fire a warning shot: You draw your flintlock and pull the trigger. The deafening, sulfurous roar echoes off the brick walls, blinding them with the flash. The weapon is now useless, but the sheer, terrifying violence of the gunshot sends the cowardly thugs scrambling back into the shadows.
+
+				Result: Escape unharmed. -1 Flintlock
+
+			[ Yield ] Take the beating: You drop to the wet cobblestones and cover your head, letting their heavy boots and lead saps take their brutal toll, praying they stop before your ribs cave in completely.
+
+				Result: -30 Health, -10 Wealth.

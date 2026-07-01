@@ -1,0 +1,137 @@
+/* Prison mode — stone, iron, limited navigation while incarcerated. */
+
+body.prison-mode {
+  --bg: #121418;
+  --bg-deep: #0a0c0e;
+  --surface: #1a1e24;
+  --panel: #222830;
+  --raised: #2c323c;
+  --velvet: #363d48;
+  --accent: #5a6270;
+  --accent-bright: #7a8494;
+  --gold: #8a9098;
+  --text: #c8ccd4;
+  --text-dim: #8a919c;
+  --muted: #5c6370;
+  --border: #6a728044;
+  --border-strong: #6a728066;
+  --glow-rgb: 90, 98, 112;
+  --glow-bright-rgb: 122, 132, 148;
+}
+
+body.prison-mode .section-tab:not([data-section="decisions"]) {
+  opacity: 0.35;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+body.prison-mode .sub-nav {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+body.prison-mode #btn-age-up {
+  width: 100%;
+  margin-top: 8px;
+  letter-spacing: 0.12em;
+  border-color: #6a728088;
+  background: linear-gradient(180deg, #3a4048 0%, #2a3038 100%);
+}
+
+body.prison-mode #btn-age-up:hover:not(:disabled) {
+  border-color: #9aa4b4;
+  background: linear-gradient(180deg, #4a5260 0%, #343c48 100%);
+}
+
+.prison-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 28px 20px 32px;
+  background:
+    linear-gradient(180deg, rgba(18, 20, 24, 0.92) 0%, rgba(10, 12, 14, 0.98) 100%),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 48px,
+      rgba(106, 114, 128, 0.06) 48px,
+      rgba(106, 114, 128, 0.06) 49px
+    );
+  border: 1px solid #6a728033;
+  border-radius: 2px;
+  text-align: center;
+}
+
+.prison-panel-eyebrow {
+  font-family: var(--display);
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #8a919c;
+  margin-bottom: 10px;
+}
+
+.prison-panel-title {
+  font-family: var(--heading);
+  font-size: 28px;
+  font-weight: 500;
+  color: #d8dce4;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+
+.prison-panel-cell {
+  font-family: var(--display);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #9aa4b4;
+  margin-bottom: 20px;
+}
+
+.prison-panel-body {
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.65;
+  color: #a8b0bc;
+  max-width: 420px;
+  margin-bottom: 16px;
+}
+
+.prison-panel-era {
+  font-family: var(--heading);
+  font-size: 15px;
+  font-style: italic;
+  color: #7a8494;
+  max-width: 400px;
+  margin-bottom: 24px;
+}
+
+.prison-panel-sentence {
+  font-family: var(--display);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #c8ccd4;
+  padding: 10px 16px;
+  border: 1px solid #6a728055;
+  background: rgba(42, 48, 56, 0.6);
+}
+
+.prison-panel-sentence strong {
+  color: #e8ecf0;
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .prison-panel-title {
+    font-size: 24px;
+  }
+
+  .prison-panel-body {
+    font-size: 16px;
+  }
+}

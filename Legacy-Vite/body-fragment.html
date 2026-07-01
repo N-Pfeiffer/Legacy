@@ -1,0 +1,1160 @@
+. */
+
+/* Text size — scales the base font size. Other typography sizes
+   downstream are derived via rem/em so they scale proportionally. */
+body.txt-size-small  { font-size: 14px; }
+body.txt-size-large  { font-size: 17px; }
+
+/* Reduce motion — disables animations and transitions. Aggressive:
+   uses `*` to catch every animated element regardless of where it
+   was defined. The `!important` is necessary to override inline
+   keyframes set in individual rules. */
+body.reduce-motion *,
+body.reduce-motion *::before,
+body.reduce-motion *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* No grain — hide the background noise overlay. The noise lives on
+   `body::before` (a pseudo-element rendering a noise SVG), so we
+   hide that. */
+body.no-grain::before { display: none; }
+
+.save-toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--raised);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 12px 20px;
+  font-family: var(--heading);
+  font-size: 14px;
+  color: var(--text);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  z-index: 400;
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+}
+.save-toast.show { opacity: 1; }
+.save-toast.error { border-color: var(--red); }
+
+/* ── Secondary nav bar ───────────────────────────────────────
+   Shared sub-nav strip that sits between the section-nav and the
+   active section's content. Each section provides its own list of
+   sub-tabs (e.g. Bloodline → Family/Relations/Childer; Vocation →
+   Career/Education). One sub-tab is "active" per section. The
+   active sub-panel is shown; others are hidden. */
+.sub-nav {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-strong);
+  flex: 0 0 auto;
+  margin-bottom: -8px;  /* tug the active section up so the underline
+                           visually connects to the content below */
+}
+
+/* Hidden state: when the active section has no sub-tabs (e.g. Decisions
+   with only one panel), the sub-nav is just empty and takes no space. */
+.sub-nav:empty { display: none; }
+
+.sub-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 11px 8px;
+  cursor: pointer;
+  font-family: var(--display);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  transition: color 0.22s, border-color 0.22s;
+}
+
+.sub-tab:hover { color: var(--text); }
+
+.sub-tab.active {
+  color: var(--accent-bright);
+  border-bottom-color: var(--accent);
+}
+
+.sub-panel {
+  min-height: 80px;
+}
+
+/* Sub-section within a tab (e.g. Parents / Siblings) */
+.bl-subsection { margin-bottom: 18px; }
+.bl-subsection:last-child { margin-bottom: 0; }
+
+.bl-sub-label {
+  font-family: var(--display);
+  font-size: 10px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.bl-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Scroll container — caps height so a hundred children won't blow out the page.
+   Inner .bl-row keeps its centered-wrap layout. */
+.bl-scroll {
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 4px 6px 4px 0;       /* a touch of breathing room beside the scrollbar */
+  /* Soft fade at the bottom edge to hint there's more below */
+  mask-image: linear-gradient(180deg, #000 0, #000 calc(100% - 18px), transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 calc(100% - 18px), transparent 100%);
+}
+.bl-scroll::-webkit-scrollbar         { width: 6px; }
+.bl-scroll::-webkit-scrollbar-track   { background: transparent; }
+.bl-scroll::-webkit-scrollbar-thumb   { background: var(--velvet); border-radius: 3px; }
+.bl-scroll::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* Count badge next to subsection label when the list is long */
+.bl-count {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--velvet);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  font-family: var(--display);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  vertical-align: middle;
+}
+
+.bl-empty {
+  text-align: center;
+  font-family: var(--heading);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--muted);
+  padding: 14px;
+}
+
+/* Person card — used inside bloodline rows */
+.person-card {
+  background: linear-gradient(180deg, var(--panel) 0%, var(--surface) 100%);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  text-align: center;
+  min-width: 112px;
+  cursor: pointer;
+  transition: border-color 0.25s, transform 0.18s, box-shadow 0.25s;
+  position: relative;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.person-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 0 16px rgba(var(--glow-rgb), 0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.person-card.is-player {
+  border-color: var(--accent-bright);
+  box-shadow: 0 0 14px rgba(var(--glow-bright-rgb), 0.35), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.person-card.is-focal {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, var(--raised) 0%, var(--panel) 100%);
+}
+.person-card.is-vampire {
+  border-color: var(--accent);
+}
+.person-card.is-vampire::before {
+  content: '';
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent-bright);
+  box-shadow: 0 0 8px var(--accent-bright);
+}
+.person-card.is-deceased { opacity: 0.45; filter: grayscale(0.4); }
+
+.pc-emoji { font-size: 22px; margin-bottom: 4px; }
+.pc-name {
+  font-family: var(--heading);
+  font-size: 15px;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+
+/* Maiden name — appears in parens after a married woman's display name.
+   Italicized in a slightly dimmer tone to read as a softer biographical note. */
+.maiden {
+  font-style: italic;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+.pc-rel {
+  font-family: var(--display);
+  font-size: 9px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  margin-top: 4px;
+}
+.pc-age {
+  font-family: var(--heading);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.pc-dead {
+  position: absolute; top: -6px; right: -6px;
+  background: var(--velvet);
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  font-size: 10px;
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text);
+}
+
+/* Compact card variant — used in the Clan tree for descendant
+   generations. Slightly smaller portrait + name; trims age/relation
+   metadata to keep tiers from getting too tall when they branch wide. */
+.person-card.compact {
+  min-width: 88px;
+  padding: 8px 10px;
+}
+.person-card.compact .pc-emoji { font-size: 18px; margin-bottom: 2px; }
+.person-card.compact .pc-name  { font-size: 13px; }
+.person-card.compact .pc-age   { font-size: 11px; margin-top: 1px; }
+.person-card.compact .pc-rel   { font-size: 8px; margin-top: 3px; letter-spacing: 0.14em; }
+
+/* ── Clan tree ──────────────────────────────────────────────
+   Vampire descent view (focal as Generation I, childer as II, etc.).
+   The whole tree scrolls vertically if rows exceed viewport; each
+   tier row scrolls horizontally if cards exceed available width. */
+.clan-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.clan-tree::-webkit-scrollbar         { width: 6px; }
+.clan-tree::-webkit-scrollbar-track   { background: transparent; }
+.clan-tree::-webkit-scrollbar-thumb   { background: var(--velvet); border-radius: 3px; }
+.clan-tree::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+.clan-tier {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  min-height: 0;
+}
+
+/* Left column: tier label. "Generation I" / "II" / "III" / "IV" stacked
+   vertically. The sire row uses the same shape with "Your / Sire" instead. */
+.clan-tier-label {
+  flex: 0 0 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-right: 1px solid var(--border-strong);
+  padding-right: 12px;
+  font-family: var(--display);
+}
+
+.clan-tier-label-top {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  color: var(--gold);
+  margin-bottom: 3px;
+}
+
+.clan-tier-label-bottom {
+  font-size: 22px;
+  letter-spacing: 0.08em;
+  color: var(--accent-bright);
+  text-shadow: 0 0 14px rgba(var(--glow-rgb), 0.4);
+  line-height: 1;
+}
+
+/* The Sire tier reads differently — smaller, less emphatic, since
+   ancestors aren't part of "your" descent. */
+.clan-tier.sire .clan-tier-label-bottom {
+  font-size: 15px;
+  letter-spacing: 0.16em;
+  color: var(--gold);
+  text-shadow: none;
+}
+
+/* The focal generation (Gen I) gets the strongest emphasis. */
+.clan-tier.focal .clan-tier-label-bottom {
+  text-shadow: 0 0 18px rgba(var(--glow-bright-rgb), 0.55);
+}
+
+/* Right column: horizontally scrolling row of cards. */
+.clan-tier-cards {
+  flex: 1;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 6px 4px 10px 0;
+  align-items: flex-start;
+}
+.clan-tier-cards::-webkit-scrollbar         { height: 6px; }
+.clan-tier-cards::-webkit-scrollbar-track   { background: transparent; }
+.clan-tier-cards::-webkit-scrollbar-thumb   { background: var(--velvet); border-radius: 3px; }
+.clan-tier-cards::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* Force cards inside the horizontal strip not to shrink — they keep
+   their natural width and the row simply scrolls. */
+.clan-tier-cards .person-card { flex: 0 0 auto; }
+
+/* ── Minions panel ──────────────────────────────────────────
+   Vampire-only view, mirrors the Clan tree visually but groups by
+   minion type instead of generation. Each group is a horizontally
+   scrolling row of compact cards. */
+.minions-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.minions-panel::-webkit-scrollbar         { width: 6px; }
+.minions-panel::-webkit-scrollbar-track   { background: transparent; }
+.minions-panel::-webkit-scrollbar-thumb   { background: var(--velvet); border-radius: 3px; }
+.minions-panel::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+.minion-group {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  min-height: 0;
+}
+
+/* Left column: group name + count badge stacked vertically. */
+.minion-group-label {
+  flex: 0 0 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-right: 1px solid var(--border-strong);
+  padding-right: 12px;
+  font-family: var(--display);
+}
+
+.minion-group-name {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.20em;
+  color: var(--gold);
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.minion-group-count {
+  font-size: 22px;
+  letter-spacing: 0.06em;
+  color: var(--accent-bright);
+  text-shadow: 0 0 14px rgba(var(--glow-rgb), 0.35);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Right column: horizontally scrolling card strip. */
+.minion-group-cards {
+  flex: 1;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 6px 4px 10px 0;
+  align-items: center;
+}
+.minion-group-cards::-webkit-scrollbar         { height: 6px; }
+.minion-group-cards::-webkit-scrollbar-track   { background: transparent; }
+.minion-group-cards::-webkit-scrollbar-thumb   { background: var(--velvet); border-radius: 3px; }
+.minion-group-cards::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+.minion-group-cards .person-card { flex: 0 0 auto; }
+
+/* Empty-row placeholder: a description of what this group would hold,
+   shown when the group has no entries. Less emphatic than card text. */
+.minion-empty {
+  font-family: var(--heading);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--muted);
+  padding: 8px 4px;
+  line-height: 1.5;
+}
+
+/* Log */
+#log-container {
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 22px;
+  flex: 0 0 auto;        /* don't stretch — keep the log at its natural height */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 2px 12px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+#event-log {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;     /* internal scroll — log no longer pushes main column */
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+#event-log li {
+  font-family: var(--heading);
+  font-size: 15px;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  border-left: 3px solid var(--muted);
+  line-height: 1.5;
+  color: var(--text);
+}
+
+#event-log li.good { border-left-color: var(--green); }
+#event-log li.bad  { border-left-color: var(--red); }
+#event-log li.info { border-left-color: var(--accent2); }
+#event-log .ly {
+  font-family: var(--display);
+  font-size: 9px;
+  color: var(--gold);
+  margin-right: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Scrollbar styling for log */
+#event-log::-webkit-scrollbar { width: 6px; }
+#event-log::-webkit-scrollbar-track { background: transparent; }
+#event-log::-webkit-scrollbar-thumb { background: var(--velvet); border-radius: 3px; }
+#event-log::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* (Footer removed — the Pass the Year button now lives in the sidebar.) */
+
+.action-btn {
+  padding: 10px 22px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: linear-gradient(180deg, var(--panel) 0%, var(--surface) 100%);
+  color: var(--text);
+  font-family: var(--display);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.22s;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.action-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--raised) 0%, var(--panel) 100%);
+  border-color: var(--accent);
+  color: var(--text);
+  box-shadow: 0 0 12px rgba(var(--glow-rgb), 0.25), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+/* Disabled state. Used by Pass-the-Year when blocked by pending
+   situations, and by other action buttons in similar states.
+   Reads "this is intentionally not available right now" rather than
+   "this button is broken." The cursor reverts and hover effects are
+   suppressed. */
+.action-btn:disabled,
+.action-btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: saturate(0.5);
+}
+.action-btn:disabled:hover,
+.action-btn[disabled]:hover {
+  border-color: var(--border-strong);
+  background: var(--panel);
+  box-shadow: none;
+}
+.action-btn.primary:disabled,
+.action-btn.primary[disabled] {
+  background: linear-gradient(180deg, var(--velvet) 0%, var(--bg) 100%);
+  border-color: var(--border-strong);
+  box-shadow: none;
+}
+.action-btn.primary {
+  background: linear-gradient(180deg, var(--accent) 0%, var(--velvet) 100%);
+  border-color: var(--accent-bright);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 0 14px rgba(var(--glow-rgb), 0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.action-btn.primary:hover {
+  background: linear-gradient(180deg, var(--accent-bright) 0%, var(--accent) 100%);
+  box-shadow: 0 0 22px rgba(var(--glow-bright-rgb), 0.55), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+/* Sidebar-action — full-width, slightly taller, sits below the Identity panel */
+.action-btn.sidebar-action {
+  width: 100%;
+  padding: 14px 22px;
+  font-size: 13px;
+  letter-spacing: 0.22em;
+}
+
+/* Modal */
+#modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(5, 3, 4, 0.85);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  align-items: center; justify-content: center;
+}
+#modal-overlay.open { display: flex; }
+#modal {
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 32px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow:
+    0 0 60px rgba(var(--glow-rgb), 0.25),
+    0 20px 60px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  position: relative;
+}
+
+#modal::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+#modal h2 {
+  font-family: var(--heading);
+  color: var(--text);
+  font-size: 26px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  letter-spacing: 0.01em;
+}
+#modal .modal-meta {
+  font-family: var(--display);
+  font-size: 10px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+#modal .modal-body {
+  font-family: var(--heading);
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text);
+}
+#modal .modal-body p { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     TITLE SCREEN
+     First thing the player sees. Routes to New Game (creation),
+     Continue (autosave), or Load (slot picker). Hidden once the
+     player commits to a path; cannot be returned to mid-game
+     except by hard reload — that's intentional.
+══════════════════════════════════════════════════════════════ -->
+<div id="title-screen" class="active">
+  <div class="title-mark">
+    <h1>LEGACY</h1>
+    <p>A chronicle waits to be written.</p>
+  </div>
+  <div class="title-menu">
+    <button class="title-btn" id="title-new-game">
+      New Game
+    </button>
+    <button class="title-btn" id="title-continue">
+      Continue
+      <span class="title-btn-sub" id="title-continue-sub">—</span>
+    </button>
+    <button class="title-btn" id="title-load">
+      Load Game
+      <span class="title-btn-sub" id="title-load-sub">—</span>
+    </button>
+    <button class="title-btn" id="title-import">
+      Import Save
+      <span class="title-btn-sub">from a file</span>
+    </button>
+    <button class="title-btn title-btn-secondary" id="title-settings">
+      Settings
+    </button>
+  </div>
+  <input type="file" id="title-import-input" accept=".json,.legacy" style="display:none;">
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     CHARACTER CREATION SCREEN
+══════════════════════════════════════════════════════════════ -->
+<div id="creation-screen">
+  <div class="cc-title">
+    <h1>Legacy</h1>
+    <p>Forge a soul. Watch the bloodline endure.</p>
+  </div>
+
+  <!-- Step dots: 1=Identity 2=Background 3=Stats 4=Family 5=Preview -->
+  <div class="steps-bar">
+    <div class="step-dot active" id="dot-1">1</div>
+    <div class="step-line"></div>
+    <div class="step-dot" id="dot-2">2</div>
+    <div class="step-line"></div>
+    <div class="step-dot" id="dot-3">3</div>
+    <div class="step-line"></div>
+    <div class="step-dot" id="dot-4">4</div>
+    <div class="step-line"></div>
+    <div class="step-dot" id="dot-5">5</div>
+  </div>
+
+  <!-- ── STEP 1: IDENTITY ────────────────────────────────── -->
+  <div class="step-panel active" id="step-1">
+    <div class="step-heading">Step 1 — Identity</div>
+
+    <div class="field">
+      <label>First Name</label>
+      <input type="text" id="cc-firstname" placeholder="Enter your first name" maxlength="24">
+    </div>
+
+    <div class="field">
+      <label>Family Name</label>
+      <input type="text" id="cc-lastname" placeholder="Enter your family name" maxlength="24">
+    </div>
+
+    <div class="field">
+      <label>Sex</label>
+      <div class="toggle-group" id="cc-sex-group">
+        <div class="toggle-btn selected" data-val="M">♂ Male</div>
+        <div class="toggle-btn" data-val="F">♀ Female</div>
+      </div>
+    </div>
+
+    <div class="step-nav">
+      <button class="btn-next" onclick="goStep(2)">Next →</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 2: BACKGROUND ─────────────────────────────── -->
+  <div class="step-panel" id="step-2">
+    <div class="step-heading">Step 2 — Background</div>
+
+    <div class="field">
+      <label>Race / Ethnicity</label>
+      <div class="toggle-group" id="cc-race-group" style="flex-wrap:wrap;">
+        <div class="toggle-btn selected" data-val="White">White</div>
+        <div class="toggle-btn" data-val="Black">Black</div>
+        <div class="toggle-btn" data-val="Hispanic">Hispanic</div>
+        <div class="toggle-btn" data-val="East Asian">East Asian</div>
+        <div class="toggle-btn" data-val="South Asian">South Asian</div>
+        <div class="toggle-btn" data-val="Middle Eastern">Middle Eastern</div>
+        <div class="toggle-btn" data-val="Indigenous">Indigenous</div>
+        <div class="toggle-btn" data-val="Mixed">Mixed</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Country of Birth</label>
+      <select id="cc-country">
+        <option>United States</option>
+        <option>United Kingdom</option>
+        <option>Canada</option>
+        <option>Australia</option>
+        <option>France</option>
+        <option>Germany</option>
+        <option>Spain</option>
+        <option>Italy</option>
+        <option>Brazil</option>
+        <option>Mexico</option>
+        <option>Argentina</option>
+        <option>Nigeria</option>
+        <option>South Africa</option>
+        <option>Kenya</option>
+        <option>Egypt</option>
+        <option>India</option>
+        <option>China</option>
+        <option>Japan</option>
+        <option>South Korea</option>
+        <option>Indonesia</option>
+        <option>Russia</option>
+        <option>Turkey</option>
+        <option>Saudi Arabia</option>
+        <option>Pakistan</option>
+        <option>Bangladesh</option>
+      </select>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:4px;">
+      <div class="field" style="margin-bottom:0;">
+        <label>Father's Age at Your Birth</label>
+        <select id="cc-father-age"></select>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Mother's Age at Your Birth</label>
+        <select id="cc-mother-age"></select>
+      </div>
+    </div>
+    <div class="stat-note" style="margin-top:6px;">Parent ages determine how old siblings can be.</div>
+
+    <div class="step-nav">
+      <button class="btn-back" onclick="goStep(1)">← Back</button>
+      <button class="btn-next" onclick="goStep(3)">Next →</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 3: STATS ──────────────────────────────────── -->
+  <div class="step-panel" id="step-3">
+    <div class="step-heading">Step 3 — Starting Stats</div>
+
+    <!--
+      Points system: 150-point pool distributed across five stats.
+        • Charisma, Intelligence: 1 pt = 1 stat, baseline 30
+        • Wealth: 1 pt = 1 stat, starts at 0 (you can be born with nothing)
+        • Insight: 2 pts = 1 stat, starts at 0, capped at 50 — rare and costly
+        • Prowess: 2 pts = 1 stat, starts at 0, capped at 10 — only a seed;
+          the age curve does the heavy lifting on physical capability
+      Per-slider caps live on the `max` attribute. Insight stops at 50
+      (cost 100), Intelligence at 70 (cost 70), Prowess at 10 (cost 20).
+      Charisma and Wealth are uncapped at creation, so a min-maxer can
+      sink the whole pool into one of them.
+    -->
+    <div class="points-bar">
+      <div>
+        <div class="pts" id="pts-remaining">150</div>
+        <div class="pts-label">points remaining</div>
+      </div>
+      <div style="font-family:var(--heading); font-size:15px; color:var(--text-dim); font-style:italic; line-height:1.55;">
+        Distribute 150 points across your five starting stats. Charisma and Intelligence
+        begin at 30; the others begin at nothing.
+        Insight and Prowess are rare, and cost two points for each. What you're born with shapes your early life — but isn't destiny.
+      </div>
+    </div>
+
+    <div class="stat-field">
+      <label>Charisma <span id="lbl-charisma">30</span></label>
+      <input type="range" id="sl-charisma" min="0" max="30" value="0" step="1" data-stat="charisma">
+    </div>
+    <div class="stat-note">Your presence and pull on others — looks, voice, the way you fill a room.</div>
+
+    <div class="stat-field">
+      <label>Intelligence <span id="lbl-intelligence">30</span></label>
+      <input type="range" id="sl-intelligence" min="0" max="30" value="0" step="1" data-stat="intelligence">
+    </div>
+    <div class="stat-note">Affects academic performance, career options, and problem-solving.</div>
+
+    <div class="stat-field">
+      <label>Family Wealth <span id="lbl-wealth">0</span></label>
+      <input type="range" id="sl-wealth" min="0" max="150" value="0" step="1" data-stat="wealth">
+    </div>
+    <div class="stat-note">Reflects the wealth of the family you are born into.</div>
+
+    <div class="stat-field">
+      <label>Insight <span id="lbl-insight">0</span></label>
+      <input type="range" id="sl-insight" min="0" max="20" value="0" step="1" data-stat="insight">
+    </div>
+    <div class="stat-note">A sensitivity to what others cannot perceive — patterns, omens, weight beneath ordinary things.</div>
+
+    <div class="stat-field">
+      <label>Prowess <span id="lbl-prowess">0</span></label>
+      <input type="range" id="sl-prowess" min="0" max="20" value="0" step="1" data-stat="prowess">
+    </div>
+    <div class="stat-note">Innate physical promise — a seed that grows with the body and fades with age.</div>
+
+    <div class="step-nav">
+      <button class="btn-back" onclick="goStep(2)">← Back</button>
+      <button class="btn-next" onclick="goStep(4)">Next →</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 4: FAMILY ─────────────────────────────────── -->
+  <div class="step-panel" id="step-4">
+    <div class="step-heading">Step 4 — Siblings</div>
+
+    <p style="font-family:var(--heading); font-size:16px; color:var(--text-dim); font-style:italic; margin-bottom:18px; line-height:1.6;">
+      Add any siblings. Set their sex and age difference from you
+      (negative = older, positive = younger — though at birth, no one can be younger yet).
+    </p>
+
+    <div class="sibling-list" id="sibling-list"></div>
+
+    <button class="add-sib-btn" onclick="addSibling()">+ Add a sibling</button>
+
+    <div class="step-nav" style="margin-top:20px;">
+      <button class="btn-back" onclick="goStep(3)">← Back</button>
+      <button class="btn-next" onclick="goStep(5)">Next →</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 5: PREVIEW ────────────────────────────────── -->
+  <div class="step-panel" id="step-5">
+    <div class="step-heading">Step 5 — Your Story Begins</div>
+
+    <div id="preview-card">
+      <div class="preview-portrait" id="prev-portrait">👶</div>
+      <div class="preview-grid" id="prev-grid"></div>
+    </div>
+
+    <div style="font-family:var(--heading); font-size:16px; color:var(--text-dim); font-style:italic; line-height:1.7; margin-bottom:4px; text-align:center;">
+      You will begin life as a newborn. Age up each year and watch your story unfold.
+    </div>
+
+    <div class="step-nav">
+      <button class="btn-back" onclick="goStep(4)">← Back</button>
+      <button class="btn-start" onclick="startGame()">Begin the Legacy ❦</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     GAME SCREEN
+══════════════════════════════════════════════════════════════ -->
+<div id="game-screen">
+
+  <header>
+    <h1>Legacy</h1>
+    <div class="header-right">
+      <div id="year-display">Year <span id="current-year">1990</span> &nbsp;·&nbsp; <span id="age-display">Age 0</span></div>
+      <!-- Header search shortcut — opens the Memories tab with the
+           search section expanded and focuses the name input. -->
+      <button class="header-search-btn" id="header-search-btn" type="button" title="Search people">⌕</button>
+    </div>
+  </header>
+
+  <aside>
+    <div class="panel" id="player-panel">
+      <div class="panel-heading" data-vocab="panel.thyself">You</div>
+      <div class="portrait" id="player-portrait">👶</div>
+      <div class="char-name" id="player-name-label">—</div>
+      <div class="char-sub"  id="player-sub-label">—</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-heading" data-vocab="panel.attributes">Attributes</div>
+
+      <!-- ── Core attributes ──────────────────────────────────
+           The "what defines you" group. These are the character's
+           capabilities — what they can do — as opposed to their
+           situation (which lives below). -->
+      <div class="stat">
+        <div class="stat-label"><span>Health</span><span id="sv-health">—</span></div>
+        <div class="stat-bar"><div class="stat-fill" id="sb-health" style="background:var(--green)"></div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label"><span>Prowess</span><span id="sv-prowess">—</span></div>
+        <div class="stat-bar"><div class="stat-fill" id="sb-prowess" style="background:var(--red)"></div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label"><span>Charisma</span><span id="sv-charisma">—</span></div>
+        <div class="stat-bar"><div class="stat-fill" id="sb-charisma" style="background:var(--accent2)"></div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label"><span>Intelligence</span><span id="sv-intelligence">—</span></div>
+        <div class="stat-bar"><div class="stat-fill" id="sb-intelligence" style="background:var(--blue)"></div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label"><span data-vocab="stat.insight">Insight</span><span id="sv-insight">—</span></div>
+        <div class="stat-bar"><div class="stat-fill" id="sb-insight" style="background:var(--gold)"></div></div>
+      </div>
+
+      <!-- ── Circumstance group ───────────────────────────────
+           The "what your life looks like right now" group. Wealth
+           (social standing), Fertility (biological condition), and
+           the trait/modifier flags (situational). Separated from the
+           core stats with a sub-label divider so the two groups
+           read as conceptually distinct.
+
+           Traits and Modifiers are stubbed for now — the data models
+           haven't been designed. The "None" placeholder shows the
+           UI shape so when content lands it can drop in without a
+           new section being added. -->
+      <div class="attribute-subgroup">Circumstance</div>
+
+      <div class="stat">
+        <div class="stat-label">
+          <span>Wealth</span>
+          <span id="sv-wealth">—</span>
+        </div>
+        <div class="stat-bar"><div class="stat-fill" id="sb-wealth" style="background:var(--green)"></div></div>
+        <!-- Tier label sits below the bar in dim italic so it
+             complements rather than competes with the numeric value.
+             Populated by render() from wealthTierLabel(). -->
+        <div class="stat-tier" id="sv-wealth-tier">—</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-label"><span>Fertility</span><span id="sv-fertility">—</span></div>
+        <div class="stat-bar"><div class="stat-fill" id="sb-fertility" style="background:var(--accent2)"></div></div>
+      </div>
+
+      <div class="trait-row">
+        <div class="trait-row-label">Traits</div>
+        <div class="trait-row-value" id="sv-traits">None</div>
+      </div>
+
+      <div class="trait-row">
+        <div class="trait-row-label">Modifiers</div>
+        <div class="trait-row-value" id="sv-modifiers">None</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-heading">Identity</div>
+      <div class="info-row"><span class="ik">Race</span><span class="iv" id="info-race">—</span></div>
+      <div class="info-row"><span class="ik">Country</span><span class="iv" id="info-country">—</span></div>
+      <div class="info-row"><span class="ik">Nature</span><span class="iv" id="info-nature">Mortal</span></div>
+      <div class="info-row" id="info-row-sire" style="display:none;"><span class="ik">Sire</span><span class="iv" id="info-sire">—</span></div>
+    </div>
+
+    <!-- Year-advance button lives in the sidebar so the scrolling main
+         column doesn't bump it around as the chronicle grows. -->
+    <button class="action-btn primary sidebar-action" id="btn-age-up" data-vocab="btn.passYear">Pass the Year ▶</button>
+
+    <!-- Save / Load opens the save overlay. -->
+    <button class="action-btn sidebar-action" id="btn-save-load" type="button">Save / Load</button>
+
+    <!-- Settings opens the settings overlay. Houses display preferences
+         (text size, motion, grain) and debug affordances (Embrace
+         toggle, until that becomes a real in-game event). -->
+    <button class="action-btn sidebar-action" id="btn-settings" type="button">Settings</button>
+  </aside>
+
+  <main>
+    <!-- Section nav: four top-level areas. The first opens to its default
+         sub-tab (Family); subsequent sections currently hold placeholders
+         that we'll flesh out in following turns. -->
+    <nav class="section-nav" id="section-nav">
+      <button class="section-tab active" data-section="bloodline" data-vocab="section.bloodline">Bloodline</button>
+      <button class="section-tab" data-section="vocation" data-vocab="section.vocation">Career &amp; Education</button>
+      <button class="section-tab" data-section="estate" data-vocab="section.estate">Assets &amp; Hobbies</button>
+      <button class="section-tab" data-section="decisions" data-vocab="section.decisions">Journal</button>
+    </nav>
+
+    <!-- Secondary nav — populated by JS based on the active section. -->
+    <nav class="sub-nav" id="sub-nav"></nav>
+
+    <!-- ── Bloodline section ─────────────────────────────────── -->
+    <div class="section" id="section-bloodline">
+      <div id="bloodline-container">
+        <div class="bloodline-header">
+          <div class="bl-breadcrumb" id="bl-breadcrumb"></div>
+        </div>
+
+        <div class="bl-focal" id="bl-focal">
+          <div class="bl-focal-portrait" id="bl-focal-portrait">👶</div>
+          <div class="bl-focal-info">
+            <div class="bl-focal-name" id="bl-focal-name">—</div>
+            <div class="bl-focal-meta" id="bl-focal-meta">—</div>
+            <div class="bl-focal-career" id="bl-focal-career"></div>
+            <div class="bl-focal-rel" id="bl-focal-rel"></div>
+          </div>
+        </div>
+
+        <!-- Focal stats panel. Populated by renderBloodline() with the
+             NPC's stat readout when the focal isn't the player. Hidden
+             when the focal IS the player (their stats live in the sidebar). -->
+        <div class="bl-focal-stats" id="bl-focal-stats"></div>
+
+        <!-- Sub-panels for each Bloodline view. Sub-nav above switches them. -->
+        <div class="sub-panel" id="bl-panel-family"></div>
+        <div class="sub-panel" id="bl-panel-relations" style="display:none;"></div>
+        <div class="sub-panel" id="bl-panel-childer" style="display:none;"></div>
+        <div class="sub-panel" id="bl-panel-minions" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- ── Vocation section (Career & Education / Herd & Blood Sorcery) ─ -->
+    <div class="section" id="section-vocation" style="display:none;">
+      <div class="sub-panel" id="voc-panel-career">
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">✦</div>
+          <div class="placeholder-text" data-vocab="vocation.career_empty">
+            A path will open in time. Few work before eighteen.
+          </div>
+        </div>
+      </div>
+      <div class="sub-panel" id="voc-panel-education" style="display:none;">
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">✦</div>
+          <div class="placeholder-text" data-vocab="vocation.edu_empty">
+            You are still a child. School begins at age 6.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Estate section (Possessions & Hobbies / Possessions & Pursuits) ─ -->
+    <div class="section" id="section-estate" style="display:none;">
+      <div class="sub-panel" id="est-panel-possessions">
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">♛</div>
+          <div class="placeholder-text" data-vocab="estate.possessions_empty">
+            You own nothing yet. The world is still your parents'.
+          </div>
+        </div>
+      </div>
+      <div class="sub-panel" id="est-panel-hobbies" style="display:none;">
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">♛</div>
+          <div class="placeholder-text" data-vocab="estate.hobbies_empty">
+            No pastimes taken up. Idle hands are the devil's workshop.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Decisions section ────────────────────────────────────── -->
+    <!-- ── Decisions / Journal / Ambitions section ────────────────
+         Five sub-panels: Focus, Decisions, Goals/Plots,
+         Situations/Reckonings, Memories/Chronicle. Each tab is a
+         placeholder for now — the labels and flavor text differ
+         between mortal and vampire modes via the vocab table. -->
+    <div class="section" id="section-decisions" style="display:none;">
+      <div class="sub-panel" id="dec-panel-focus">
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">⊙</div>
+          <div class="placeholder-text" data-vocab="dec.focus_empty">
+            No singular focus consumes you. The mind drifts where it will.
+          </div>
+        </div>
+      </div>
+      <div class="sub-panel" id="dec-panel-decisions" style="display:none;">
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">✧</div>
+          <div class="placeholder-text" data-vocab="dec.decisions_empty">
+            No decisions weigh upon you. Life is, for now, simply lived.
+          </div>
+        </div>
+      </div>
+      <div class="sub-panel" id="dec-panel-goals" style="display:none;">
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">✦</div>
+          <div class="placeholder-text" data-vocab="dec.goals_empty">
+            You have set yourself no ambition. The road is open in every direction.
+          </div>
+        </div>
+      </div>
+      <div class="sub-panel" id="dec-panel-situations" style="display:none;">
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">⚜</div>
+          <div class="placeholder-text" data-vocab="dec.situations_empty">
+            No matter presses upon you. The world is, for the moment, quiet.
+          </div>
+        </div>
+      </div>
+      <div class="sub-panel" id="dec-panel-memories" style="display:none;">
+        <!-- Search section — collapsed by default; expanding reveals
+             a free-text name field, multi-select chip filters, and
+             a results list of matching people. -->
+        <div class="search-section" id="search-section">
+          <button class="search-toggle" id="search-toggle" type="button" aria-expanded="false">
+            <span class="search-toggle-icon">⌕</span>
+            <span class="search-toggle-label" data-vocab="search.toggle">Search People</span>
+            <span class="search-toggle-caret">▾</span>
+          </button>
+
+          <div class="search-body" id="search-body" hidden>
+            <div class="search-input-row">
+              <input type="text" id="search-input" class="search-input" placeholder="Search by name…" autocomplete="off" />
+              <button class="search-clear" id="search-clear" type="button" title="Clear search">×</button>
+            </div>
+
+            <div class="search-filters">
+              <div class="search-filter-group">
+                <div class="search-filter-label">Sex</div>
+                <div class="search-chips" data-filter="sex">
+                  <button class="search-chip active" data-value="any">Any</button>
+                  <button class="search-chip" data-value="M">Male</button>
+                  <button class="search-chip" data-value="F">Female</button>
+                </div>
+              </div>
+
+              <div class="search-filter-group">
+                <div class="search-filter-label">Status</div>
+                <div class="search-chips" data-filter="status">
+                  <button class="search-chip active" data-value="any">Any</button>
+                  <button class="search-chip" data-value="alive">Living</button>
+                  <button class="search-chip" data-value="dead">Deceased</button>
+                </div>
+              </div>
+
+              <div class="search-filter-group">
+                <div class="search-filter-label">Relation</div>
+                <!-- Multi-select chips. "Any" is a clear-all; selecting any
+                     specific chip auto-clears Any. Selecting all chips reverts
+                     back to Any. -->
+                <div class="search-chips multi" data-filter="relation">
+                  <button class="search-chip active" data-value="any">Any</button>
+                  <button class="search-chip" data-value="family">Family</button>
+                  <button class="search-chip" data-value="spouse">Spouse</button>
+                  <button class="search-chip" data-value="lover">Lover</button>
+                  <button class="search-chip" data-value="friend">Friend</button>
+                  <button class="search-chip" data-value="enemy">Enemy</button>
+                  <button class="search-chip" data-value="ex">Ex</button>
+                  <button class="search-chip" data-value="sire">Sire</button>
+                  <button class="search-chip" data-value="childe">Childe</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="search-meta" id="search-meta">—</div>
+            <div class="search-results" id="search-results"></div>
+          </div>
+        </div>
+
+        <!-- Memories placeholder — sits below the search section,
+             will be replaced with real memory entries later. -->
+        <div class="placeholder-card">
+          <div class="placeholder-emblem">❦</div>
+          <div class="placeholder-text" data-vocab="dec.memories_empty">
+            Your years are yet too few to be remembered. Live them first.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="log-container">
+      <div class="section-heading">Annals</div>
+      <ul id="event-log"></ul>
+    </div>
+  </main>
+</div>
+
+<!-- ── End of game screen ─────────────────────────────────────── -->

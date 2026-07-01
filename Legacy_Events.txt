@@ -1,0 +1,184 @@
+FOR MOBILE, DOES THE EVENT CHOICE NEED A CONFIRM BUTTON?
+
+Embrace Events:
+	The Vial of Vampire Blood
+		Player gains a vial of blood that shifts and moves unnaturally in its cage. 
+		Option 1: Drink it
+			Increase Max Health by +50 (removed upon becoming a vampire)
+			Increase Prowess by 5 (removed upon becoming a vampire)
+			Increase Insight by +5 (kept upon becoming vampire)
+
+		Option 2 [repeatable]: Study it 
+			Option 2.1 [repeatable, cooldown 1 year]: Study it carefully
+				After 5 studies, Increase Insight +1
+			Option 2.2: Study it hastily. 
+				Consumes item, increases insight +2 
+
+		Option 3 [Prerequisites: Positive dispotion with vampire hunter]: Give hunter the vial
+			Gain +25 disposition with hunter, +10 wealth
+
+		Option 4 [Prerequisites: Learned how vampires are created]: Turn yourself into a vampire
+
+		Option 5 [Prerequisites: Learned how vampires are created]: Turn someone else into a vampire
+
+
+	Obsession
+		If player has Trait "Siren", or Humor "Sanguine" 5% chance to trigger event "The Beautiful Woman" after age 16 every year.
+
+		The Beautiful Woman
+			(text): " "
+			beautiful pale woman with black hair and fine clothing watches player from corner of the tavern. Even though there are only a 
+			couple people in the tavern, the player only suddenly notices she is there when she instructs the bartender 
+			that she will pay for your entire tab for the night. The player makes eye contact and a sense of unease comes over them or worse. 
+			Player feels like they should've known she was there, but they didnt strangely. 
+				Options
+				1. go thank her personally, despite unease 
+				2. give a curt nod and return to their conversation,
+				3. leave for the night. 
+
+			If 1. thank her personally:
+			She flirts with player and player is quickly charmed. She offers the player a vague and sketchy opportunity for power and wealth 
+			but refuses to give details. She doesn't ask for an answer immedietly, but instead tells the player she will visit again soon. 
+
+				Options (Suspisciously friendly/trusting in tone)	
+				Player wholeheartedly agrees and promises to accept her offer when she returns
+				Player thanks her gratefully for the opportunity and promises to accept her offer when she returns
+				Player kisses her hand and promises to accept her offer when she returns
+
+				1.1 Thank her personally
+					After the player agrees to accept her offer in the future, she bids them farewell and the player reflects on the walk home.
+						
+						Options
+						Player decides she was a nice lady and they are interested
+						Player realizes something is deeply wrong
+
+			Create situation, "The Pale Lady" 
+				Player has a couple options to prepare for her return with timer ticking down 5 years, and can also daydream of her beauty. 
+
+			if 2. or 3. Give a curt nod and return to conversation
+				The next time the player looks for her, she is gone. Player gets chills but shrugs it off. 
+
+				2.1 Lady of the Night 
+					pale lady stalks them over 4 years, and on the 5th year they appear in a private place and the player instantly recognizes them.
+					No one else should be in that place, so the player has two points of unease. Pale lady makes the offer for power and wealth, if the 
+					player will serve. She tells the player she will return soon to recieve the answer, and makes a risque and flirtatious threat.
+
+					Options:
+						Player blushes and promises to accept the offer.
+						Player hesistates but her eyes inspire player to thank her and agree.
+						Player with sufficient insight can resist her charm and tell her to leave them alongside
+					
+				Create situation, "The Pale Lady" 
+				Player has a couple options to prepare for her return with timer ticking down 5 years, and can also daydream of her beauty.
+
+1800's
+The Midnight Racket
+		For three consecutive nights, a pack of stray hounds has gathered in the cobblestone alley behind your residence. They aren't just
+		howling at the moon; they are snarling and barking violently. The relentless noise is fraying your nerves and ruining your sleep.
+		
+		Option 1: Drive them off (Prowess check)
+			You light a heavy iron lantern, grab a heavy walking stick, and march down into the freezing alley to scatter the mutts yourself.
+
+			Success: You swing the lantern, and the firelight scatters the pack. Investigating the area they were barking at, you find no one—but you do find a strange puddle of thick, dark blood that is freezing unnaturally fast. 
+
+			Failure: The pack is panicked and desperate. They turn on you, tearing through your coat and leaving a nasty bite on your calf before you manage to retreat back inside. (-15 Health)
+
+		Option 2: Shutter the windows and Endure
+			Result: You stay physically safe, but the psychological toll of the snarling beasts—and the strange scratching noises that follow—leaves you deeply unsettled for the rest of the year. (-10 Health)
+		
+		Option 3: Dismiss the dogs [Requires Animalism trait]
+			Result: The dogs instantly bow away from you and scatter back into the night. You notice a strange puddle of thick, dark blood that is freezing unnaturally fast.
+
+The Crimson Tonic
+		A brightly painted wagon has rolled into the market square, drawing a massive crowd. A man introducing himself as "Dr. Silas Vane" stands on the buckboard. He is charismatic, unnaturally pale, and wears dark tinted spectacles despite the overcast sky. He is peddling a "Miracle Panacea" guaranteed to balance the humors, cure the wasting sickness, and restore youthful vigor. The vial he holds catches the dim light—it is filled with a thick, almost luminous crimson syrup that smells faintly of copper and iron.
+		
+		Option 1: Purchase and Consume the Tonic [-10 wealth, silently checks Insight >20]
+			You pay the exoribtant fee and swallow the heavy metallic sludge.
+
+			Success: The effects are immediate and terrifyingly potent. Your cough vanishes, your joints stop aching, and you feel a surge of raw, physical power. However, for the rest of the year, normal food tastes like ash. (+40 Health, +5 Prowess)
+			
+			Failure: Your mortal stomach violently rejects the thick, unnatural liquid. You spend three agonizing days bedridden, sweating through your sheets and hallucinating shadows moving in the corners of your room. (-15 Health)
+			
+		Option 2: Keep your coin and walk away.
+		You refuse to be swindled by a traveling charlatan. You pull your coat tight and head home.
+
+			Result: A week later, you hear that the elderly, bedridden baker who bought the tonic is completely cured of his severe arthritis. Those who shop at his bakery tell of his new oddities.
+		
+		Option 3: Investigate the Tonic [Requires The Uncanny Trait]
+			Your heightened intuition spots something peculiar, the tonic is mixed with blood.
+			
+			Result: The Doctor locks eyes with you, and gives you a small knowing smile. He places a vial in your hands and asks for your benevolence in the nights to come. You drink the vial and gain +40 Health, +5 Prowess).
+		
+The Headmaster's Office
+		
+		While doing chores, you notice the Headmaster has left the door to his private study ajar. Sitting on his 
+		mahogany desk is a [Mysterious Relic]—a heavy looking, strangely shaped silver and deep crimson relic. 
+		Stealing it would be incredibly dangerous, as the Headmaster is known for his brutal discipline.
+
+		Option 1: Leave it be (Event Ends)
+			You aren't foolish enough to risk the Headmaster's wrath so soon after starting school. You walk away, the faint
+			hum of the object fading from your mind as you return to your duties. 
+
+		Option 2: Steal the Relic (Continues to The Inquisition)
+			The relic vanishes into your pockets a moment later, but you accidentally knock over the inkwell behind the relic.
+			You slip quietly down the corridor and take your seat in  the main hall, masking your racing heart with a 
+			cheerful, innocent smile. You furiously scrub your hand on a rag to no avail, the ink stains you.
+			(+3 Cunning, +1 Mysterious Relic)
+
+		The Inquisition
+			Less than five minutes later, the heavy doors of the main hall slam shut. The Headmaster locks the deadbolt and 
+			turns to face the assembly of students. His face is pale, his eyes practically burning holes through the room. 
+			"Which one of you gutter rats took it?" He barks, his voice echoing in the following silence. "You know who you are.
+			Step forward now, or it will be much, much worse for you."
+			He begins a slow, methodical march down the central aisle, demanding everyone empty their pockets onto their desks.
+
+			Option 1: "I took it, sir." (Event Ends)
+				You stand up, your hands trembling, and place the Relic on your desk. The room goes dead silent. 
+				He doesn't praise your honesty. He simply brings his cane down on your back. 
+				(-15 Health, -1 Mysterious Relic)
+			
+			Option 2: Stay silent (Continues to Stained)
+				You slip the Relic into your boot beneath the desk. You stare straight ahead, your face a perfect mask of 
+				confusion and fear, blending in with the other terrified students with your hands behind your back as 
+				he inspects your empty pockets and moves on.
+				(+5 Cunning)
+
+				Stained
+					The Headmaster reaches the front of the room, his fury boiling over into a terrifying calm. "You think
+					you are clever," he seethes. "But the thief was careless. You knocked over my inkwell."
+					He commands everyone to place their hands flat on their desks. 
+
+					You notice your friend next to you, Thomas, still has ink on his hands from the morning's penmanship lesson. 
+					Earlier today he had bragged to you about the 10 copper pieces he found yesterday, more than he'd seen all 
+					his life. You know exactly what the Headmaster thinks of the poorer students. The gutter rats, as he called 
+					them. If you claim Thomas sold the Relic to a passing merchant through the courtyard fence, those pennies 
+					will be all the proof the Headmaster needs. Your friend won't just be beaten; he will be sent away 
+					to the workhouse. The Headmaster is walking down your row, now only three desks away.
+
+						Option 1: "Wait! I have it!"
+							The sheer terror breaks you. You cannot stomach the fear anymore. 
+							You pull the Relic from your boot, place it on the desk, and resolve to take whatever brutal 
+							beating is coming to you, telling yourself it's preferable to the alternative.
+							(-30 Health, -1 Mysterious Relic)
+						
+						Option 2: You point your shaking finger at Thomas
+							The Headmaster looks at Thomas's hands, hauls him up by his collar, and empties the boy's pockets. 
+							The pennies hit the floor. The headmasters expression changes from realization, to a brief moment of grief, and then 
+							to anger. You sit in dead silence, the Relic safely hidden in your boot, as Thomas is dragged away screaming his innocence.
+							(+6 Cunning)
+				End
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1900's

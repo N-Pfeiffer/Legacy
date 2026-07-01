@@ -1,0 +1,214 @@
+Hidden means hidden for both mortals and vampires. Vamp means hidden from mortals. 
+
+
+The Four Humors:
+	Every NPC will be assigned one Humor at random. This serves as a personality type feature that gives basic mechanics to differentiate people. The player will be able to see what humor someone has through a color coded label on their card. Gains and losses will affect all stat calculations for that NPC. So if a player romances a sanguine npc through an event and gains 10 intimicy, they will actually gain 14.
+	
+	Choleric (Yellow): Prone to anger, aggression, and ambition.
+
+		Mechanic: Disposition drops twice as much from insults or failures. They gain a 25% resistance to Intimidation attempts.
+
+	Sanguine (Blood): Social, romantic, and highly impulsive.
+
+		Mechanic: Intimacy gain 40% faster Disposition loss is 40% faster. They are 100% more likely to be affected by Siren trait and Player Sanguine Humor.
+
+	Melancholic (Dark Blue): Analytical, depressive, and deeply introverted.
+
+		Mechanic: Intimicy gain is reduced by 40%. Disposition and Intimacy loss is reduced by 40%.
+
+	Phlegmatic (Green): Stoic, relaxed, and incredibly stubborn.
+
+		Mechanic: Disposition loss and gain is reduced by 40%. Enthrallment gain and loss is reduced by 20%
+	
+	Humors Extended 
+		
+		Each archtype learns the vampire disciplines in that humor twice as fast. This is not mentioned at creation,
+		and neither is any mention of the vampire bonuses. Keep any vampiric mentions hidden. These humors will be
+		applied as the first Trait for a characher, and they will swap descriptions and effects/modifiers
+		upon being Embraced.
+
+		Melancholic (Dark Blue)
+			Hidden: 
+			Spirits will haunt the player during their mortal life in subtle ways.
+			Vampire Phase: Their dreary nature attracts spirits,
+			and improves the rate at which the vampire builds relationship with spirits and undead. Upon player "death" 
+			(being embraced), the spirits (NPCs with cards) that haunted the player appear as friends or enemies, 
+			depending on how the player reacted/treated them throughout their life.
+
+		Sanguine (Red)
+			Hidden: 
+			(Vampire Phase): The Addictive Kiss. You transition into the Requiem with a larger maximum blood pool. 
+			However, your bite is intoxicating. Mortals you casually feed upon are not easily forgotten; 
+			they frequently become obsessed stalkers. They will track you down, appearing at your Haven to 
+			beg for your attention or another bite, constantly threatening to breach the Masquerade if you do not 
+			deal with them.
+
+		Choleric (Yellow)
+			Hidden:
+			(Vampire Phase): The Blinding Strike. Your restless mortal energy translates directly into lethal, 
+			supernatural kinetic speed. In the Requiem, you become a terrifying duelist. 
+			During physical Reckonings or combat, you have a special rapid-strike, accompanied by a 
+			permanent modifier that increases your melee damage.
+
+		Phlegmatic (Green)
+			Hidden:
+			(Vampire Phase): The Puppeteer. Your meticulously built mortal network transitions into a 
+			fiercely loyal stable of ghouls. Your Vitae is highly efficient when binding servants, 
+			allowing you to sustain a larger number of Ghouls without draining your blood reserves. 
+			Furthermore, your calculating approach to manipulation makes it much easier to Ghoul 
+			high-prestige mortals, effortlessly bypassing the difficulty they naturally pose for other vampires.
+
+	
+General Traits:
+
+
+Traits included in Character Creation:
+	The Uncanny (1)
+
+	You see too much. Others find you unnerving and strange. 
+
+		-7 CHA, +4 Insight.
+
+	Beguiling (2)
+
+		+5 CHA, 20% faster relationship building through flirting/romance
+
+	The Gutter-born (1)
+
+		The streets raised you rough. You know how to steal when you need to. 
+
+		-2 INT, -2 CHA
+
+		(Hidden description: unlocks steal decision to boost wealth temporarily)
+
+	Iron Vigor (2)
+
+		You are unnaturally sturdy.
+
+		+25 Max Health
+
+		(Vamp: Survive an otherwise deadly injury once every 20 years)
+
+	Scholar (1)
+
+		You take more comfort from dusty tomes than people.
+
+		+7 INT, -3 CHA
+
+	The Beast Whisperer (1)
+
+		Creatures regard you with the same respect you show them.
+
+		Tame pets for free.
+
+		(Vamp: Start your unlife with the Animalism discipline)
+
+	Strong Arm (1)
+
+		Your stature is well suited to combat.
+
+		+3 Prowess, -1 Int
+
+	Longbowman (1)
+		You've spent many leisure hours at the aristocratic archery targets, mastering a martial art long forgotten by the common street thug.
+		+2 Bonus Prowess with Longbows
+
+	Street Duelist (1)
+		You are no stranger to rapier duels in back alleys.
+		+2 Bonus Prowess with Rapiers
+		
+	Light-Footed (1)
+		You tread silently, moving through soot-choked alleys like a ghost.
+		+1 Prowess, +1 Insight.
+		
+	Mysterious Inheritance (1)
+		Due to exceedingly strange circumstances, you possess a strange family heirloom.
+		Begin the game with a Rare Mysterious Relic in your Inventory.
+
+
+
+
+
+
+
+
+
+
+
+
+
+!Drawback Traits:
+
+	The Haunted (-1) (requires The Uncanny)
+
+		-5 Prowess, -10 Max Health, +3 Insight 
+
+		(Hidden Always: Attract spirits with same mechanic as Melancholic)
+
+	Siren (-1)(Requires Beguiling)
+
+		Dangerously alluring. Few forget your face.
+
+		(Hidden always: addictive kiss/stalker mechanic from Sanguine humor)
+
+	Frail Constitution (-0.5)
+
+		Prone to sickness and frailty.
+
+		-10 Max health
+
+	Marked by the Rookeries (-1)
+		You crossed the wrong crime syndicate early in life. The gutters have eyes, and they are looking for you.
+		Periodic dangerous encounters with Underworld thugs.
+		
+		(Vamp: The syndicate's hunters eventually realize you survived death. This triggers a massive, early-game(vampire) combat Reckoning against heavily armed mobsters.)
+	
+	Hemophobia (-1)
+		The sight of blood causes you to become woozy, nauseous, and weak-kneed.
+		-5 Prowess in combat when someone is injured.	
+		
+		(vamp: For 50 years after becoming a vampire,
+		feeding is more difficult and you only drain (gain) half blood.)
+
+	Waking Dreamer (-1)
+
+		You see things that aren't real. They see you too. Sitations appear that aren't real.
+
+		+2 Int
+
+		(Vamp: Reckonings will also appear.)
+
+	Opium Addict (-1)
+
+		Soothed with poppy syrup as a child, you become dependant on it.
+
+		-5 Wealth, -2 Int
+
+	Pox-Scarred (-2)
+
+		As a child you survived the great outbreaks, but your face bears the permanent scars.
+
+		-5 CHA, start most relationships with bad impressions
+
+		(Vamp: Good chance new relationships start at -10 when meeting someone new. 
+		Hidden until eligible for decision requirements: decision to completely heal it with full blood, consumes 30% blood)
+
+	Family Debt (-1)
+
+		Your family begins under a burden of debt.
+
+		-7 Wealth
+
+	Orphaned (-2)
+
+		All that remains of your family is your name.
+
+		-10 Wealth
+	
+		(hidden: generate no parents, siblings, grandparents, etc. Skip the second character creation sheet)
+
+	One-eyed (-1)
+
+		One of your eyes was lost as a child.
+
+		-2 Prowess
