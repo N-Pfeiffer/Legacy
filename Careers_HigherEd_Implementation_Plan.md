@@ -61,6 +61,12 @@ no framework). Key architecture:
    promotion fires once the bar reaches **50%**; disposition **0–50** → bar must reach
    **100%**; disposition **< 0** → promotion impossible. Self-employed careers have no
    boss: bar must reach 100%.
+7. **Important NPCs get households.** Any generated NPC the player will deal with
+   repeatedly or who holds power over them (patron professor, bosses, the crime plan's
+   magistrate) is generated **with a spouse and children** via
+   `generateAdultWithHousehold` (built in 2.4b) — families are where future story hooks
+   (blackmail, leverage, courtship, grief) attach. Bulk background NPCs (coworkers,
+   solo-career peers) stay household-less to keep the population sane.
 
 ---
 
@@ -330,9 +336,20 @@ education.university.sponsorship = {
 ```
 
 - **Patron generation** (on accepting the melancholic offer): professor NPC, age 45–60,
-  high intelligence/insight, `career` = schoolmaster at a senior rank, generated with the
-  `schoolStaff.js` pattern; relationship edge to the player starting at **+30
-  disposition**. He is an ordinary interactable NPC thereafter.
+  high intelligence/insight, `career` = schoolmaster at a senior rank; relationship edge
+  to the player starting at **+30 disposition**. He is an ordinary interactable NPC
+  thereafter. Per locked decision #7, generate him **with a household** — build the
+  shared helper here in `sim/npcFamilyGen.js`:
+
+  ```js
+  export function generateAdultWithHousehold({ age, sex, careerId, wealth })
+  // → { focal, spouse, children, members }
+  ```
+
+  Focal adult (stats skewed toward the career's primary stat, senior rank), spouse
+  (opposite sex, age ±2–8, married), 1–3 children aged `focal.age − randInt(20, 38)`
+  (clamped ≥ 0 — some will be adults). All pushed to `G.people`. Phase 4 (bosses) and
+  the Criminal System plan (magistrate) reuse this helper.
 - **While `active`**: tuition is £0 at either school via the `isFreeRide` helper (2.3).
   The sponsorship path never sets `fatherFunded` — the patron pays even when a rich
   father is alive.
@@ -633,13 +650,16 @@ Assignments:
 
 - `G.workplace = { careerId, bossId, grandBossId, coworkerIds: [], peerIds: [], isBoss: false }`
   (null when the player has no career). Persisted in saves like `G.school`.
-- On player career join (`commitPlayerCareer`): generate via the npc-generation helpers
-  (`npcFamilyGen.js` patterns): boss age 35–55, stats skewed toward the career's
-  primary stat, same career at `rank = player.rank + 1` (capped at top); coworkers within
-  `coworkers` range, ages 18–50, same career at rank 0–1; solo peers get the `role` string
-  stored on the workplace entry (they keep whatever career fits or none — role is display
-  flavor). All get relationship edges to the player (neutral disposition, small random
-  spread) and are interactable like any NPC.
+- On player career join (`commitPlayerCareer`): **boss** (and grand boss, where the
+  career defines one) generated via `generateAdultWithHousehold` (2.4b) — age 35–55,
+  stats skewed toward the career's primary stat, same career at
+  `rank = player.rank + 1` (capped at top), spouse and children included per locked
+  decision #7. **Coworkers** stay household-less (bulk NPCs): within `coworkers` range,
+  ages 18–50, same career at rank 0–1. Solo peers get the `role` string stored on the
+  workplace entry (they keep whatever career fits or none — role is display flavor).
+  All get relationship edges to the player (neutral disposition, small random spread)
+  and are interactable like any NPC. Replacement bosses generated on promotion (4.3)
+  also get households.
 - On leaving a career, generation change, or death: clear `G.workplace` (people persist in
   `G.people` as ordinary NPCs).
 
