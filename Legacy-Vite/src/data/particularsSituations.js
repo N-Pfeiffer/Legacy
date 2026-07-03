@@ -173,13 +173,13 @@ function applyPatronExposeGargoyle(player) {
 }
 
 /** Immersive intro popups — fire after Pass the Year; accept routes to the Situations panel. */
-export function buildEstateImmersiveEvents() {
+export function buildParticularsImmersiveEvents() {
   return [
     {
       id: 'peculiar_patron_offer',
       presentation: 'immersive',
       once: true,
-      domain: 'estate',
+      domain: 'particulars',
       record: 'milestone',
       logContext: 'London Streets',
       eyebrow: () => String(G.year),
@@ -208,7 +208,7 @@ export function buildEstateImmersiveEvents() {
             pendingCaught: false,
             jailedUntilYear: null,
           };
-          player._estateFollowUp = 'peculiar_patron_annual';
+          player._particularsFollowUp = 'peculiar_patron_annual';
         }
       },
       logText: (player, ctx, choice) => (
@@ -221,7 +221,7 @@ export function buildEstateImmersiveEvents() {
     {
       id: 'mudlarks_lockbox_find',
       presentation: 'immersive',
-      domain: 'estate',
+      domain: 'particulars',
       // Finding the box is a discovery beat, not a reward → chronicle only.
       record: 'flavor',
       logContext: 'Thames Mudflats',
@@ -254,7 +254,7 @@ export function buildEstateImmersiveEvents() {
     {
       id: 'peculiar_patron_map_result',
       presentation: 'immersive',
-      domain: 'estate',
+      domain: 'particulars',
       // Each delivery attempt is a minor beat → chronicle only; only the run that
       // completes the bargain (the reward) is worth a permanent Memory.
       record: (player) => (player.patronArc?.completed ? 'milestone' : 'flavor'),
@@ -276,7 +276,7 @@ export function buildEstateImmersiveEvents() {
     {
       id: 'peculiar_patron_caught',
       presentation: 'immersive',
-      domain: 'estate',
+      domain: 'particulars',
       record: 'milestone',
       logContext: 'Newgate',
       eyebrow: () => String(G.year),
@@ -307,13 +307,13 @@ export function buildEstateImmersiveEvents() {
   ];
 }
 
-/** After an estate popup resolves, queue panel situations or caught follow-ups. */
-export function processEstateFollowUp(player, fireSituation) {
+/** After a Particulars popup resolves, queue panel situations or caught follow-ups. */
+export function processParticularsFollowUp(player, fireSituation) {
   if (!player || typeof fireSituation !== 'function') return;
 
-  if (player._estateFollowUp) {
-    const templateId = player._estateFollowUp;
-    delete player._estateFollowUp;
+  if (player._particularsFollowUp) {
+    const templateId = player._particularsFollowUp;
+    delete player._particularsFollowUp;
     fireSituation(player, templateId);
     return;
   }
@@ -324,14 +324,14 @@ export function processEstateFollowUp(player, fireSituation) {
   }
 }
 
-/** Estate situation templates — player-initiated from the Situations panel.
+/** Particulars situation templates — player-initiated from the Situations panel.
  *  blocksPassYear: false makes the popup dismissible (back / click outside). */
-export function buildEstateSituations() {
+export function buildParticularsSituations() {
   return [
     {
       id: 'peculiar_patron_annual',
       blocksPassYear: false,
-      domain: 'estate',
+      domain: 'particulars',
       memory: true,
       logContext: 'The Peculiar Patron',
       title: 'Map the Constabulary Routes',
@@ -350,8 +350,8 @@ export function buildEstateSituations() {
   ];
 }
 
-/** Roll for estate events at year end — intro popups first; ongoing work lives in the panel. */
-export function tickEstateSituations(player, year, fireSituation) {
+/** Roll for Particulars events at year end — intro popups first; ongoing work lives in the panel. */
+export function tickParticularsSituations(player, year, fireSituation) {
   if (!player?.isAlive || typeof fireSituation !== 'function') return;
 
   const arc = ensurePatronArc(player);
@@ -366,10 +366,10 @@ export function tickEstateSituations(player, year, fireSituation) {
     }
   }
 
-  const hasPendingEstateIntro = (player.situations || []).some((s) => (
+  const hasPendingParticularsIntro = (player.situations || []).some((s) => (
     s.templateId === 'peculiar_patron_offer' || s.templateId === 'mudlarks_lockbox_find'
   ));
-  if (hasPendingEstateIntro) return;
+  if (hasPendingParticularsIntro) return;
 
   if (
     !player.isVampire

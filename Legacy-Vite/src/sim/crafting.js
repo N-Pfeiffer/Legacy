@@ -57,6 +57,22 @@ function extraRequirementsMet(player, recipe) {
   return true;
 }
 
+export function recipeHasAnyIngredient(player, recipe) {
+  if (!player || !recipe) return false;
+
+  for (const input of recipe.inputs || []) {
+    if (input.oneOf) {
+      if (input.oneOf.some((opt) => materialCount(player, opt.id) >= 1)) return true;
+    } else if (materialCount(player, input.id) >= 1) {
+      return true;
+    }
+  }
+
+  if (recipe.requiresItem && hasItem(player, recipe.requiresItem)) return true;
+
+  return false;
+}
+
 export function getRecipeLabel(recipe) {
   if (recipe?.label) return recipe.label;
   const out = recipe?.outputs?.[0];

@@ -42,6 +42,9 @@ function findPendingImmersive(player, registry) {
 
   const IMMERSIVE_PRIORITY = [
     'birth_humor',
+    'univ_accept_melancholic',
+    'univ_accept_letters',
+    'univ_accept_gower_street',
     'secondary_enrollment',
     'headmasters_office',
     'peculiar_patron_caught',
@@ -101,8 +104,14 @@ function formatBodyHtml(body, escapeHtml) {
     .replace(/$/, '</p>');
 }
 
-function renderChoicesHtml(step, escapeHtml) {
-  const choices = step.choices || [];
+function resolveChoices(step, player) {
+  const raw = step?.choices;
+  if (typeof raw === 'function') return raw(player) || [];
+  return raw || [];
+}
+
+function renderChoicesHtml(step, player, escapeHtml) {
+  const choices = resolveChoices(step, player);
   const useCards = choices.some((c) => c.description);
 
   if (useCards) {
@@ -126,10 +135,11 @@ function renderChoicesHtml(step, escapeHtml) {
 }
 
 function wireChoiceHandlers(modal, step, tpl, inst, player, ctx, escapeHtml, onAdvance, onComplete) {
+  const choices = resolveChoices(step, player);
   modal.querySelectorAll('[data-immersive-choice]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const choiceId = btn.getAttribute('data-immersive-choice');
-      const choice = step.choices.find((c) => c.id === choiceId);
+      const choice = choices.find((c) => c.id === choiceId);
       if (!choice) return;
 
       if (typeof tpl.onStepChoice === 'function') {
@@ -157,7 +167,8 @@ function renderStepContent(modal, tpl, inst, player, ctx, escapeHtml, onAdvance,
   const title = resolveField(tpl.title, ctx, player);
   const body = resolveField(step.body, ctx, player);
   const acquisition = step.acquisition ? resolveField(step.acquisition, ctx, player) : '';
-  const useHumorGrid = (step.choices || []).some((c) => c.description);
+  const choices = resolveChoices(step, player);
+  const useHumorGrid = choices.some((c) => c.description);
   modal.classList.toggle('immersive-modal--humor-grid', useHumorGrid);
 
   modal.innerHTML = `
@@ -166,7 +177,7 @@ function renderStepContent(modal, tpl, inst, player, ctx, escapeHtml, onAdvance,
       <div class="immersive-title">${escapeHtml(title)}</div>
       <div class="immersive-body">${formatBodyHtml(body, escapeHtml)}</div>
       ${acquisition ? `<div class="immersive-acquisition">${escapeHtml(acquisition)}</div>` : ''}
-      ${renderChoicesHtml(step, escapeHtml)}
+      ${renderChoicesHtml(step, player, escapeHtml)}
     </div>`;
 
   wireChoiceHandlers(modal, step, tpl, inst, player, ctx, escapeHtml, onAdvance, onComplete);
@@ -243,6 +254,7 @@ function openImmersivePopup(player, inst, tpl, deps) {
       apply: () => {
         if (typeof tpl.onComplete === 'function') tpl.onComplete(livePlayer, ctx, choice);
       },
+      declaredEffects: choice.effects,
     });
 
     if (keepPending && typeof tpl.afterComplete === 'function') {

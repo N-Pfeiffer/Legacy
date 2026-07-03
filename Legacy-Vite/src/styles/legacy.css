@@ -453,6 +453,9 @@ body.reduce-motion .player-section.is-flashing {
   box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
   border: 1px solid var(--border);
 }
+.stat-bar--hidden {
+  display: none;
+}
 .stat-fill {
   height: 100%;
   border-radius: 1px;
@@ -499,10 +502,10 @@ body.reduce-motion .player-section.is-flashing {
 }
 
 /* Hobbies panel (Particulars > Hobbies) */
-#est-panel-hobbies {
+#part-panel-hobbies {
   overflow-y: auto;
 }
-#est-panel-hobbies .hobbies-panel {
+#part-panel-hobbies .hobbies-panel {
   flex: 1;
   min-height: 0;
   box-sizing: border-box;
@@ -2786,6 +2789,33 @@ aside::-webkit-scrollbar-thumb:hover { background: var(--accent); }
   background: var(--border-strong);
 }
 .cc-prestige-dot.filled { background: var(--gold); }
+.cc-pay {
+  font-size: 0.85em;
+  color: var(--gold);
+  margin: 4px 0 6px;
+}
+.cc-reqs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+  font-size: 0.8em;
+}
+.cc-req-met { color: var(--green); }
+.cc-req-unmet { color: var(--muted); }
+.career-card.locked .cc-req-unmet { color: var(--red, #c44); opacity: 0.9; }
+.career-promotion-block {
+  margin-top: 16px;
+}
+.career-promotion-blocked {
+  margin-top: 8px;
+  font-size: 0.9em;
+  color: var(--red, #c44);
+  font-style: italic;
+}
+.workplace-view {
+  margin-top: 16px;
+}
 
 /* â”€â”€ Person info modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Opens when the player clicks a person card anywhere in the game.
@@ -3393,6 +3423,13 @@ aside::-webkit-scrollbar-thumb:hover { background: var(--accent); }
   border: 1px solid var(--border-strong);
   border-radius: 2px;
   background: var(--raised);
+}
+.edu-grade-flavor {
+  font-family: var(--body);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-dim);
+  margin: 0 0 12px;
 }
 .edu-grade-head {
   display: flex;
@@ -4421,6 +4458,14 @@ body.no-grain::before { display: none; }
   color: var(--gold);
 }
 
+.memory-log-body .log-item-link {
+  color: var(--text);
+}
+
+.memory-log-body .log-item-link:hover {
+  color: var(--gold);
+}
+
 .memory-log-outcome {
   font-family: var(--heading);
   font-style: italic;
@@ -5038,6 +5083,18 @@ button.family-section-title:active {
   color: var(--text);
 }
 
+/* Persons of Note — star toggle beside the name in the person-info modal. */
+.person-info-pin {
+  border: none; background: none; cursor: pointer;
+  padding: 0 2px; margin-left: 2px;
+  font-size: 18px; line-height: 1;
+  color: var(--muted);
+  vertical-align: middle;
+  transition: color 0.15s;
+}
+.person-info-pin:hover { color: var(--gold); }
+.person-info-pin.is-pinned { color: var(--gold); }
+
 /* Compact card variant â€” used in the Clan tree for descendant
    generations. Slightly smaller portrait + name; trims age/relation
    metadata to keep tiers from getting too tall when they branch wide. */
@@ -5263,7 +5320,10 @@ button.family-section-title:active {
 
 #event-log li.good { border-left-color: var(--green); }
 #event-log li.bad  { border-left-color: var(--red); }
-#event-log li.info { border-left-color: var(--accent2); }
+#event-log em {
+  font-style: italic;
+  color: var(--text-dim);
+}
 
 .log-person-link {
   color: inherit;
@@ -5273,6 +5333,17 @@ button.family-section-title:active {
   cursor: pointer;
 }
 .log-person-link:hover {
+  color: var(--gold);
+}
+
+.log-item-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.log-item-link:hover {
   color: var(--gold);
 }
 
@@ -5351,7 +5422,7 @@ button.family-section-title:active {
   box-shadow: 0 0 22px rgba(var(--glow-bright-rgb), 0.55), inset 0 1px 0 rgba(255,255,255,0.1);
 }
 
-/* Sidebar-action â€” full-width, slightly taller; pinned below attribute panels */
+/* Sidebar-action â€” full-width, slightly taller */
 .action-btn.sidebar-action {
   width: 100%;
   padding: 14px 22px;

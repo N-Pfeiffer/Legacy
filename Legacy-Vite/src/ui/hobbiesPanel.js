@@ -33,6 +33,7 @@ import {
   inputDisplayName,
   inputOwnedCount,
   inputRequiredCount,
+  recipeHasAnyIngredient,
   recipeLockLabel,
   recipeRequiresItemLine,
   runCraft,
@@ -140,7 +141,7 @@ function renderListView(player, panel) {
 
         <div class="placeholder-emblem">♛</div>
 
-        <div class="placeholder-text" data-vocab="estate.hobbies_empty">
+        <div class="placeholder-text" data-vocab="particulars.hobbies_empty">
 
           No pastimes taken up. Idle hands are the devil's workshop.
 
@@ -502,9 +503,9 @@ function renderEndeavorsBody(hobby, player) {
 
 
 function renderCraftingBody(hobby, player) {
-  const recipes = recipesForHobby(hobby.id);
+  const recipes = recipesForHobby(hobby.id).filter((recipe) => recipeHasAnyIngredient(player, recipe));
   if (!recipes.length) {
-    return `<div class="hobby-tab-body"><div class="hobby-empty">No crafting recipes are available yet.</div></div>`;
+    return `<div class="hobby-tab-body"><div class="hobby-empty">No recipes match materials in your inventory.</div></div>`;
   }
 
   const skill = getHobbyLevel(player, hobby.id);
@@ -614,6 +615,8 @@ function wireGatherButtons(panel, player, hobby) {
 
           priority: ANNALS_PRIORITY.FLAVOR,
 
+          html: true,
+
         });
 
       }
@@ -648,6 +651,7 @@ function wireHuntButtons(panel, player) {
           msg: result.message,
           type: result.type || 'good',
           priority: ANNALS_PRIORITY.FLAVOR,
+          html: true,
         });
       }
       hooks.render();
@@ -816,7 +820,7 @@ function renderDetailView(player, panel) {
 
 export function renderHobbiesPanel(player) {
 
-  const panel = document.getElementById('est-panel-hobbies');
+  const panel = document.getElementById('part-panel-hobbies');
 
   if (!panel || !player) return;
 

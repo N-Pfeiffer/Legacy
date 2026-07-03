@@ -1,7 +1,7 @@
 // Public sim barrel — only finished modules.
 export { recomputeJournalFlags, isJournaled } from './journal.js';
 export { runYearTick } from './yearTick.js';
-export { linkSpouses, syncMarriageWealth, backfillMarriageWealth, marryPersons } from './marriage.js';
+export { linkSpouses, syncMarriageWealth, marryPersons } from './marriage.js';
 export { tryConceive, tryConceiveFromPair, clearPregnancy, sanitizePregnancies, currentFertility } from './conception.js';
 export { spawnChild, tickBirths } from './birth.js';
 export {
@@ -19,6 +19,12 @@ export {
   careerName,
   careerRankLabel,
   careerDisplay,
+  careerLabel,
+  careerEligibilityForPlayer,
+  careerRequirementLines,
+  annualPay,
+  entryAnnualPay,
+  peakAnnualPay,
   pickCareerForNPC,
   assignCareerToPerson,
   assignCareerToPersonWithAgeFit,
@@ -28,16 +34,41 @@ export {
   careerWealthTarget,
   tickCareerProgression,
   registerCareerHooks,
+  migrateStaleCareer,
+  progressPlayerCareerOneYear,
+  PROMOTION_CADENCE_YEARS,
+  RETIREMENT_AGE,
 } from './careers.js';
 export {
+  ensureWorkplaceState,
+  clearWorkplace,
+  generateWorkplace,
+  healWorkplaceIfNeeded,
+  workHardForPromotion,
+  deductCareerUpkeep,
+  getBossDisposition,
+  isPromotionBlocked,
+  workplaceRoleLabel,
+  CAREER_UPKEEP_AP,
+  WORK_HARD_AP_COST,
+} from './workplace.js';
+export {
   playerHasDegree,
-  nextDegreeFor,
-  canApplyForDegree,
-  commitDegreeApplication,
   tickEducation,
   educationStageLabel,
   registerEducationTickHooks,
 } from './educationTick.js';
+export {
+  getMoney,
+  addMoney,
+  trySpendMoney,
+  formatMoney,
+  syncSovereignMirror,
+  moneyStandingBand,
+  moneyStandingLabel,
+  startingMoneyForClass,
+  parentWealthForInheritance,
+} from './money.js';
 export { processPlayerEvents, registerEventHooks } from './events.js';
 export { checkMortality, killPerson, registerMortalityHooks } from './mortality.js';
 export { spawnPendingSiblings, registerSiblingHooks } from './siblings.js';

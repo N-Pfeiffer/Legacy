@@ -7,16 +7,35 @@ import {
   listEquipment,
 } from '../sim/personItems.js';
 import {
-  unequipItem,
   isEquipped,
   ensureEquippedSlots,
 } from '../sim/equipment.js';
 import { renderEntryArt } from './renderArt.js';
 import { openItemPopup } from './itemPopup.js';
+import {
+  clearInventoryItemHighlight,
+  isEntryHighlighted,
+  possessionsPanelState,
+  resetInventoryFiltersOnEnter,
+} from './possessionsState.js';
 
-export const possessionsPanelState = {
-  inventoryTab: 'equipment',
+export { possessionsPanelState, resetInventoryFiltersOnEnter } from './possessionsState.js';
+
+export const INVENTORY_FILTER_ORDER = ['equipment', 'consumable', 'unique', 'material', 'component'];
+
+const FILTER_LABELS = {
+  equipment: ITEM_CATEGORIES.equipment,
+  consumable: ITEM_CATEGORIES.consumable,
+  unique: 'Unique Items',
+  material: ITEM_CATEGORIES.material,
+  component: ITEM_CATEGORIES.component,
 };
+
+const SORT_OPTIONS = [
+  { id: 'recent', label: 'Recently added' },
+  { id: 'alphabetical', label: 'Alphabetical' },
+  { id: 'category', label: 'By category' },
+];
 
 const SLOT_DEFS = [
   { key: 'mainHand', label: 'Main Hand' },
@@ -28,7 +47,6 @@ const SLOT_DEFS = [
 
 const JEWELRY_LABELS = ['J1', 'J2', 'J3', 'J4'];
 const ARTIFACT_LABELS = ['A1', 'A2', 'A3', 'A4'];
-const INVENTORY_TABS = ['equipment', 'material', 'component', 'consumable'];
 
 function playerHasAnyInventory(player) {
   if (!player) return false;
@@ -46,6 +64,80 @@ function isOffhandTwoHandLocked(player) {
   const inst = listEquipment(player).find((e) => e.uid === mainUid);
   if (!inst) return false;
   return !!ITEMS_BY_ID[inst.id]?.twoHanded;
+}
+
+function buildInventoryEntries(player) {
+  const entries = [];
+  const materialAcq = player.materialAcq || {};
+
+  for (const inst of listEquipment(player)) {
+    const item = ITEMS_BY_ID[inst.id];
+    if (!item) continue;
+    entries.push({
+      item,
+      itemId: inst.id,
+      uid: inst.uid,
+      acq: inst.acq ?? 0,
+      category: item.category,
+      isUnique: !!item.uniqueItem,
+      uniqueOnly: !!item.uniqueOnly,
+    });
+  }
+
+  for (const [itemId, count] of Object.entries(player.materials || {})) {
+    if (count <= 0) continue;
+    const item = ITEMS_BY_ID[itemId];
+    if (!item) continue;
+    entries.push({
+      item,
+      itemId,
+      count,
+      acq: materialAcq[itemId] ?? 0,
+      category: item.category,
+      isUnique: !!item.uniqueItem,
+      uniqueOnly: !!item.uniqueOnly,
+    });
+  }
+
+  return entries;
+}
+
+function entrySortGroup(entry) {
+  if (entry.isUnique) return 'unique';
+  return entry.category;
+}
+
+function entryMatchesFilters(entry, activeFilters) {
+  if (!activeFilters.length) return true;
+  return activeFilters.some((filter) => {
+    if (filter === 'unique') return entry.isUnique;
+    if (entry.uniqueOnly) return false;
+    return entry.category === filter;
+  });
+}
+
+function sortInventoryEntries(entries, sortMode) {
+  const sorted = [...entries];
+  if (sortMode === 'alphabetical') {
+    sorted.sort((a, b) => (a.item.label || a.itemId).localeCompare(b.item.label || b.itemId));
+    return sorted;
+  }
+  if (sortMode === 'category') {
+    const groupRank = (entry) => {
+      const group = entrySortGroup(entry);
+      const idx = INVENTORY_FILTER_ORDER.indexOf(group);
+      return idx >= 0 ? idx : INVENTORY_FILTER_ORDER.length;
+    };
+    sorted.sort((a, b) => {
+      const ga = groupRank(a);
+      const gb = groupRank(b);
+      if (ga !== gb) return ga - gb;
+      return (b.acq || 0) - (a.acq || 0);
+    });
+    return sorted;
+  }
+  sorted.sort((a, b) => (b.acq || 0) - (a.acq || 0));
+  return sorted;
 }
 
 function renderEquipSlot(player, def, escapeHtml) {
@@ -123,22 +215,45 @@ function renderEquipSection(player, escapeHtml) {
   </section>`;
 }
 
-function renderInventoryTabs(activeTab, escapeHtml) {
-  if (!INVENTORY_TABS.includes(activeTab)) {
-    possessionsPanelState.inventoryTab = 'equipment';
-    activeTab = 'equipment';
-  }
-  const tabs = INVENTORY_TABS.map((key) => {
-    const cls = 'hobby-section-btn' + (key === activeTab ? ' active' : '');
-    return `<button type="button" class="${cls}" data-inventory-tab="${escapeHtml(key)}">${escapeHtml(ITEM_CATEGORIES[key])}</button>`;
+function renderInventoryHeader(sortMode, escapeHtml) {
+  const options = SORT_OPTIONS.map((opt) => {
+    const selected = opt.id === sortMode ? ' selected' : '';
+    return `<option value="${escapeHtml(opt.id)}"${selected}>${escapeHtml(opt.label)}</option>`;
+  }).join('');
+  return `<div class="inventory-header-row">
+    <h3 class="possessions-section-title">Inventory</h3>
+    <select class="inventory-sort-select" data-inventory-sort aria-label="Sort inventory">${options}</select>
+  </div>`;
+}
+
+function renderInventoryFilters(activeFilters, escapeHtml) {
+  const tabs = INVENTORY_FILTER_ORDER.map((key) => {
+    const cls = 'hobby-section-btn' + (activeFilters.includes(key) ? ' active' : '');
+    return `<button type="button" class="${cls}" data-inventory-filter="${escapeHtml(key)}">${escapeHtml(FILTER_LABELS[key])}</button>`;
   }).join('');
   return `<div class="possessions-inventory-tabs hobby-section-nav hobby-section-nav--split">${tabs}</div>`;
 }
 
-function renderFungibleCard(itemId, count, escapeHtml) {
-  const item = ITEMS_BY_ID[itemId];
-  if (!item) return '';
-  return `<button type="button" class="item-grid-card" data-item-id="${escapeHtml(itemId)}" title="${escapeHtml(item.label)}">
+function renderEquipmentCard(entry, player, escapeHtml) {
+  const { item, itemId, uid } = entry;
+  const equipped = isEquipped(player, uid);
+  const eqBadge = equipped ? '<span class="item-equipped-badge">Equipped</span>' : '';
+  const highlightClass = isEntryHighlighted(entry) ? ' has-unread' : '';
+  return `<button type="button" class="item-grid-card${equipped ? ' item-grid-card--equipped' : ''}${highlightClass}"
+    data-item-id="${escapeHtml(itemId)}"
+    data-equipment-uid="${escapeHtml(uid)}"
+    title="${escapeHtml(item.label)}">
+    ${eqBadge}
+    ${renderEntryArt(item, { size: 28, className: 'item-grid-icon', escapeHtml })}
+    <span class="item-grid-label">${escapeHtml(item.label)}</span>
+    <span class="item-grid-type">${escapeHtml(itemTypeLabel(item.type))}</span>
+  </button>`;
+}
+
+function renderFungibleCard(entry, escapeHtml) {
+  const { item, itemId, count } = entry;
+  const highlightClass = isEntryHighlighted(entry) ? ' has-unread' : '';
+  return `<button type="button" class="item-grid-card${highlightClass}" data-item-id="${escapeHtml(itemId)}" title="${escapeHtml(item.label)}">
     <span class="item-stack-badge">×${count}</span>
     ${renderEntryArt(item, { size: 28, className: 'item-grid-icon', escapeHtml })}
     <span class="item-grid-label">${escapeHtml(item.label)}</span>
@@ -146,49 +261,87 @@ function renderFungibleCard(itemId, count, escapeHtml) {
   </button>`;
 }
 
-function renderInventoryGrid(player, tab, escapeHtml) {
-  if (tab === 'equipment') {
-    const instances = listEquipment(player);
-    if (!instances.length) {
-      return `<div class="possessions-inventory-empty">No equipment in inventory.</div>`;
-    }
-    const cards = instances.map((inst) => {
-      const item = ITEMS_BY_ID[inst.id];
-      if (!item) return '';
-      const equipped = isEquipped(player, inst.uid);
-      const eqBadge = equipped ? '<span class="item-equipped-badge">Equipped</span>' : '';
-      return `<button type="button" class="item-grid-card${equipped ? ' item-grid-card--equipped' : ''}"
-        data-item-id="${escapeHtml(inst.id)}"
-        data-equipment-uid="${escapeHtml(inst.uid)}"
-        title="${escapeHtml(item.label)}">
-        ${eqBadge}
-        ${renderEntryArt(item, { size: 28, className: 'item-grid-icon', escapeHtml })}
-        <span class="item-grid-label">${escapeHtml(item.label)}</span>
-        <span class="item-grid-type">${escapeHtml(itemTypeLabel(item.type))}</span>
-      </button>`;
-    }).join('');
-    return `<div class="items-grid">${cards}</div>`;
-  }
-
-  const materials = player.materials || {};
-  const ids = Object.keys(materials).filter(
-    (id) => materials[id] > 0 && ITEMS_BY_ID[id]?.category === tab,
-  );
-  if (!ids.length) {
-    return `<div class="possessions-inventory-empty">No ${escapeHtml(ITEM_CATEGORIES[tab].toLowerCase())} yet.</div>`;
-  }
-  ids.sort((a, b) => (ITEMS_BY_ID[a]?.label || a).localeCompare(ITEMS_BY_ID[b]?.label || b));
-  return `<div class="items-grid">${ids.map((id) => renderFungibleCard(id, materials[id], escapeHtml)).join('')}</div>`;
+function renderEntryCard(entry, player, escapeHtml) {
+  if (entry.uid) return renderEquipmentCard(entry, player, escapeHtml);
+  return renderFungibleCard(entry, escapeHtml);
 }
 
-function wireEquipSlots(panel, player, onChange) {
+function renderInventoryGridContent(entries, sortMode, player, escapeHtml) {
+  if (!entries.length) {
+    return `<div class="possessions-inventory-empty">No items match the current filters.</div>`;
+  }
+
+  if (sortMode !== 'category') {
+    return `<div class="items-grid">${entries.map((e) => renderEntryCard(e, player, escapeHtml)).join('')}</div>`;
+  }
+
+  const byGroup = new Map();
+  for (const entry of entries) {
+    const group = entrySortGroup(entry);
+    if (!byGroup.has(group)) byGroup.set(group, []);
+    byGroup.get(group).push(entry);
+  }
+
+  const sections = INVENTORY_FILTER_ORDER.map((groupKey) => {
+    const groupEntries = byGroup.get(groupKey);
+    if (!groupEntries?.length) return '';
+    groupEntries.sort((a, b) => (b.acq || 0) - (a.acq || 0));
+    const cards = groupEntries.map((e) => renderEntryCard(e, player, escapeHtml)).join('');
+    return `<div class="inventory-category-group">
+      <div class="inventory-category-head">${escapeHtml(FILTER_LABELS[groupKey])}</div>
+      <div class="items-grid">${cards}</div>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  return sections || `<div class="possessions-inventory-empty">No items match the current filters.</div>`;
+}
+
+function renderUnifiedInventoryGrid(player, escapeHtml) {
+  const { activeFilters, sortMode } = possessionsPanelState;
+  const allEntries = buildInventoryEntries(player);
+  if (!allEntries.length) {
+    return `<div class="possessions-inventory-empty">You own nothing yet.</div>`;
+  }
+  const filtered = allEntries.filter((entry) => entryMatchesFilters(entry, activeFilters));
+  const sorted = sortInventoryEntries(filtered, sortMode);
+  return renderInventoryGridContent(sorted, sortMode, player, escapeHtml);
+}
+
+function renderEquipmentOnlyGrid(player, escapeHtml) {
+  const instances = listEquipment(player);
+  if (!instances.length) {
+    return `<div class="possessions-inventory-empty">No equipment in inventory.</div>`;
+  }
+  const entries = instances.map((inst) => {
+    const item = ITEMS_BY_ID[inst.id];
+    return item ? {
+      item,
+      itemId: inst.id,
+      uid: inst.uid,
+      acq: inst.acq ?? 0,
+      category: item.category,
+      isUnique: !!item.uniqueItem,
+      uniqueOnly: !!item.uniqueOnly,
+    } : null;
+  }).filter(Boolean);
+  entries.sort((a, b) => (b.acq || 0) - (a.acq || 0));
+  const cards = entries.map((e) => renderEquipmentCard(e, player, escapeHtml)).join('');
+  return `<div class="items-grid">${cards}</div>`;
+}
+
+function wireEquipSlots(panel, player, escapeHtml, itemPopupOptions, onChange) {
   panel.querySelectorAll('.equip-slot[data-equip-uid]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const uid = btn.dataset.equipUid;
-      if (uid) {
-        unequipItem(player, uid);
-        onChange();
-      }
+      if (!uid) return;
+      const inst = listEquipment(player).find((e) => e.uid === uid);
+      const item = inst ? ITEMS_BY_ID[inst.id] : null;
+      if (!item) return;
+      openItemPopup(item, player, escapeHtml, {
+        ...itemPopupOptions,
+        equipmentUid: uid,
+        onInventoryChange: onChange,
+      });
     });
   });
 }
@@ -204,17 +357,32 @@ function wireItemGridCards(panel, player, escapeHtml, itemPopupOptions, onChange
         equipmentUid: btn.dataset.equipmentUid || null,
         onInventoryChange: onChange,
       });
+      clearInventoryItemHighlight();
+      onChange();
     });
   });
 }
 
 function wireInventoryPanel(panel, player, escapeHtml, itemPopupOptions, onChange) {
-  panel.querySelectorAll('[data-inventory-tab]').forEach((btn) => {
+  panel.querySelectorAll('[data-inventory-filter]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      possessionsPanelState.inventoryTab = btn.dataset.inventoryTab;
+      const filter = btn.dataset.inventoryFilter;
+      if (!filter) return;
+      const { activeFilters } = possessionsPanelState;
+      const idx = activeFilters.indexOf(filter);
+      if (idx >= 0) activeFilters.splice(idx, 1);
+      else activeFilters.push(filter);
       onChange();
     });
   });
+
+  const sortSelect = panel.querySelector('[data-inventory-sort]');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', () => {
+      possessionsPanelState.sortMode = sortSelect.value || 'recent';
+      onChange();
+    });
+  }
 
   wireItemGridCards(panel, player, escapeHtml, itemPopupOptions, onChange);
 }
@@ -222,15 +390,15 @@ function wireInventoryPanel(panel, player, escapeHtml, itemPopupOptions, onChang
 function renderEquipmentInventorySection(player, escapeHtml) {
   return `<section class="possessions-inventory-section possessions-equipment-inventory" aria-label="Equipment inventory">
     <h3 class="possessions-section-title">${escapeHtml(ITEM_CATEGORIES.equipment)}</h3>
-    ${renderInventoryGrid(player, 'equipment', escapeHtml)}
+    ${renderEquipmentOnlyGrid(player, escapeHtml)}
   </section>`;
 }
 
 /**
- * Render the Estate → Equipment panel (equipped slots + equipment inventory).
+ * Render the Particulars → Equipment panel (equipped slots + equipment inventory).
  */
 export function renderEquipmentPanel(player, escapeHtml, itemPopupOptions = {}) {
-  const panel = document.getElementById('est-panel-equipment');
+  const panel = document.getElementById('part-panel-equipment');
   if (!panel || !player) return;
 
   const onChange = typeof itemPopupOptions.onInventoryChange === 'function'
@@ -242,15 +410,15 @@ export function renderEquipmentPanel(player, escapeHtml, itemPopupOptions = {}) 
     ${renderEquipmentInventorySection(player, escapeHtml)}
   </div>`;
 
-  wireEquipSlots(panel, player, onChange);
+  wireEquipSlots(panel, player, escapeHtml, itemPopupOptions, onChange);
   wireItemGridCards(panel, player, escapeHtml, itemPopupOptions, onChange);
 }
 
 /**
- * Render the Estate → Items panel (categorized inventory).
+ * Render the Particulars → Items panel (unified inventory with filters and sort).
  */
 export function renderPossessionsPanel(player, escapeHtml, itemPopupOptions = {}) {
-  const panel = document.getElementById('est-panel-possessions');
+  const panel = document.getElementById('part-panel-possessions');
   if (!panel) return;
 
   const onChange = typeof itemPopupOptions.onInventoryChange === 'function'
@@ -260,19 +428,19 @@ export function renderPossessionsPanel(player, escapeHtml, itemPopupOptions = {}
   if (!playerHasAnyInventory(player)) {
     panel.innerHTML = `<div class="placeholder-card">
       <div class="placeholder-emblem">♛</div>
-      <div class="placeholder-text" data-vocab="estate.possessions_empty">
+      <div class="placeholder-text" data-vocab="particulars.possessions_empty">
         You own nothing yet. The world is still your parents'.
       </div>
     </div>`;
     return { empty: true };
   }
 
-  const tab = possessionsPanelState.inventoryTab;
+  const { sortMode } = possessionsPanelState;
   panel.innerHTML = `<div class="items-panel possessions-panel">
     <section class="possessions-inventory-section" aria-label="Inventory">
-      <h3 class="possessions-section-title">Inventory</h3>
-      ${renderInventoryTabs(tab, escapeHtml)}
-      ${renderInventoryGrid(player, tab, escapeHtml)}
+      ${renderInventoryHeader(sortMode, escapeHtml)}
+      ${renderInventoryFilters(possessionsPanelState.activeFilters, escapeHtml)}
+      ${renderUnifiedInventoryGrid(player, escapeHtml)}
     </section>
   </div>`;
 

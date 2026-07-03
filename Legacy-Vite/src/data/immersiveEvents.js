@@ -27,10 +27,22 @@ const PROGNOSIS = {
     'This one may raise you as much as you raise them."',
 };
 
+/** Shorter annals copy — stops once the physician names the humor. */
+const PROGNOSIS_ANNALS = {
+  sanguine:
+    '"...flush with blood," the doctor chuckles. "A Sanguine temperament."',
+  choleric:
+    '"...ruled by the yellow bile," the doctor sighs. "A Choleric humor."',
+  melancholic:
+    '"...dominated by the black bile." The doctor lowers you. "Melancholic."',
+  phlegmatic:
+    '"...Phlegmatic," the doctor mutters as you stare back without crying.',
+};
+
 function prognosisLogText(humorId) {
   const h = HUMORS[humorId];
   if (!h) return 'The physician records your constitution in the parish ledger.';
-  return PROGNOSIS[humorId] || `The physician names you ${h.label}.`;
+  return PROGNOSIS_ANNALS[humorId] || `The physician names you ${h.label}.`;
 }
 
 /** Immersive event templates — blocking popups with multi-step flows. */

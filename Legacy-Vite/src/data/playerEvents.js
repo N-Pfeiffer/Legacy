@@ -1,6 +1,7 @@
 /** Yearly random player events — static registry. */
 import { clamp, pick } from '../utils/index.js';
 import { statCap } from '../utils/statCap.js';
+import { addMoney, getMoney } from '../sim/money.js';
 
     export const PLAYER_EVENTS = [
       // ─── HEALTH: a healthy year ──────────────────────────────
@@ -112,9 +113,13 @@ import { statCap } from '../utils/statCap.js';
         weight: 8,
         cond: p => p.age >= 18,
         apply: p => {
-          const g = pick([5,10,15]);
+          // annualPay wired in Phase 3; pre-career uses flat £ picks.
+          const annualPay = 0;
+          const g = annualPay > 0
+            ? Math.max(5, Math.round(annualPay * pick([0.2, 0.4, 0.6])))
+            : pick([5, 10, 20]);
           p._lastWealthDelta = g;
-          p.wealth = clamp(p.wealth + g, 0, statCap('wealth', p.isVampire));
+          addMoney(p, g);
         },
         flavor: {
           1800: {
@@ -144,11 +149,14 @@ import { statCap } from '../utils/statCap.js';
       {
         id: 'wealth_loss',
         weight: 6,
-        cond: p => p.wealth > 15 && p.age >= 18,
+        cond: p => getMoney(p) > 10 && p.age >= 18,
         apply: p => {
-          const l = pick([5,10]);
+          const annualPay = 0;
+          const l = annualPay > 0
+            ? Math.max(3, Math.round(annualPay * pick([0.1, 0.3])))
+            : pick([3, 5, 10]);
           p._lastWealthDelta = -l;
-          p.wealth = clamp(p.wealth - l, 0, statCap('wealth', p.isVampire));
+          addMoney(p, -l);
         },
         flavor: {
           1800: { mortal: { log: 'Crop failure or a bad debt — the year cost you.' } },

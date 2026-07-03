@@ -8,29 +8,63 @@ import {
 } from '../sim/annals.js';
 import { grantTrait, hasTrait } from '../sim/traits.js';
 import { addGrade } from '../sim/grade.js';
-import { EDUCATION_TRACKS, trackLabel, trackShortLabel } from '../data/educationTracks.js';
-import { TRACK_TRAIT_IDS } from '../data/traits.js';
 import { weightedPick } from '../utils/weightedPick.js';
-const BACC_WEALTH_GATE = 50;
+import { addMoney } from '../sim/money.js';
+import {
+  UNIVERSITIES,
+  DEGREES,
+  DEGREES_BY_ID,
+  CLASS_LOADS,
+  CLASS_LOADS_BY_ID,
+} from './education.js';
+import {
+  enrollUniversity,
+  declineUniversityOffer,
+  generateUniversityPatron,
+  setUniversityDegree,
+  degreesForSchool,
+  applyClassLoad,
+  classLoadAffordable,
+  classLoadCostLine,
+  needsFatherDeathNotice,
+  markFatherDeathNoticed,
+  tuitionForLoad,
+  isFreeRide,
+} from '../sim/university.js';
+import { canSpendActionPoints, spendActionPoints } from '../sim/actionPoints.js';
+import { getMoney, formatMoney } from '../sim/money.js';
+import { bumpDisposition } from '../sim/relationships.js';
 
 function bumpStat(player, stat, delta) {
   const cap = statCap(stat, !!player.isVampire);
   player[stat] = clamp((player[stat] || 0) + delta, 0, cap);
 }
 
-function enrollInDegree(player, degree, trackId = null) {
-  if (trackId) {
-    player.education.track = trackId;
-    const traitId = TRACK_TRAIT_IDS[trackId];
-    if (traitId) grantTrait(player, traitId);
-  }
-  player.education.stage = degree.inProgress;
-  player.education.since = G.year;
-  proposeAnnals({
-    msg: `You have enrolled in the ${degree.label}${trackId ? ` (${trackShortLabel(trackId)})` : ''}.`,
-    type: 'good',
-    priority: ANNALS_PRIORITY.MAJOR,
-    category: 'education',
+const FATHER_DEATH_NOTICE =
+  "Your father's death has ended more than his life: the bursar's letters now come addressed to you.";
+
+const MELANCHOLIC_ACCEPT_BODY_M =
+  'He introduces himself after a public lecture — an older gentleman in scholar\'s black, ' +
+  'studying you the way an anatomist studies a specimen he suspects of being rare. He says ' +
+  'he has watched you; that he recognizes the particular gravity that sits behind your eyes, ' +
+  'for it sits behind his own. Great minds, he says, are seldom happy ones, and unhappy minds ' +
+  'left idle devour themselves. He is a professor, and a man of some quiet means. He will stand ' +
+  'as your patron — fees, books, and lodging — and asks only that you do not waste.';
+
+const MELANCHOLIC_ACCEPT_BODY_F =
+  'He introduces himself after a public lecture — an older gentleman in scholar\'s black, ' +
+  'studying you the way an anatomist studies a specimen he suspects of being rare. He says ' +
+  'he has watched you; that he recognizes the particular gravity that sits behind your eyes, ' +
+  'for it sits behind his own. Great minds, he says, are seldom happy ones, and unhappy minds ' +
+  'left idle devour themselves. He is a professor, and a man of some quiet means. He will stand ' +
+  'as your patron at the new college on Gower Street, which cares less than most who a mind belongs to.';
+
+function matriculateWithPatron(player, school) {
+  const patron = generateUniversityPatron(player);
+  enrollUniversity(player, {
+    school,
+    fatherFunded: false,
+    sponsorship: { patronId: patron.id, disappointments: 0, active: true },
   });
 }
 
@@ -73,10 +107,9 @@ function applySecondaryEnrollmentChoice(player, choiceId) {
     bumpStat(player, 'intelligence', 3);
   } else if (choiceId === 'arts') {
     if (!player.education.track) player.education.trackPref = 'letters';
-    bumpStat(player, 'charisma', 3);
+    bumpStat(player, 'charisma', 2);
+    player.prowessBonus = (player.prowessBonus || 0) + 1;
   }
-  // A studious start to secondary nudges the new tier's grade.
-  if (choiceId) addGrade(player, 20);
 }
 
 /** Education immersive popups — blocking narrative scenes (not Journal list situations). */
@@ -97,9 +130,9 @@ export function buildEducationImmersiveEvents() {
           id: 'enrollment',
           body: SECONDARY_ENROLLMENT_BODY,
           choices: [
-            { id: 'languages', label: 'Languages and letters', effects: [{ kind: 'stat', stat: 'intelligence', delta: 2 }, { kind: 'stat', stat: 'charisma', delta: 1 }, { kind: 'grade', delta: 20 }] },
-            { id: 'sciences', label: 'Sciences and mathematics', effects: [{ kind: 'stat', stat: 'intelligence', delta: 3 }, { kind: 'grade', delta: 20 }] },
-            { id: 'arts', label: 'Arts and performance', effects: [{ kind: 'stat', stat: 'charisma', delta: 3 }, { kind: 'grade', delta: 20 }] },
+            { id: 'languages', label: 'Languages and letters', effects: [{ kind: 'stat', stat: 'intelligence', delta: 2 }, { kind: 'stat', stat: 'charisma', delta: 1 }] },
+            { id: 'sciences', label: 'Sciences and mathematics', effects: [{ kind: 'stat', stat: 'intelligence', delta: 3 }] },
+            { id: 'arts', label: 'Arts and performance', effects: [{ kind: 'stat', stat: 'charisma', delta: 2 }, { kind: 'stat', stat: 'prowess', delta: 1 }] },
           ],
         },
       ],
@@ -233,14 +266,127 @@ export function buildEducationImmersiveEvents() {
         return 'The Headmaster\'s study taught you how quickly innocence can become a performance.';
       },
     },
+
+    {
+      id: 'univ_accept_melancholic',
+      presentation: 'immersive',
+      once: true,
+      domain: 'education',
+      record: 'milestone',
+      memoryCategory: 'education',
+      logContext: 'University',
+      eyebrow: () => String(G.year),
+      title: 'A Peculiar Kindness',
+      steps: [
+        {
+          id: 'offer',
+          body: (player) => (player.sex === 'F' ? MELANCHOLIC_ACCEPT_BODY_F : MELANCHOLIC_ACCEPT_BODY_M),
+          choices: (player) => {
+            const choices = [];
+            if (player.sex === 'M') {
+              choices.push({ id: 'oxford', label: 'Accept — read at Oxford [Patron pays]' });
+            }
+            choices.push({ id: 'ucl', label: 'Accept — enrol at University College London [Patron pays]' });
+            choices.push({ id: 'decline', label: 'Refuse his charity', complete: true });
+            return choices;
+          },
+        },
+      ],
+      onComplete(player, ctx, choice) {
+        if (choice?.id === 'oxford') matriculateWithPatron(player, 'oxford');
+        else if (choice?.id === 'ucl') matriculateWithPatron(player, 'ucl');
+        else declineUniversityOffer(player);
+      },
+      logText: (player, ctx, choice) => {
+        if (choice?.id === 'decline') return 'You refused the professor\'s charity — for now, the university doors remain shut.';
+        const school = choice?.id === 'oxford' ? 'Oxford' : 'University College London';
+        return `You accepted your patron's support and matriculated at ${school}.`;
+      },
+    },
+
+    {
+      id: 'univ_accept_letters',
+      presentation: 'immersive',
+      once: true,
+      domain: 'education',
+      record: 'milestone',
+      memoryCategory: 'education',
+      logContext: 'University',
+      eyebrow: () => String(G.year),
+      title: 'Letters of Acceptance',
+      steps: [
+        {
+          id: 'letters',
+          body:
+            'Two letters arrive at the house in the same week. The first bears the arms of the ' +
+            'University of Oxford — heavy cream paper, a seal pressed deep as a thumbprint. You are ' +
+            'invited to matriculate among the sons of gentlemen. Your father reads it twice, says ' +
+            'nothing, and instructs that his good claret be brought up from the cellar. He will pay ' +
+            'your way, he announces, so long as there is breath in him — no son of his shall want ' +
+            'for Latin. The second letter is thinner, from the new college on Gower Street, where a ' +
+            'man may study the sciences without swearing to any articles of faith. It promises no ' +
+            'dinners in hall — only lectures, at forty pounds the year. Your father sets it face ' +
+            'down on the table. If it is Gower Street you want, it is your own purse that shall bleed for it.',
+          choices: [
+            { id: 'oxford', label: 'Matriculate at Oxford [Father pays]' },
+            { id: 'ucl', label: 'Enrol at University College London [£40 a year, your own purse]' },
+            { id: 'decline', label: 'Decline them both', complete: true },
+          ],
+        },
+      ],
+      onComplete(player, ctx, choice) {
+        if (choice?.id === 'oxford') enrollUniversity(player, { school: 'oxford', fatherFunded: true });
+        else if (choice?.id === 'ucl') enrollUniversity(player, { school: 'ucl', fatherFunded: false });
+        else declineUniversityOffer(player);
+      },
+      logText: (player, ctx, choice) => {
+        if (choice?.id === 'decline') return 'You set both letters aside — the university could wait.';
+        if (choice?.id === 'oxford') return 'You matriculated at Oxford on your father\'s purse.';
+        return 'You enrolled at University College London — Gower Street, at your own expense.';
+      },
+    },
+
+    {
+      id: 'univ_accept_gower_street',
+      presentation: 'immersive',
+      once: true,
+      domain: 'education',
+      record: 'milestone',
+      memoryCategory: 'education',
+      logContext: 'University',
+      eyebrow: () => String(G.year),
+      title: 'A Letter from Gower Street',
+      steps: [
+        {
+          id: 'letter',
+          body:
+            'A single letter finds you, postage paid in smudged pence rather than a gentleman\'s ' +
+            'frank. University College London — the godless institution on Gower Street — will have ' +
+            'you. They care nothing for your pedigree, your parish, or your professed faith; they ' +
+            'care that the fees are met by Michaelmas. Forty pounds the year for a full course of ' +
+            'lectures, less for fewer. It is not Oxford. But the men who built the railways, and the ' +
+            'men who will build whatever comes after, are sitting in those lecture rooms — and there ' +
+            'is a seat among them with your name upon it, if you can pay for it.',
+          choices: [
+            { id: 'ucl', label: 'Enrol at University College London' },
+            { id: 'decline', label: 'Decline — the fees must wait', complete: true },
+          ],
+        },
+      ],
+      onComplete(player, ctx, choice) {
+        if (choice?.id === 'ucl') enrollUniversity(player, { school: 'ucl', fatherFunded: false });
+        else declineUniversityOffer(player);
+      },
+      logText: (player, ctx, choice) => {
+        if (choice?.id === 'decline') return 'You folded the letter away — the fees must wait.';
+        return 'You enrolled at University College London on Gower Street.';
+      },
+    },
   ];
 }
 
-export function buildEducationSituations({ EDUCATION_LADDER_BY_ID }) {
-  const bacc = EDUCATION_LADDER_BY_ID.baccalaureate;
-  const licentiate = EDUCATION_LADDER_BY_ID.licentiate;
-  const doctorate = EDUCATION_LADDER_BY_ID.doctorate;
-  const universityLogContext = (player) => trackShortLabel(player.education?.track) || 'University';
+export function buildEducationSituations() {
+  const universityLogContext = () => 'University';
 
   return [
     {
@@ -258,23 +404,22 @@ export function buildEducationSituations({ EDUCATION_LADDER_BY_ID }) {
         {
           id: 'eager',
           label: 'Eager to learn',
-          effects: [{ kind: 'stat', stat: 'intelligence', delta: 2 }, { kind: 'grade', delta: 20 }],
+          effects: [{ kind: 'stat', stat: 'intelligence', delta: 2 }, { kind: 'grade', delta: 10 }],
           logText:
             'You met the schoolhouse with open hands: Each lesson sharpened your wits, and the masters noticed your hunger to learn.',
           apply: (player) => {
             bumpStat(player, 'intelligence', 2);
-            addGrade(player, 20);
+            addGrade(player, 10);
           },
         },
         {
           id: 'dragged',
           label: 'Dragged kicking',
-          effects: [{ kind: 'stat', stat: 'prowess', delta: 2 }, { kind: 'grade', delta: 5 }],
+          effects: [{ kind: 'stat', stat: 'prowess', delta: 4 }],
           logText:
             'You fought the schoolhouse door and lost: The struggle toughened your young body, even if your spirit resisted.',
           apply: (player) => {
-            player.prowessBonus = (player.prowessBonus || 0) + 2;
-            addGrade(player, 5);
+            player.prowessBonus = (player.prowessBonus || 0) + 4;
           },
         },
         {
@@ -307,20 +452,22 @@ export function buildEducationSituations({ EDUCATION_LADDER_BY_ID }) {
         {
           id: 'watch',
           label: 'Study the older boys',
-          effects: [{ kind: 'stat', stat: 'cunning', delta: 2 }, { kind: 'grade', delta: 10 }],
+          effects: [{ kind: 'stat', stat: 'cunning', delta: 2 }],
           logText:
             'You watched the yard like a hawk: Who lied, who led, and who paid — and you remembered every detail.',
           apply: (player) => {
             bumpStat(player, 'cunning', 2);
-            addGrade(player, 10);
           },
         },
         {
           id: 'ignore',
           label: 'Keep your head down',
+          effects: [{ kind: 'stat', stat: 'intelligence', delta: 2 }],
           logText:
             'You kept to the wall and let the politics pass you by — safer, if less illuminating.',
-          apply: () => {},
+          apply: (player) => {
+            bumpStat(player, 'intelligence', 2);
+          },
         },
       ],
     },
@@ -341,11 +488,11 @@ export function buildEducationSituations({ EDUCATION_LADDER_BY_ID }) {
           id: 'teachers_pet',
           label: "Become the teacher's pet",
           annalsType: 'good',
-          effects: [{ kind: 'stat', stat: 'intelligence', delta: 8 }, { kind: 'grade', delta: 40 }],
+          effects: [{ kind: 'stat', stat: 'intelligence', delta: 2 }, { kind: 'grade', delta: 40 }],
           logText:
             'You sat at the front and answered every question: Diligence became your reputation, and the faculty took you under their wing.',
           apply: (player) => {
-            bumpStat(player, 'intelligence', 8);
+            bumpStat(player, 'intelligence', 2);
             addGrade(player, 40);
           },
         },
@@ -353,247 +500,94 @@ export function buildEducationSituations({ EDUCATION_LADDER_BY_ID }) {
           id: 'playground_king',
           label: 'Rule the playground',
           annalsType: 'good',
-          effects: [{ kind: 'stat', stat: 'charisma', delta: 8 }, { kind: 'grade', delta: 10 }],
+          effects: [{ kind: 'stat', stat: 'prowess', delta: 4 }],
           logText:
             'You learned to lead with laughter and nerve: The yard moved when you did, and other children looked to you first.',
           apply: (player) => {
-            bumpStat(player, 'charisma', 8);
-            addGrade(player, 10);
+            player.prowessBonus = (player.prowessBonus || 0) + 4;
           },
         },
         {
           id: 'skip_class',
           label: 'Skip class whenever you can',
           effects: [
-            { kind: 'stat', stat: 'prowess', delta: 5 },
-            { kind: 'stat', stat: 'charisma', delta: -3 },
-            { kind: 'grade', delta: -20 },
+            { kind: 'stat', stat: 'charisma', delta: 6 },
+            { kind: 'grade', delta: -30 },
           ],
           logText:
             'Lessons became optional in your mind: You learned other things outdoors, and trouble followed in your wake.',
           apply: (player) => {
-            player.prowessBase = (player.prowessBase || 0) + 3;
-            player.prowessBonus = (player.prowessBonus || 0) + 2;
-            bumpStat(player, 'charisma', -3);
-            addGrade(player, -20);
+            bumpStat(player, 'charisma', 6);
+            addGrade(player, -30);
           },
         },
       ],
     },
 
     {
-      id: 'secondary_streetwise',
+      id: 'univ_degree_choice',
+      autoOpen: true,
+      domain: 'education',
+      record: 'milestone',
+      memoryCategory: 'education',
+      logContext: 'University',
+      title: 'Choose Your Degree',
+      body: (player) => {
+        const school = player.education?.university?.school;
+        const schoolLabel = UNIVERSITIES[school]?.label ?? 'the university';
+        return `You have matriculated at ${schoolLabel}. Declare the field in which you shall labour — the choice shapes your title, not the breadth of your learning.`;
+      },
+      buttons: (player) => {
+        const school = player.education?.university?.school;
+        return degreesForSchool(school).map((deg) => ({
+          id: `degree_${deg.id}`,
+          label: `${deg.label} (${deg.progressCost} progress)`,
+          logText: `You declared for ${deg.label}.`,
+          apply: (p) => setUniversityDegree(p, deg.id),
+        }));
+      },
+    },
+
+    {
+      id: 'univ_class_load',
       autoOpen: true,
       domain: 'education',
       record: 'flavor',
       memoryCategory: 'education',
-      logContext: 'Secondary School',
-      title: 'A Lesson in the Alley',
-      body:
-        'After lessons, you cut through the alley behind the dormitory. Two older students are running a quiet racket — forged hall passes for a few coins.\n\n' +
-        'They have not noticed you yet.',
-      buttons: [
-        {
-          id: 'learn',
-          label: 'Watch and memorize their trick',
-          effects: [{ kind: 'stat', stat: 'cunning', delta: 3 }],
-          logText:
-            'You memorized the forged seal and the lie they told the porter — useful knowledge, if morally grey.',
-          apply: (player) => {
-            bumpStat(player, 'cunning', 3);
-          },
-        },
-        {
-          id: 'report',
-          label: 'Report them to a master',
-          annalsType: 'good',
-          effects: [{ kind: 'stat', stat: 'charisma', delta: 1 }, { kind: 'grade', delta: 15 }],
-          logText:
-            'You reported the racket and earned a nod of approval — and two new enemies in the dormitory.',
-          apply: (player) => {
-            bumpStat(player, 'charisma', 1);
-            addGrade(player, 15);
-          },
-        },
-      ],
-    },
-
-    {
-      id: 'university_enrollment',
-      domain: 'education',
-      logContext: (player) => trackLabel(player.education?.track) || 'University',
-      title: 'Choose Your Track',
-      body: (player) => {
-        const wealth = player.wealth ?? 0;
-        const gateNote =
-          wealth >= BACC_WEALTH_GATE
-            ? 'Your family can bear the fees.'
-            : `Wealth ${wealth} — below the usual gate of ${BACC_WEALTH_GATE}. A patron or scholarship may be your only path.`;
-        return (
-          'The university doors stand open to those with means and merit. Before you enroll, you must declare your field of study.\n\n' +
-          gateNote
-        );
-      },
-      buttons: EDUCATION_TRACKS.map((track) => ({
-        id: `track_${track.id}`,
-        label: track.shortLabel,
-        logText: (player) =>
-          player.wealth < BACC_WEALTH_GATE
-            ? `You wished to study ${track.label}, but the fees remained beyond reach — for now.`
-            : `You declared for ${track.label}: The university recorded your name, and the years of study began in earnest.`,
-        apply: (player) => {
-          if (player.wealth < BACC_WEALTH_GATE) {
-            proposeAnnals({
-              msg: `You cannot afford enrollment in ${track.label} — not yet.`,
-              type: 'bad',
-              priority: ANNALS_PRIORITY.LIFE,
-            });
-            return;
-          }
-          enrollInDegree(player, bacc, track.id);
-        },
-      })),
-    },
-
-    {
-      id: 'university_scholarship',
-      domain: 'education',
       logContext: 'University',
-      title: 'A Scholarship Offer',
-      body:
-        'Your merit has been noticed. A benefactor offers to cover your first years at university — if you accept the obligation of study and the scrutiny that comes with charity.',
-      buttons: [
-        {
-          id: 'accept_letters',
-          label: 'Accept — Letters & Humanities',
-          logText:
-            'You accepted the benefactor\'s charity for Letters & Humanities: Pride stung, but the gates of learning opened all the same.',
-          apply: (player) => {
-            player.wealth = clamp(player.wealth + 15, 0, statCap('wealth', !!player.isVampire));
-            enrollInDegree(player, bacc, 'letters');
-          },
-        },
-        {
-          id: 'accept_natural',
-          label: 'Accept — Natural Philosophy',
-          logText:
-            'You accepted the benefactor\'s charity for Natural Philosophy: The scrutiny of charity weighed on you, but so did the opportunity.',
-          apply: (player) => {
-            player.wealth = clamp(player.wealth + 15, 0, statCap('wealth', !!player.isVampire));
-            enrollInDegree(player, bacc, 'natural_philosophy');
-          },
-        },
-        {
-          id: 'decline',
-          label: 'Decline for now',
-          logText:
-            'You turned the scholarship down: Pride, or prudence — only time would tell whether you had chosen wisely.',
-          apply: (player) => {
-            player.education.scholarshipDeclined = G.year;
-            proposeAnnals({
-              msg: 'You turned the offer down. Pride, or prudence — only time will tell.',
-              type: 'info',
-              priority: ANNALS_PRIORITY.LIFE,
-            });
-          },
-        },
-      ],
-    },
-
-    {
-      id: 'licentiate_enrollment',
-      domain: 'education',
-      logContext: (player) => trackLabel(player.education?.track) || 'Licentiate',
-      title: 'Pursue the Licentiate',
+      title: 'This Year\'s Classes',
       body: (player) => {
-        const track = trackLabel(player.education?.track);
-        return (
-          `Your Baccalaureate is earned. The faculty invites you to continue toward the Licentiate${track ? ` in the tradition of ${track}` : ''}.\n\n` +
-          `Required wealth: ${licentiate.wealthGate}. You have ${player.wealth}.`
+        const lines = [];
+        if (needsFatherDeathNotice(player)) {
+          lines.push(FATHER_DEATH_NOTICE);
+          markFatherDeathNoticed(player);
+        }
+        const school = UNIVERSITIES[player.education?.university?.school]?.label ?? 'university';
+        lines.push(
+          `Another year at ${school}. Choose how much of yourself you shall give to lectures this term — each load costs tuition and time.`
         );
+        return lines.join('\n\n');
       },
-      buttons: [
-        {
-          id: 'confirm',
-          label: 'Begin Licentiate',
-          logText: (player) =>
-            player.wealth < licentiate.wealthGate
-              ? 'You wished to pursue the Licentiate, but your purse could not bear the cost.'
-              : 'You accepted the faculty\'s invitation: The Licentiate years began, and your name was entered in the college rolls.',
-          apply: (player) => {
-            if (player.wealth < licentiate.wealthGate) {
-              proposeAnnals({
-                msg: 'You lack the means to continue your studies.',
-                type: 'bad',
-                priority: ANNALS_PRIORITY.LIFE,
-              });
-              return;
+      buttons: (player) => CLASS_LOADS.map((load) => {
+        const affordable = classLoadAffordable(player, load);
+        const costLine = classLoadCostLine(player, load);
+        return {
+          id: `load_${load.id}`,
+          label: `${load.label} (${costLine})`,
+          disabled: load.id !== 'skip' && !affordable,
+          logText: load.id === 'skip'
+            ? 'You did not attend classes this year — your purse and your hours were spared.'
+            : `You chose ${load.label.toLowerCase()} this year.`,
+          apply: (p) => {
+            const result = applyClassLoad(p, load.id);
+            if (result?.reason === 'money') {
+              proposeAnnals({ msg: 'You cannot afford that course load.', type: 'bad', priority: ANNALS_PRIORITY.LIFE });
+            } else if (result?.reason === 'ap') {
+              proposeAnnals({ msg: 'You lack the hours for that course load.', type: 'bad', priority: ANNALS_PRIORITY.LIFE });
             }
-            enrollInDegree(player, licentiate);
           },
-        },
-        {
-          id: 'wait',
-          label: 'Not yet',
-          logText:
-            'You deferred the Licentiate: The academy would wait — for a time — and you would return when you were ready.',
-          apply: (player) => {
-            proposeAnnals({
-              msg: 'You deferred the Licentiate. The academy will wait — for a time.',
-              type: 'info',
-              priority: ANNALS_PRIORITY.LIFE,
-            });
-          },
-        },
-      ],
-    },
-
-    {
-      id: 'doctorate_enrollment',
-      domain: 'education',
-      logContext: (player) => trackLabel(player.education?.track) || 'Doctorate',
-      title: 'Pursue the Doctorate',
-      body: (player) => {
-        const track = trackLabel(player.education?.track);
-        return (
-          `The highest title awaits: Doctorate${track ? ` in ${track}` : ''}. Two more years of thesis, examination, and faculty judgment.\n\n` +
-          `Required wealth: ${doctorate.wealthGate}. You have ${player.wealth}.`
-        );
-      },
-      buttons: [
-        {
-          id: 'confirm',
-          label: 'Begin Doctorate',
-          logText: (player) =>
-            player.wealth < doctorate.wealthGate
-              ? 'You wished to pursue the Doctorate, but the final ascent demanded coin you did not have.'
-              : 'You accepted the highest challenge: Thesis, examination, and faculty judgment — the Doctorate had begun.',
-          apply: (player) => {
-            if (player.wealth < doctorate.wealthGate) {
-              proposeAnnals({
-                msg: 'You lack the means to pursue the Doctorate.',
-                type: 'bad',
-                priority: ANNALS_PRIORITY.LIFE,
-              });
-              return;
-            }
-            enrollInDegree(player, doctorate);
-          },
-        },
-        {
-          id: 'wait',
-          label: 'Not yet',
-          logText:
-            'You chose to pause before the final ascent: The thesis could wait, and so could the title.',
-          apply: (player) => {
-            proposeAnnals({
-              msg: 'You chose to pause before the final ascent. The thesis can wait.',
-              type: 'info',
-              priority: ANNALS_PRIORITY.LIFE,
-            });
-          },
-        },
-      ],
+        };
+      }),
     },
 
     // ── Yearly university situations ──
@@ -603,9 +597,7 @@ export function buildEducationSituations({ EDUCATION_LADDER_BY_ID }) {
       record: 'flavor',
       logContext: universityLogContext,
       title: 'Debate Society',
-      body: (player) =>
-        `The ${trackShortLabel(player.education?.track) || 'university'} debating hall fills with sharp voices. ` +
-        'An argument is forming — and someone expects you to take a side.',
+      body: 'The debating hall fills with sharp voices. An argument is forming — and someone expects you to take a side.',
       buttons: [
         {
           id: 'speak',
@@ -664,7 +656,7 @@ export function buildEducationSituations({ EDUCATION_LADDER_BY_ID }) {
           logText:
             'In the confusion you pocketed what you could and ran: Old habits die hard, and reagents spend like coin.',
           apply: (player) => {
-            player.wealth = clamp(player.wealth + 5, 0, statCap('wealth', !!player.isVampire));
+            addMoney(player, 5);
           },
         },
       ],
@@ -708,7 +700,7 @@ export function buildEducationSituations({ EDUCATION_LADDER_BY_ID }) {
       domain: 'education',
       record: 'flavor',
       logContext: universityLogContext,
-      title: 'A Patron Offers Funding',
+      title: 'A Benefactor\'s Offer',
       body: 'A wealthy benefactor seeks a bright student to advise on matters of learning — and perhaps loyalty.',
       buttons: [
         {
@@ -717,7 +709,7 @@ export function buildEducationSituations({ EDUCATION_LADDER_BY_ID }) {
           logText:
             'You accepted a patron\'s coin: The fees eased, but another\'s interests now sat beside your own.',
           apply: (player) => {
-            player.wealth = clamp(player.wealth + 8, 0, statCap('wealth', !!player.isVampire));
+            addMoney(player, 8);
             bumpStat(player, 'charisma', 1);
           },
         },
@@ -778,7 +770,7 @@ export function buildEducationSituations({ EDUCATION_LADDER_BY_ID }) {
           logText:
             'You paid the term fees from your own purse: Thin meals followed, but you remained enrolled.',
           apply: (player) => {
-            player.wealth = clamp(player.wealth - 3, 0, statCap('wealth', !!player.isVampire));
+            addMoney(player, -3);
           },
         },
         {
@@ -787,7 +779,41 @@ export function buildEducationSituations({ EDUCATION_LADDER_BY_ID }) {
           logText:
             'You borrowed from family to meet the fees: The coin kept you at your books — and indebted in other ways.',
           apply: (player) => {
-            player.wealth = clamp(player.wealth - 1, 0, statCap('wealth', !!player.isVampire));
+            addMoney(player, -1);
+          },
+        },
+      ],
+    },
+
+    {
+      id: 'sponsor_patron_summons',
+      domain: 'education',
+      record: 'flavor',
+      logContext: universityLogContext,
+      title: 'Your Patron Summons You',
+      body:
+        'Your patron requests a favour — transcription, cataloguing a shelf of his library, ' +
+        'or some other task befitting a grateful scholar. It will cost you an hour or two.',
+      buttons: [
+        {
+          id: 'help',
+          label: 'Attend to his request (2 AP)',
+          logText: 'You answered your patron\'s summons — tedious work, but he seemed pleased.',
+          apply: (player) => {
+            if (!canSpendActionPoints(player, 2)) return;
+            spendActionPoints(player, 2);
+            const patronId = player.education?.university?.sponsorship?.patronId;
+            if (patronId) bumpDisposition(player, patronId, 5, G.year);
+            bumpStat(player, 'intelligence', 1);
+          },
+        },
+        {
+          id: 'decline',
+          label: 'Beg off this year',
+          logText: 'You declined your patron\'s summons — he did not take it well.',
+          apply: (player) => {
+            const patronId = player.education?.university?.sponsorship?.patronId;
+            if (patronId) bumpDisposition(player, patronId, -5, G.year);
           },
         },
       ],
@@ -795,80 +821,78 @@ export function buildEducationSituations({ EDUCATION_LADDER_BY_ID }) {
   ];
 }
 
-/** Pool of yearly academic situations keyed by track affinity. */
+/** Pool of yearly academic situations while at university. */
 const UNIVERSITY_YEARLY_POOL = [
   { id: 'univ_debate_society', weight: 12 },
-  { id: 'univ_lab_accident', weight: 8, tracks: ['medicine', 'natural_philosophy'] },
-  { id: 'univ_thesis_crisis', weight: 10, minStage: 'licentiate_in_progress' },
+  { id: 'univ_lab_accident', weight: 8, degrees: ['medicine', 'bsc'] },
+  { id: 'univ_thesis_crisis', weight: 10, minProgress: 300 },
   { id: 'univ_patron_offer', weight: 8 },
   { id: 'univ_academia_seminar', weight: 6 },
   { id: 'univ_tuition_strain', weight: 10 },
+  { id: 'sponsor_patron_summons', weight: 10, requiresSponsorship: true },
 ];
 
-export function pickUniversitySituation(player, inProgressStage) {
-  const track = player.education?.track;
+export function pickUniversitySituation(player) {
+  if (player.education?.stage !== 'university') return null;
+  const uni = player.education.university;
+  const degreeId = uni?.degreeId;
+  const progress = uni?.progress ?? 0;
+  const hasSponsorship = !!uni?.sponsorship?.active;
+
   const eligible = UNIVERSITY_YEARLY_POOL.filter((entry) => {
-    if (entry.tracks && track && !entry.tracks.includes(track)) return false;
-    if (entry.minStage === 'licentiate_in_progress') {
-      const licentiateStages = new Set([
-        'licentiate_in_progress',
-        'doctorate_in_progress',
-      ]);
-      if (!licentiateStages.has(inProgressStage)) return false;
-    }
+    if (entry.degrees && degreeId && !entry.degrees.includes(degreeId)) return false;
+    if (entry.minProgress != null && progress <= entry.minProgress) return false;
+    if (entry.requiresSponsorship && !hasSponsorship) return false;
+    if (entry.id === 'univ_patron_offer' && hasSponsorship) return false;
     return true;
   });
   if (!eligible.length) return null;
   return weightedPick(eligible).id;
 }
 
-export function shouldOfferScholarship(player) {
-  if (player.education?.stage !== 'completed') return false;
-  if (player.wealth >= BACC_WEALTH_GATE) return false;
-  if (player.education?.scholarshipDeclined === G.year) return false;
-  if (player.education?.scholarshipOffered) return false;
-  const merit =
-    hasTrait(player, 'scholar') ||
-    (player.intelligence ?? 0) >= 55;
-  return merit;
+export function buildUniversityProgressHtml(player) {
+  const ed = player.education || {};
+  const uni = ed.university;
+  if (!uni || ed.stage !== 'university') return '';
+
+  const degree = uni.degreeId ? DEGREES_BY_ID[uni.degreeId] : null;
+  const cost = degree?.progressCost ?? 400;
+  const progress = uni.progress ?? 0;
+  const pct = Math.min(100, Math.round((progress / cost) * 100));
+  const loadLabel = uni.lastClassLoadId
+    ? (CLASS_LOADS_BY_ID[uni.lastClassLoadId]?.label ?? '—')
+    : '—';
+
+  return `
+    <div class="edu-progress-wrap">
+      <div class="edu-progress-bar"><div class="edu-progress-fill" style="width:${pct}%"></div></div>
+      <div class="edu-progress-label">${progress} / ${cost} progress</div>
+    </div>
+    <div class="edu-apply-row"><span>This year's load</span><span>${escapeHtml(loadLabel)}</span></div>`;
 }
 
-export function buildFocusPanelHtml(player, { EDUCATION_LADDER_BY_ID, HIGHER_ED_IN_PROGRESS_STAGES }) {
+export function buildUniversityPanelHtml(player) {
   const ed = player.education || {};
-  if (!HIGHER_ED_IN_PROGRESS_STAGES.has(ed.stage)) {
-    return '';
-  }
+  const uni = ed.university;
+  if (!uni || ed.stage !== 'university') return '';
 
-  const tier = Object.values(EDUCATION_LADDER_BY_ID).find((d) => d.inProgress === ed.stage);
-  const yearsIn = ed.since != null ? Math.max(0, G.year - ed.since) : 0;
-  const track = trackLabel(ed.track);
-  const duration = tier?.duration ?? 1;
-  const progress = Math.min(100, Math.round((yearsIn / duration) * 100));
-
-  const blurbs = {
-    baccalaureate_in_progress:
-      'Lectures by day, texts by night. You are laying the foundation of an educated life.',
-    licentiate_in_progress:
-      'The arguments grow finer; the faculty knows your name. Mastery is within reach.',
-    doctorate_in_progress:
-      'The thesis weighs on every hour. One final ascent separates you from the title.',
-  };
+  const schoolLabel = UNIVERSITIES[uni.school]?.label ?? uni.school;
+  const degree = uni.degreeId ? DEGREES_BY_ID[uni.degreeId] : null;
+  const progressHtml = buildUniversityProgressHtml(player);
 
   return `<div class="career-page">
-    <div class="career-page-title">Academic Focus</div>
+    <div class="career-page-title">At University</div>
     <div class="career-detail-headline">
-      <div class="career-detail-rank">${escapeHtml(tier?.label ?? 'Higher Education')}</div>
-      ${track ? `<div class="career-detail-since">${escapeHtml(track)}</div>` : ''}
+      <div class="career-detail-rank">${escapeHtml(schoolLabel)}</div>
+      <div class="career-detail-since">${escapeHtml(degree?.label ?? 'Degree undeclared')}</div>
     </div>
-    <div class="edu-progress-wrap">
-      <div class="edu-progress-bar"><div class="edu-progress-fill" style="width:${progress}%"></div></div>
-      <div class="edu-progress-label">Year ${yearsIn + 1} of ${duration}</div>
-    </div>
-    <div class="career-page-subtitle">${escapeHtml(blurbs[ed.stage] || 'Your studies demand the better part of your days.')}</div>
-    <div class="career-page-subtitle" style="margin-top:12px;">
-      This year's academic life will surface as Situations in your Journal when something needs your attention.
-    </div>
+    ${progressHtml}
   </div>`;
+}
+
+/** @deprecated use buildUniversityPanelHtml */
+export function buildFocusPanelHtml(player) {
+  return buildUniversityPanelHtml(player);
 }
 
 function escapeHtml(s) {

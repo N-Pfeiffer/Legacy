@@ -1,5 +1,6 @@
 import { G, getPlayer, getPerson } from '../state/gameState.js';
 import { ANNALS_PRIORITY, proposeAnnals } from '../sim/annals.js';
+import { appendAnnalsOutcomeHtml } from '../sim/situationLog.js';
 import { currentFertility } from '../sim/conception.js';
 import {
   getAvailableInteractChoices,
@@ -115,10 +116,13 @@ export function handlePersonInteractAction(p, actionId, { refreshPopup, refreshF
   }
 
   if (result.message) {
+    const msg = result.effects?.length
+      ? appendAnnalsOutcomeHtml(result.message, result.effects)
+      : result.message;
     proposeAnnals({
-      msg: result.message,
+      msg,
       type: result.type || 'info',
-      html: result.html ?? true,
+      html: true,
       priority: ANNALS_PRIORITY.LIFE,
     });
   }

@@ -27,7 +27,13 @@ function bumpHealth(player, delta) {
   player.health = clamp((player.health || 0) + delta, 0, cap);
 }
 
+import { addMoney } from '../sim/money.js';
+
 function bumpWealth(player, delta) {
+  if (player?.isPlayer) {
+    addMoney(player, delta);
+    return;
+  }
   const cap = statCap('wealth', !!player.isVampire);
   player.wealth = clamp((player.wealth || 0) + delta, 0, cap);
 }
@@ -62,7 +68,7 @@ export function buildRookeriesSituations() {
     {
       id: 'syndicate_searches',
       blocksPassYear: false,
-      domain: 'estate',
+      domain: 'particulars',
       logContext: 'The Rookeries',
       title: 'The Syndicate Searches',
       body: SYNDICATE_SEARCHES_BODY,
@@ -73,7 +79,7 @@ export function buildRookeriesSituations() {
       id: 'syndicate_collects',
       autoOpen: true,
       dismissible: false,
-      domain: 'estate',
+      domain: 'particulars',
       record: 'flavor',
       logContext: 'The Rookeries',
       title: 'The Syndicate Collects',

@@ -1,158 +1,57 @@
+Notes/questions for Playtesting:
+	Play through ages 0-30 with rich character, then poor character. Does it feel meaningful?
+
+
+
+
 	To Do:
 Later add mechanic (potion? 50 in any stat?) to increase AP cap
 
+
+
+Consider currency system
+	could keep class system in place for NPCs, replace it for players with actual $$
+
+	Keep plenty of hobby materials, but make the economy super punishing so player must sell refined high end products to make any
+	real money?
+
 General
+	Character Creation point buy should shows how many points each stat increase cost
+
+	rename cholerics "The Swift Ascent" to "The Hasty"
+
+	Sanguine Player should have 50 more max health
+
+	Show inventory UI even when player has no items
+
+	Write descriptions for careers and hobbies 
+
+	Criminal System 
+        Label near Wealth: Suspicion 
+        Minor crimes (pickpocketing, petty theft) 5 Suspicion 
+        Major Crimes (Murder, Grand Theft) 25 suspcision 
+
+        Reduce suspicion with 
+            Decision: Bribe a local Magistrate. Money to lower suspicion. 
+            Natural decay -5 a year
+
+		Poacher 
+			suspicion chance
+			hunting item drops
+
+		River Pirate
+			suspicion chance
+			theft item drops
 	
-	hitting study in education should not take you to a decision, just keep it in 
-	education
-
-	You Begin School give 4 prowess, no grade for dragged kicking, only 10 grade for eager.
-
-	Sharp Eyes in the Yard no grade, Keep Head Down gives +2 int
-
-	A Crossroads at School teachers pet gives only 2 int, +40 grade, rule the playground gives 
-	4 prowess, no grade. Skip Class gives 6 charisma, -30 grade. 
-
-	Secondary School popup event should not give grade. Arts and performances should give 2 Charisma 
-	and 1 prowess.
-
-	Should be able to view Secondary School students as primary schooler. 
-
-	Secondary School does not have many students, and students very quickly leave and rarely join
-
-	Studying with someone doesn't show result/gain in annals.
-
-	A Lesson in the Alley remove event
-
-	Star/save system for people
-
-	Clicking equipped item should pop it up, not unequip. Unequip should be an option in popup. 
-
-	Equipment UI box sizes should be flipped, smaller jewelry and artifcats, bigger hands, body, head, back
-
-	Inventory should show all items by default, but clicking the categories should sort it and only show that category. Clicking the category again should 
-	unsort them. 
-
-	Mudlarks Lockbox should be in a new category -> Unique Items. Filters should be (from left to right) Equipment - Consumables - Unique Items - Materials - Components
-		Items can be in Unique Item category and another one. Mudlarks Lockbox should ONLY be unique items. 
-
 	Item Icons and Descriptions
 	
 	Material Gathering Balance
 
-	Forage Event in the Annals shows "botany skill now _" but it should show the increase value instead.
-		Adjust forage flavor text to reflect outcome AFTER item system implimented.
-
-	Extend Family generation to aunts and uncles (So that the player has cousins)
-
 	Botany Deep Forest should require discovery through hunting in the forest
-
-	Only show crafting recipes if the player has at least 1 item involved
-
 
 	Headmasters office Mysterious Relic in text should allow you to click for item popup
 		Remove +5 cunning from staying silent choice. (staying silent button does nothing first click, second click ended event?)
 
-	The size of the hands/body/head/back slots are too small on large screens, and the jewelry and artifact slots are too big, but when the screen is smaller it reverses so that the jewelry and artifacts shrink appropriately and the main slots get bigger (relatively). The jewelry and artifacts should be smaller on larger screens, and the other slots bigger. 
-
-
-
-### Deliberately deferred (stubbed with TODOs in Items and Hobbies Plan)
-	- **Vampire Blood/Hunger stat** and everything depending on it: the Hunting **"Drain for Blood"**
-	branch and the **Blood Vial** vampire effect. Build the mortal/non-Blood side only; guard the
-	Blood side. *(Per your direction — wired later.)*
-	- **Séance spirit spawning.** Gate + ingredient consumption are built; actual minion creation is
-	stubbed because the minion system has display (`minionIds`/herd/ghoul) but **no creation helper,
-	no 'spirit' type, no expiry tick**. (Whole-minion-system work is its own effort.)
-	- **Witness events** on hunting mortals — chance is rolled, consequence is a TODO.
-	- **Dark Ritual** (Mysticism 75) — design says WIP; stub only.
-
-	### Explicitly excluded from this plan (not even stubbed)
-	- **Hidden attribute system** (yield modifiers, social/disposition/enthrallment modifiers, max
-	herd/ghoul counts — `Legacy_ToDo.txt:46-49`). Per your decision, **left out entirely**, including
-	schema fields. Catalog entries carry only the stats they need for the equip/craft loop.
-	- **Durability & enchantment.** The hybrid `equipment:[{uid,id}]` model **leaves room** for these
-	as future field additions, but no durability decay, repair, enchant sources, or UI are built.
-	- **Temporary buffs.** Consumable effects are **permanent stat bumps only** (e.g. Elixir of
-	Comprehension = permanent +1 Int). No timed/expiring buff framework.
-	- **Multi-year tome translation-to-fluency loop** (`Items_and_Hobbies.txt:316-319`). Translate/
-	Create Tome are one-shot crafts this pass; the language-progression loop is future work.
-	- **Vampire daytime hobby gating / ghoul delegation** (`Items_and_Hobbies.txt:3` — "for daytime
-	hobbies they will be required to build out/ghoul for the relevant hobby decision"). Not modeled;
-	vampires use hobbies the same as mortals for now. Flag as a known future mechanic.
-	- **NPCs gathering/crafting/equipping.** This pass is **player-only** for the new loop. NPCs keep
-	their existing item interactions; they do not run endeavors, craft, or equip from these systems.
-	- **Painted raster art.** The raster pipeline (folder convention, `renderArt` `image` kind, sizes,
-	`art/README.md` + prompt guidance) is **built and wired** (§2A.8d), but the actual painted
-	`.webp` files (zone banners, vampire haven scenes) are **not produced this pass** — they need an
-	image model/artist. Zones/items ship with SVG + per-zone CSS art; flipping an entry to
-	`kind:'image'` later is the only edit needed.
-	- **Angling depth.** Only one provisional starter zone is added; the full Angling catalog/zones,
-	and the "ease your stress / Health" framing, are left thin and marked provisional.
-	- **Balance tuning.** All drop weights, quantities, AP/skill costs, and resolved `?` recipe costs
-	are **provisional** (`// BALANCE: provisional`). This pass makes the loop *functional*, not tuned.
-	- **Education/University overhaul, careers, social/criminal systems, mobile conversion** and other
-	`Legacy_ToDo.txt` items unrelated to items/hobbies — out of scope except the specific Cunning
-	school events (Phase 6) and the small hobby/forage polish (Phase 8).
-
-
-
-
-
-
-
-Education
-	Create Plan: Impliment Education section. Impliment Study decision. Impliment Study interaction.
-	Priorities: Progress Bar UI -> UI + Classmates/Teacher Generation -> Event changes and Grade stats
-	Future: University overhaul/system, cheating/bribing for grade points
-	 Complete overhaul of the UI.
-		First thing the top of UI shows grade progress bar (0-100 and letter) similar to hobbies skill bar. Each tier of school (primary, secondary, University) 
-		resets this counter to 0/100 F, but records the grade letter earned for the tier of school in memories. UI progress bar should have shortcuts
-		to Study Decision and move the dropout Button here. Dropout flavor text should appear on the popup after clicking "dropout" and have a confirm 
-		option.
-
-			The player will have grades A,B,C,D, and F, and each of these will be 0-100 scales. Each time they hit 100 they start at the next letter 
-			grade at 0. Player advances through multiple grades influenced by already created school events, players focus, and Study decision or personal
-			interaction with other NPC. If left uninfluenced, player will have the default F grade. F Grade at end of tier means expelled, cannot reapply.
-			Grade object is temporary and is removed when exiting the section of school, but recorded in memories alongside the popup rewards
-			
-		
-			Grade letter earned at end of tier gives event popup:
-				A: +5 Int, +2 Insight, +1 Charisma
-				B: +3 Int, +1 Insight, +1 Charisma
-				C: +1 Int
-				D: 
-				F: -10 Health (The teacher smacks you with a ruler and you get expelled)
-		
-		Under UI Progress bar 
-		Social View shows "Primary School" with the students in rows sorted by age, oldest at the top, and the Headmaster and both teachers iare in their own row on the top.
-		Teachers should have families generated with the same system
-
-			Primary ages 6-11
-				1st female Teacher, 3-5 students of each age generated when player enters school, each with their own families fully generated like players.
-				Each year the 11 year olds turning 12 persistently transfer to Secondary school and 3-5 new 6 year old students are generated.
-				Primary School NPC generation should include the NPC and their Parents and Siblings. No grandparents or aunts and uncles. 
-
-
-					You Begin School event shows stat effects in option buttons. Remove "The Schoolmaster" physical description (old severe...pipe smoke)
-					Primary Crossroads event shows stat effects in the option buttons.
-
-			Secondary ages 12-16. UI changes to show "Secondary School" but under the classmates view is a toggle menu to show the primary school that
-			continues being generated until player exits Secondary School.
-				2nd female Teacher, students are not generated only transfered from Primary school. Every student above age 14 has chance to dropout based on 
-				their Int. Students will continue being generated in primary school until player graduates to university. 
-
-					Secondary School Event shows stat effects in buttons 
-					Remove The Road Ahead event, remove education.intent
-
-		Interaction	Study 2AP [req: In Primary,Secondary school, or University. Disposition>19]:
-			"Study with" to raise personal grade by 34, and disposition by 5. 
-		Decision Study 2AP [req: In Primary,Secondary school, or University]:
-			"Study" to study alone and raise personal grade by 25 and Int by 0.25
-
-
-
-Backburner
 	Hide artifacts equipment section until mysticism is 20. continue showing them as equipment but do not allow them to be equipped
 	until 20. 
 
@@ -239,10 +138,6 @@ Interactions:
 
 
 
-Careers
-	
-	Add work coleuges, bosses
-	
 Social system
 	Specific Sibling and Family events and interactions
 
@@ -256,25 +151,30 @@ Social system
 Decisions
 	Adoption for parentless children or relatives
 
-Mobile conversion 
-	
 
-	Specific:
-		Change in-game layout to be more dynamic. Main/center screen should remain complete with Bloodline/Station/Particulars/Journal headers remaining
+UI
+	Family Tree View 
+		Semantic Zooming, level of detail increases as zoom does. Fully zoomed: Portrait, Age, First+Last Name, etc 
+		Fully zoomed out: color coded geometric nodes connected by lines. 
 
-			Collapse left and right side bars with narrow (mobile) screen. Add buttons that appear under the main game window on either side to popout
+		Toggle button under characters to minimze their lines.
+
+		Color code lines with filters (Supernatural filter could show a red line connecting through, non-supernatural people greyed out)
+
+		Pinned people highlighted
+
+	Filter/tag descendants possibly by bloodlines/family branches
+
+	Collapse left and right side bars with narrow (mobile) screen. Add buttons that appear under the main game window on either side to popout
 			the Stats/Settings left sidebar and the rightside Annals sidebar overtop of the main screen. Clicking the main screen minimizes the sidebar.
 			Only one sidebar allowed at a time, clicking the other one minimizes the previous one.
 
-		Confirm button for choices such as Humor selection at character creation.
+	Confirm button for choices such as Humor selection at character creation.
 
-		Pass the Year button should move above the "You" panel on the left sidebar
-
-		Save Menu needs responsive UI
+	Save Menu needs responsive UI and delete all saves shortcut button
 
 Backburner
-	Hide artifacts equipment section until mysticism is 20. continue showing them as equipment but do not allow them to be equipped
-	until 20. 
+
 
 
 
@@ -350,7 +250,14 @@ Vampire Section:
 
 		8. The Underworld (+wealth +Suspicion, high level control unlocks various plots)
 
-		
+		- **Vampire Blood/Hunger stat** and everything depending on it: the Hunting **"Drain for Blood"**
+	branch and the **Blood Vial** vampire effect. Build the mortal/non-Blood side only; guard the
+	Blood side. *(Per your direction — wired later.)*
+	- **Séance spirit spawning.** Gate + ingredient consumption are built; actual minion creation is
+	stubbed because the minion system has display (`minionIds`/herd/ghoul) but **no creation helper,
+	no 'spirit' type, no expiry tick**. (Whole-minion-system work is its own effort.)
+	- **Witness events** on hunting mortals — chance is rolled, consequence is a TODO.
+	- **Dark Ritual** (Mysticism 75) — design says WIP; stub only.
 
 		
 

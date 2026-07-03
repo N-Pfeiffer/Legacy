@@ -2,8 +2,10 @@ import { getPerson, getPlayer, getCurrentSection } from '../state/gameState.js';
 import { escapeHtml } from './eventLog.js';
 import { careerDisplay } from '../sim/careers.js';
 import { relationLabel } from './relations.js';
-import { focalStatsHtml } from './bloodline.js';
+import { focalStatsHtml, renderBloodline } from './bloodline.js';
 import { showSection, setSubTab } from './navigation.js';
+import { navigateToPlayerInventory } from './itemAnnalsNav.js';
+import { isPinned, togglePin } from '../sim/pins.js';
 import {
   renderPersonActionBarHtml,
   renderPersonTraitsPanelHtml,
@@ -66,7 +68,7 @@ export function closePersonInfoModal() {
 export function personInfoHeaderHtml(p, player) {
   const relLabel = relationLabel(p, player, {
     prefix:    'Your ',
-    fallback:  'Kin',
+    fallback:  '',
     selfLabel: 'Yourself',
   });
   const career = careerDisplay(p);
@@ -88,9 +90,14 @@ export function personInfoHeaderHtml(p, player) {
           <div class="person-info-hint">Click portrait to view their bloodline</div>
         </div>
         <div class="person-info-identity">
-          <div class="person-info-name">${hooks.personNameHtml(p)}${p.isVampire ? ' <span class="nature-mark">Vampire</span>' : ''}</div>
+          <div class="person-info-name">${hooks.personNameHtml(p)}${p.isVampire ? ' <span class="nature-mark">Vampire</span>' : ''}${
+            p.isPlayer ? '' : (() => {
+              const pinned = isPinned(player, p.id);
+              return ` <button type="button" class="person-info-pin${pinned ? ' is-pinned' : ''}" data-person-info-pin title="${pinned ? 'Remove from Persons of Note' : 'Add to Persons of Note'}" aria-label="${pinned ? 'Remove from Persons of Note' : 'Add to Persons of Note'}">${pinned ? '★' : '☆'}</button>`;
+            })()
+          }</div>
           <div class="person-info-meta">${escapeHtml(metaParts.join(' · '))}</div>
-          <div class="person-info-rel">${escapeHtml(relLabel)}</div>
+          ${relLabel ? `<div class="person-info-rel">${escapeHtml(relLabel)}</div>` : ''}
           ${career ? `<div class="person-info-career">${escapeHtml(career)}</div>` : ''}
         </div>
       </div>
@@ -107,6 +114,17 @@ export function wirePersonInfoPortrait(content, p) {
     if (getCurrentSection() !== 'bloodline') showSection('bloodline');
     hooks.setFocal(p.id);
   });
+
+  const pinBtn = content.querySelector('[data-person-info-pin]');
+  pinBtn?.addEventListener('click', () => {
+    const nowPinned = togglePin(getPlayer(), p.id);
+    pinBtn.classList.toggle('is-pinned', nowPinned);
+    pinBtn.textContent = nowPinned ? '★' : '☆';
+    const label = nowPinned ? 'Remove from Persons of Note' : 'Add to Persons of Note';
+    pinBtn.title = label;
+    pinBtn.setAttribute('aria-label', label);
+    if (getCurrentSection() === 'bloodline') renderBloodline();
+  });
 }
 
 export function wirePersonInfoActionBar(content, p) {
@@ -120,6 +138,11 @@ export function wirePersonInfoActionBar(content, p) {
       }
     },
     onItems: () => {
+      if (p.isPlayer) {
+        closePersonInfoModal();
+        navigateToPlayerInventory();
+        return;
+      }
       if (personInfoState.view === 'items' && personInfoState.personId === personId) {
         renderPersonInfoDetailsView(personId);
       } else {

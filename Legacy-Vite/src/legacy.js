@@ -28,7 +28,7 @@ import {
   currentSection,
   setCurrentSection,
 } from './state/gameState.js';
-import { registerSaveMigrationDeps } from './state/saveSystem.js';
+import { registerSaveMigrationDeps, SAVE_REJECTED, SAVE_REJECT_MESSAGE } from './state/saveSystem.js';
 import {
   renderFamilyTab,
   defaultFamilyCollapseState,
@@ -77,7 +77,8 @@ import {
   CREATION_TRAIT_BUDGET,
 } from './sim/traits.js';
 import { assignRandomHumor, backfillNpcHumors } from './sim/humorPersonality.js';
-import { linkSpouses, syncMarriageWealth, backfillMarriageWealth } from './sim/marriage.js';
+import { linkSpouses, syncMarriageWealth } from './sim/marriage.js';
+import { startingMoneyForClass, syncSovereignMirror } from './sim/money.js';
 import {
   getAvailableInteractChoices,
   performPersonInteraction,
@@ -94,17 +95,24 @@ import {
   applyInheritedStats,
 } from './state/personFactory.js';
 import { randomName, randomSurname } from './data/names.js';
-import { CAREER_TRACK_REQUIREMENTS, trackLabel, trackShortLabel } from './data/educationTracks.js';
+import {
+  UNIVERSITIES,
+  DEGREES,
+  DEGREES_BY_ID,
+  trackLabel,
+} from './data/education.js';
 import {
   buildEducationSituations,
   buildEducationImmersiveEvents,
   pickUniversitySituation,
-  shouldOfferScholarship,
+  buildUniversityPanelHtml,
+  buildUniversityProgressHtml,
   buildFocusPanelHtml,
 } from './data/educationSituations.js';
+import { leaveUniversity, setUniversityDegree, degreesForSchool } from './sim/university.js';
 import { recordSituationResolution, recordMilestone, renderSituationPendingMetaHtml } from './sim/situationLog.js';
 import { buildImmersiveEvents, isImmersiveTemplate } from './data/immersiveEvents.js';
-import { buildEstateSituations, buildEstateImmersiveEvents, tickEstateSituations, processEstateFollowUp } from './data/estateSituations.js';
+import { buildParticularsSituations, buildParticularsImmersiveEvents, tickParticularsSituations, processParticularsFollowUp } from './data/particularsSituations.js';
 import { buildRookeriesSituations } from './data/rookeriesSituations.js';
 import { buildPrisonSituations } from './data/prisonSituations.js';
 import {
@@ -137,6 +145,7 @@ import {
 import { ITEMS, ITEMS_BY_ID } from './data/items.js';
 import { clearItems, grantItem, hasItem, removeItem, migratePersonInventory } from './sim/playerItems.js';
 import { closeItemPopup, getOpenItemPopupId, refreshOpenItemPopup, wireItemPopupOverlay } from './ui/itemPopup.js';
+import { wireAnnalsItemLinks } from './ui/itemAnnalsNav.js';
 import {
   effectiveCharisma,
   effectiveInsight,
@@ -161,13 +170,21 @@ import {
   wireProposeMarriagePanel,
   wirePersonPanelBack,
 } from './ui/personPanels.js';
-import { buildDecisions } from './data/decisions.js';
+import {
+  buildDecisions,
+  studyEligible,
+} from './data/decisions.js';
 import {
   closeDecisionPopup,
   isDecisionPopupOpen,
   openMudlarkLockboxPopup,
   wireDecisionPopupOverlay,
 } from './ui/decisionPopup.js';
+import {
+  closeStudyPopup,
+  openStudyPopup,
+  wireStudyPopupOverlay,
+} from './ui/studyPopup.js';
 import { openMarriageProposalResultPopup } from './ui/marriageProposalPopup.js';
 import { isProposalAttemptAction } from './data/marriageProposal.js';
 import { initializeMudlarkFromFind, migrateMudlarkLockboxToItems } from './sim/mudlarkLockbox.js';
@@ -182,6 +199,12 @@ import {
   careerName,
   careerRankLabel,
   careerDisplay,
+  careerLabel,
+  careerEligibilityForPlayer,
+  careerRequirementLines,
+  entryAnnualPay,
+  peakAnnualPay,
+  annualPay,
   pickCareerForNPC,
   assignCareerToPerson,
   assignCareerToPersonWithAgeFit,
@@ -191,12 +214,21 @@ import {
   careerWealthTarget,
   tickCareerProgression,
   registerCareerHooks,
+  PROMOTION_CADENCE_YEARS,
+  RETIREMENT_AGE,
 } from './sim/careers.js';
 import {
-  playerHasDegree,
-  nextDegreeFor,
-  canApplyForDegree,
-  commitDegreeApplication,
+  generateWorkplace,
+  workHardForPromotion,
+  isPromotionBlocked,
+  workplaceRoleLabel,
+  ensureWorkplaceState,
+  healWorkplaceIfNeeded,
+  WORK_HARD_AP_COST,
+} from './sim/workplace.js';
+import { getRelationshipOrDefault } from './sim/relationships.js';
+import { canSpendActionPoints } from './sim/actionPoints.js';
+import {
   tickEducation,
   educationStageLabel,
   registerEducationTickHooks,
@@ -263,14 +295,10 @@ import {
   CAREERS_BY_ID,
   SCHOOL_WORK_MIN_AGE,
   SCHOOL_WORK_HEALTH_COST_PER_YEAR,
+  PLAYER_CAREERS,
+  PLAYER_CAREER_GROUPS,
+  SOCIAL_GROUP_LABELS,
 } from './data/careers.js';
-import {
-  EDUCATION_LADDER,
-  EDUCATION_LADDER_BY_ID,
-  HIGHER_ED_IN_PROGRESS_STAGES,
-  COMPLETED_DEGREE_STAGES,
-  COMPLETED_DEGREE_INDEX,
-} from './data/education.js';
 import { PLAYER_EVENTS } from './data/playerEvents.js';
 
 export function loadLegacyIntoDocument() {
@@ -1058,7 +1086,7 @@ export function loadLegacyIntoDocument() {
     // To inspect a save in DevTools console:
     //   inspectSave('legacy:slot:1')
 
-    const SAVE_SCHEMA      = 28;
+    const SAVE_SCHEMA      = 30;
     const SAVE_SLOT_COUNT  = 10;
     const SAVE_KEY_PREFIX  = 'legacy';
     const SAVE_KEY_AUTO    = `${SAVE_KEY_PREFIX}:autosave`;
@@ -1078,7 +1106,7 @@ export function loadLegacyIntoDocument() {
       minionIds: [], masterId: null, minionType: null,
       yearBorn: null, yearDied: null,
       health: 100,
-      charisma: 50, intelligence: 50, wealth: 0, insight: 0, cunning: 0,
+      charisma: 50, intelligence: 50, wealth: 0, money: 0, insight: 0, cunning: 0,
       prowessBase: 0, prowessBonus: 0,
       fertilityBase: 80, vampireFertilityBonus: 0,
       pregnant: { active: false, conceivedYear: null, fatherId: null },
@@ -1217,207 +1245,9 @@ export function loadLegacyIntoDocument() {
     //
     //   if (save.schema < 8) { ...; save.schema = 8; }
     function migrateSave(save) {
-      // schema 1 → 2: no field rewrites needed. The schema bump is a marker so
-      // that the rest of the system knows era-aware code paths are available.
-      // Old year values pass through untouched.
-
-      if (save.schema < 3) {
-        // Re-roll careerPickAge for everyone (the default 18 from
-        // PERSON_DEFAULTS would otherwise make every old adult eligible
-        // immediately, which is correct for backfill but means children
-        // would all be assigned at exactly 18 going forward — we want the
-        // proper spread).
-        for (const p of save.people) {
-          if (p.careerPickAge === 18) {
-            // Spread 18-30 for the proper distribution. We can't tell which
-            // ones already had this field meaningfully set, so we reroll all
-            // 18s on the assumption that no one rolled this field before
-            // schema 3 (they didn't — it didn't exist).
-            p.careerPickAge = 18 + Math.floor(Math.random() * 13);
-          }
-        }
-        // Backfill careers for adult NPCs who have already passed their pick age.
-        for (const p of save.people) {
-          if (!p.isPlayer && p.isAlive && p.career == null && p.age >= p.careerPickAge) {
-            const careerId = pickCareerForNPC(p, save.year);
-            if (careerId) {
-              p.career = { id: careerId, since: save.year - Math.min(p.age - p.careerPickAge, 5) };
-            }
-          }
-        }
+      if (!save || typeof save.schema !== 'number' || save.schema < SAVE_SCHEMA) {
+        return { [SAVE_REJECTED]: true, message: SAVE_REJECT_MESSAGE };
       }
-
-      if (save.schema < 4) {
-        // For each existing career, derive rank and yearsAtRank.
-        // Heuristic: one rank tier per ~10 years in career, capped by the
-        // career's actual rankLadder length. yearsAtRank gets the leftover
-        // so the next promotion check fires at the natural cadence.
-        for (const p of save.people) {
-          if (!p.career) continue;
-          if (typeof p.career.rank !== 'number') {
-            const yearsInCareer = Math.max(0, save.year - (p.career.since || save.year));
-            const career = CAREERS_BY_ID[p.career.id];
-            const maxRank = career ? Math.max(0, career.rankLadder.length - 1) : 0;
-            // Soft cap: even an old NPC doesn't auto-jump to the top — they
-            // had to earn ranks. Cap at floor(years / 10), bounded by maxRank.
-            const derivedRank = Math.min(maxRank, Math.floor(yearsInCareer / 10));
-            p.career.rank = derivedRank;
-            p.career.yearsAtRank = yearsInCareer % 10;
-          }
-        }
-      }
-
-      if (save.schema < 5) {
-        // Backfill education stage from age. Old saves had no education
-        // tracking, so we derive a stage that matches the person's current
-        // age bracket. The `since` is approximated to the year they would
-        // have entered that stage.
-        for (const p of save.people) {
-          if (p.education && p.education.stage && p.education.stage !== 'none') continue;
-          const stage =
-            p.age < 6   ? 'none' :
-            p.age < 12  ? 'primary' :
-            p.age < 17  ? 'secondary' :
-                          'completed';
-          const sinceAge =
-            stage === 'primary'   ? 6 :
-            stage === 'secondary' ? 12 :
-            stage === 'completed' ? 17 :
-                                    null;
-          const since = (sinceAge != null) ? save.year - (p.age - sinceAge) : null;
-          p.education = { stage, since };
-        }
-      }
-
-      if (save.schema < 6) {
-        // Higher education tiers (baccalaureate / licentiate / doctorate)
-        // didn't exist before schema 6. No old person could have those
-        // stages, so the migration is a no-op. We bump the schema marker
-        // so the rest of the system knows higher-ed code paths are
-        // available.
-      }
-
-      if (save.schema < 7) {
-        // Situations didn't exist before schema 7. Initialize the empty
-        // array on every person. We don't retroactively fire any situations
-        // for existing players — going back in time and saying "by the way
-        // you have an unresolved school-starting choice from your childhood"
-        // would be jarring. Old saves keep their unmarked history.
-        for (const p of save.people) {
-          if (!Array.isArray(p.situations)) p.situations = [];
-        }
-      }
-
-      if (save.schema < 8) {
-        // Annals / event log were DOM-only before schema 8. Old saves start
-        // with an empty log — we can't reconstruct what was already lost.
-        if (!Array.isArray(save.eventLog)) save.eventLog = [];
-      }
-
-      if (save.schema < 9) {
-        if (save.annalsCandidate !== null && typeof save.annalsCandidate !== 'object') {
-          save.annalsCandidate = null;
-        }
-        if (!('annalsCandidate' in save)) save.annalsCandidate = null;
-      }
-
-      if (save.schema < 10) {
-        for (const p of save.people) {
-          migratePerson(p);
-        }
-      }
-
-      if (save.schema < 11) {
-        for (const p of save.people) {
-          if (!Array.isArray(p.situationLog)) p.situationLog = [];
-        }
-      }
-
-      if (save.schema < 13) {
-        for (const p of save.people) {
-          if (!('prison' in p)) p.prison = null;
-          migratePatronJailToPrison(p, save.year);
-        }
-      }
-
-      if (save.schema < 14) {
-        for (const p of save.people) {
-          if (!Array.isArray(p.items)) p.items = [];
-        }
-      }
-
-      if (save.schema < 15) {
-        for (const p of save.people) {
-          migratePatronRelicToItem(p);
-        }
-      }
-
-      if (save.schema < 16) {
-        const player = save.people.find((p) => p.isPlayer);
-        if (player) {
-          migratePlayerRelationships(player, save.year, save.people);
-        }
-      }
-
-      if (save.schema < 17) {
-        const player = save.people.find((p) => p.isPlayer);
-        if (player) {
-          migratePlayerRelationships(player, save.year, save.people);
-        }
-      }
-
-      if (save.schema < 18) {
-        backfillNpcHumors(save.people);
-      }
-
-      if (save.schema < 19) {
-        backfillMarriageWealth(save.people);
-      }
-
-      if (save.schema < 20) {
-        const byId = Object.fromEntries((save.people || []).map((p) => [p.id, p]));
-        sanitizePregnancies(save.people, (id) => byId[id]);
-      }
-
-      if (save.schema < 21) {
-        const player = save.people.find((p) => p.isPlayer);
-        if (player) backfillRelationshipEdgeFloors(player);
-      }
-
-      if (save.schema < 22) {
-        if (!Array.isArray(save.memories)) save.memories = [];
-        delete save.annalsCandidate;
-      }
-
-      if (save.schema < 26) {
-        // Situation Log retired as a display surface. Fold each person's
-        // situationLog[] into the resolvedSituations ledger (gating-only).
-        for (const p of save.people) {
-          foldSituationLogToLedger(p);
-        }
-      }
-
-      if (save.schema < 27) {
-        for (const p of save.people) {
-          migratePersonInventory(p);
-          if (!p._possessionItemBonuses) {
-            migrateLegacyItemAcquireBonuses(p);
-          }
-        }
-      }
-
-      if (save.schema < 28) {
-        for (const p of save.people) {
-          if (typeof p.cunning !== 'number') {
-            const insight = p.insight ?? 0;
-            const age = p.age ?? 0;
-            // BALANCE: provisional — adults get a small baseline from insight
-            p.cunning = age >= 12 ? Math.min(15, Math.round(insight * 0.15)) : 0;
-          }
-        }
-      }
-
-      // Always end by stamping current schema.
       save.schema = SAVE_SCHEMA;
       return save;
     }
@@ -1644,6 +1474,7 @@ export function loadLegacyIntoDocument() {
         eventLog:      G.eventLog || [],
         memories:      G.memories || [],
         school:        G.school || null,
+        workplace:     G.workplace || null,
         nextId:        _id,
         // Player-level metadata for slot display
         meta: {
@@ -1666,11 +1497,18 @@ export function loadLegacyIntoDocument() {
       G.eventLog        = save.eventLog || [];
       G.memories        = save.memories || [];
       G.school          = save.school || null;
+      G.workplace       = save.workplace || null;
       // Normalize the school shape (no generation here — the next year tick
       // populates a cohort for an old in-school save). Safe across save round-trips.
       if (G.school) ensureSchoolState();
+      if (G.workplace) ensureWorkplaceState();
       syncMemoryIdFromSave(G.memories);
       setNextId(save.nextId || G.people.reduce((m, p) => Math.max(m, p.id), 0));
+      const loadedPlayer = getPlayer();
+      if (loadedPlayer) {
+        syncSovereignMirror(loadedPlayer);
+        healWorkplaceIfNeeded(loadedPlayer);
+      }
     }
 
     // Try to write a save to localStorage. Returns { ok, error? }.
@@ -1744,6 +1582,7 @@ export function loadLegacyIntoDocument() {
     function loadFromSlot(slotIndex) {
       const key = slotIndex === 0 ? SAVE_KEY_AUTO : SAVE_KEY_SLOT(slotIndex);
       const save = readSave(key);
+      if (save?.[SAVE_REJECTED]) return { ok: false, error: save.message };
       if (!save) return { ok: false, error: 'Slot is empty.' };
       applySave(save);
       enterGameScreen();
@@ -1810,6 +1649,10 @@ export function loadLegacyIntoDocument() {
       reader.onload = () => {
         try {
           const save = migrateSave(JSON.parse(reader.result));
+          if (save?.[SAVE_REJECTED]) {
+            onDone?.({ ok: false, error: save.message });
+            return;
+          }
           applySave(save);
           enterGameScreen();
           onDone?.({ ok: true });
@@ -2298,6 +2141,77 @@ export function loadLegacyIntoDocument() {
 
         if (auntUncle.age >= 18) assignCareerToPersonWithAgeFit(auntUncle, G.year);
         G.people.push(auntUncle);
+
+        // Give settled aunts/uncles a spouse and children (the player's cousins).
+        spawnSpouseAndCousins(auntUncle, lineSurname);
+      }
+    }
+
+    // Marry off an aunt/uncle and give them children — the player's cousins.
+    // Married-in spouses have no generated extended family (no in-laws).
+    function spawnSpouseAndCousins(auntUncle, lineSurname) {
+      if (auntUncle.age < 20) return;                 // too young to be settled
+      if (Math.random() > 0.75) return;               // ~25% stay single/childless. BALANCE: provisional
+
+      const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+      const spouseSex = auntUncle.sex === 'M' ? 'F' : 'M';
+      const spouseAge = Math.max(18, auntUncle.age + ri(-4, 4));
+
+      // Marriage surname convention (mirrors the player's parents): the wife
+      // takes the husband's surname, keeping her birth name as a maiden name;
+      // children take the husband's surname.
+      let coupleSurname, spouseSurname, spouseMaiden = null;
+      if (auntUncle.sex === 'M') {
+        coupleSurname = lineSurname;                  // uncle keeps the family line
+        spouseSurname = lineSurname;
+        spouseMaiden  = randomSurname();
+      } else {
+        coupleSurname = randomSurname();              // aunt marries into husband's line
+        spouseSurname = coupleSurname;
+        auntUncle.maidenName = lineSurname;
+        auntUncle.surname    = coupleSurname;
+      }
+
+      const spouse = createPerson({
+        firstName:  randomName(spouseSex),
+        surname:    spouseSurname,
+        sex:        spouseSex,
+        age:        spouseAge,
+        generation: -1,
+      });
+      spouse.yearBorn = G.year - spouseAge;
+      if (spouseMaiden) spouse.maidenName = spouseMaiden;
+      applyInheritedStats(spouse, rollAdultStats());
+      snapshotBirthStats(spouse);
+      assignRandomHumor(spouse);
+      linkSpouses(auntUncle, spouse);
+      if (spouse.age >= 18) assignCareerToPersonWithAgeFit(spouse, G.year);
+      syncMarriageWealth(auntUncle, spouse);
+      G.people.push(spouse);
+
+      // Children (cousins) — each parent at least ~16 at the child's birth.
+      const maxChildAge = Math.min(auntUncle.age, spouse.age) - 16;
+      if (maxChildAge < 0) return;
+      const kids = rollSiblingCount({ min: 1, max: 3 });
+      for (let i = 0; i < kids; i++) {
+        const childSex = Math.random() < 0.5 ? 'M' : 'F';
+        const childAge = ri(0, Math.min(maxChildAge, 20));
+        const cousin = createPerson({
+          firstName:  randomName(childSex),
+          surname:    coupleSurname,
+          sex:        childSex,
+          age:        childAge,
+          generation: 0,
+          parentIds:  [auntUncle.id, spouse.id],
+        });
+        cousin.yearBorn = G.year - childAge;
+        applyInheritedStats(cousin, inheritStats(auntUncle, spouse));
+        snapshotBirthStats(cousin);
+        assignRandomHumor(cousin);
+        auntUncle.childIds.push(cousin.id);
+        spouse.childIds.push(cousin.id);
+        if (cousin.age >= 18) assignCareerToPersonWithAgeFit(cousin, G.year);
+        G.people.push(cousin);
       }
     }
 
@@ -2316,6 +2230,8 @@ export function loadLegacyIntoDocument() {
       G.people  = [];
       G.eventLog = [];
       G.memories = [];
+      G.school = null;
+      G.workplace = null;
 
       const surname = cc.lastName;
 
@@ -2332,7 +2248,8 @@ export function loadLegacyIntoDocument() {
       player.socialClass  = cc.socialClass;
       player.charisma     = cc.charisma;
       player.intelligence = cc.intelligence;
-      player.wealth       = cc.wealth;
+      player.wealth       = 0;
+      player.money        = startingMoneyForClass(cc.socialClass);
       player.insight      = cc.insight;
       player.prowessBase  = cc.prowess;
       player.health       = 100;
@@ -2347,6 +2264,7 @@ export function loadLegacyIntoDocument() {
       // Player's birth stats are their character-creation stats — snapshot now,
       // before anything (events, ageing) can shift the live numbers.
       snapshotBirthStats(player);
+      syncSovereignMirror(player);
       G.people.push(player);
       refreshActionPoints(player);
 
@@ -2388,7 +2306,9 @@ export function loadLegacyIntoDocument() {
       father.insight       = fatherRoll.insight;
       father.fertilityBase = fatherRoll.fertilityBase;
       father.prowessBase   = fatherRoll.prowessBase;
-      father.wealth        = clamp(cc.wealth + pick([-10,-5,0,5,10]), 20, 100);
+      const householdDrift = pick([-10, -5, 0, 5, 10]);
+      const householdWealth = clamp(cc.wealth + householdDrift, 20, 100);
+      father.wealth        = householdWealth;
 
       // Mother has a maiden name from before she married the father.
       const motherMaiden = randomSurname();
@@ -2404,6 +2324,7 @@ export function loadLegacyIntoDocument() {
       mother.insight       = motherRoll.insight;
       mother.fertilityBase = motherRoll.fertilityBase;
       mother.prowessBase   = motherRoll.prowessBase;
+      mother.wealth        = householdWealth;
 
       linkSpouses(father, mother);
       snapshotBirthStats(father);
@@ -2433,7 +2354,8 @@ export function loadLegacyIntoDocument() {
         assignCareerToPersonWithAgeFit(parent, G.year);
         if (parent.career) {
           const c = CAREERS_BY_ID[parent.career.id];
-          const typicalStart = c ? Math.round((c.startAge[0] + c.startAge[1]) / 2) : 22;
+          const typicalStart = c?.requirements?.minAge
+            ?? (c?.schoolCompatible ? 14 : 22);
           const yearsIn = Math.min(10, parent.age - typicalStart);
           if (yearsIn > 0) parent.career.since = G.year - yearsIn;
 
@@ -2593,6 +2515,7 @@ export function loadLegacyIntoDocument() {
       wireGameScreen();
       wireItemPopupOverlay();
       wireDecisionPopupOverlay();
+      wireStudyPopupOverlay();
     }
 
     // Wire all in-game event handlers. Idempotent — guarded by `_wired` so
@@ -2612,6 +2535,7 @@ export function loadLegacyIntoDocument() {
       wireSubsectionCollapse();
       wireBreadcrumbControls();
       wirePersonInfoOverlay();
+      wireAnnalsItemLinks({ render, getPlayer });
 
       // Debug toggle: flip mortal ↔ vampire. This is now reached via the
       // Settings overlay (sidebar Settings button → Debug section → Embrace).
@@ -2934,7 +2858,7 @@ export function loadLegacyIntoDocument() {
     // modal directly. The modal owns the "currently inspecting this
     // career" state implicitly via its own lifecycle.)
     const careerPickerState = {
-      category: 'all',     // active category filter chip
+      socialGroup: 'all',
     };
 
     // Compute a fit score for the PLAYER vs a candidate career. Uses the
@@ -3002,135 +2926,46 @@ export function loadLegacyIntoDocument() {
     // Age check: simple comparison to startAge[0]. We do NOT enforce
     // the upper bound startAge[1] for the player — they can begin a
     // career later than typical.
-    function careerEligibilityForPlayer(player, career) {
-      const era = currentEra(G.year);
-      if (!career.eras.includes(era)) {
-        // Era list is contiguous; find the next era this career exists in
-        // (if any) for a better hint than "wrong era."
-        const futureEras = career.eras.filter(e => e > era);
-        if (futureEras.length) {
-          return { eligible: false, reason: `The ${futureEras[0]}s or later.` };
-        }
-        return { eligible: false, reason: 'An earlier era — this trade no longer exists.' };
-      }
-
-      const stage = player.education?.stage;
-      const inSchool = stage === 'primary' || stage === 'secondary';
-      if (inSchool) {
-        if (player.age < SCHOOL_WORK_MIN_AGE) {
-          return { eligible: false, reason: `Age ${SCHOOL_WORK_MIN_AGE} to balance school and work.` };
-        }
-        if (!career.schoolCompatible) {
-          return { eligible: false, reason: 'Part-time trades only while still in school.' };
-        }
-      } else if (stage === 'none') {
-        return { eligible: false, reason: 'More years lived.' };
-      } else if (HIGHER_ED_IN_PROGRESS_STAGES.has(stage)) {
-        const tier = EDUCATION_LADDER.find(d => d.inProgress === stage);
-        return { eligible: false, reason: `Your ${tier?.label ?? 'degree'} completed.` };
-      }
-
-      // Degree requirement, if any. A dropped-out player can never satisfy
-      // this since their stage is 'dropped_out', not a degree tier.
-      if (career.requiresDegree) {
-        const required = EDUCATION_LADDER_BY_ID[career.requiresDegree];
-        if (!playerHasDegree(player, career.requiresDegree)) {
-          return { eligible: false, reason: `A ${required?.label ?? 'degree'}.` };
-        }
-      }
-
-      // Doctorate-tier careers may require a matching academic track.
-      const requiredTrack = CAREER_TRACK_REQUIREMENTS[career.id];
-      if (requiredTrack && career.requiresDegree === 'doctorate') {
-        if (player.education?.track !== requiredTrack) {
-          return {
-            eligible: false,
-            reason: `Requires a ${trackShortLabel(requiredTrack)} degree.`,
-          };
-        }
-      }
-
-      if (player.age < career.startAge[0]) {
-        return { eligible: false, reason: `Age ${career.startAge[0]} or older.` };
-      }
-
-      return { eligible: true };
-    }
-
-    // Build the picker HTML. Shows ALL era-eligible careers, sorted with
-    // "can take now" cards at the top and "can't take yet" cards (dimmed)
-    // below. Each card surfaces its eligibility status — ineligible cards
-    // show the specific reason inline.
-    //
-    // Card clicks only open the confirm modal for eligible cards;
-    // ineligible cards are non-interactive.
     function renderCareerPicker(player) {
-      const era = currentEra(G.year);
-      // All careers that exist in this era. Out-of-era careers are
-      // hidden entirely (showing them as ineligible would only confuse —
-      // there's no path to making them eligible except waiting decades).
-      const inEra = CAREERS.filter(c => c.eras.includes(era));
+      const groups = ['all', ...PLAYER_CAREER_GROUPS];
 
-      // Distinct categories present in the in-era set, plus 'all'.
-      const cats = ['all', ...Array.from(new Set(inEra.map(c => c.category))).sort()];
-
-      const filtered = inEra.filter(c =>
-        careerPickerState.category === 'all' || c.category === careerPickerState.category
+      const filtered = PLAYER_CAREERS.filter((c) =>
+        careerPickerState.socialGroup === 'all' || c.socialGroup === careerPickerState.socialGroup
       );
 
-      // Annotate each career with fit score and eligibility, then sort:
-      //   1. eligible cards first (sorted by fit desc within group)
-      //   2. ineligible cards after (also sorted by fit desc within group)
-      // This keeps the "what could I aim for" cards grouped by appeal in
-      // both halves.
-      const annotated = filtered.map(c => ({
+      const annotated = filtered.map((c) => ({
         c,
         fit: playerCareerFitScore(player, c),
         eligibility: careerEligibilityForPlayer(player, c),
+        reqLines: careerRequirementLines(player, c),
       }));
 
       annotated.sort((a, b) => {
-        // Eligible before ineligible
         if (a.eligibility.eligible !== b.eligibility.eligible) {
           return a.eligibility.eligible ? -1 : 1;
         }
-        // Within group, by fit descending
         return b.fit - a.fit;
       });
 
-      const chipsHtml = cats.map(cat => {
-        const active = (cat === careerPickerState.category) ? 'active' : '';
-        const label = cat === 'all' ? 'All' : cat[0].toUpperCase() + cat.slice(1);
-        return `<button class="career-chip ${active}" data-cat="${cat}">${label}</button>`;
+      const chipsHtml = groups.map((grp) => {
+        const active = grp === careerPickerState.socialGroup ? 'active' : '';
+        const label = grp === 'all' ? 'All' : (SOCIAL_GROUP_LABELS[grp] || grp);
+        return `<button class="career-chip ${active}" data-cat="${grp}">${escapeHtml(label)}</button>`;
       }).join('');
 
-      const cardsHtml = annotated.map(({ c, fit, eligibility }) => {
-        const name = c.nameByEra[era];
+      const cardsHtml = annotated.map(({ c, fit, eligibility, reqLines }) => {
+        const name = careerLabel(c, player);
         const fitInfo = fitLabel(fit);
-        const dots = [0,1,2].map(i =>
-          `<span class="cc-prestige-dot ${i < c.prestige ? 'filled' : ''}"></span>`
-        ).join('');
-        const primCap = statCap(c.primary, !!player.isVampire);
-        const secCap  = statCap(c.secondary, !!player.isVampire);
-        const primStat = c.primary === 'prowess' ? currentProwess(player)
-                       : c.primary === 'fertility' ? currentFertility(player)
-                       : player[c.primary];
-        const secStat  = c.secondary === 'prowess' ? currentProwess(player)
-                       : c.secondary === 'fertility' ? currentFertility(player)
-                       : player[c.secondary];
-        const statParts = [];
-        if (c.primary !== 'health') {
-          statParts.push(`${escapeHtml(c.primary)} ${Math.round(primStat)}/${primCap}`);
-        }
-        if (c.secondary !== 'health') {
-          statParts.push(`${escapeHtml(c.secondary)} ${Math.round(secStat)}/${secCap}`);
-        }
-        const statsHtml = statParts.length
-          ? `<div class="cc-stats">${statParts.join(' · ')}</div>`
+        const entryPay = entryAnnualPay(player, c);
+        const peakPay = peakAnnualPay(player, c);
+        const payHtml = `<div class="cc-pay">£${entryPay}/yr → £${peakPay}/yr peak</div>`;
+
+        const reqHtml = reqLines.length
+          ? `<div class="cc-reqs">${reqLines.map((r) =>
+              `<div class="cc-req ${r.met ? 'cc-req-met' : 'cc-req-unmet'}">${escapeHtml(r.text)}</div>`
+            ).join('')}</div>`
           : '';
 
-        // Ineligible cards: dimmed, not clickable, and display the reason
-        // in place of the fit row's interactive content.
         const lockedClass = eligibility.eligible ? '' : 'locked';
         const reasonHtml = eligibility.eligible
           ? `<div class="cc-fit-row">
@@ -3141,12 +2976,9 @@ export function loadLegacyIntoDocument() {
 
         return `<div class="career-card ${lockedClass}" data-career-id="${c.id}">
           <div class="cc-name">${escapeHtml(name)}</div>
-          <div class="cc-category">${escapeHtml(c.category)}</div>
-          ${statsHtml}
-          <div class="cc-fit-row">
-            <span class="cc-fit-label">Prestige</span>
-            <span class="cc-prestige">${dots}</span>
-          </div>
+          <div class="cc-category">${escapeHtml(SOCIAL_GROUP_LABELS[c.socialGroup] || c.socialGroup)}</div>
+          ${payHtml}
+          ${reqHtml}
           ${reasonHtml}
         </div>`;
       }).join('');
@@ -3156,11 +2988,6 @@ export function loadLegacyIntoDocument() {
       const subtitle = inSchoolWork
         ? 'Part-time trades you can hold while school continues. Full careers unlock after graduation.'
         : 'Your stats shape what suits you. Your choice shapes what comes.';
-
-      // No inline confirm row — selecting a card opens a modal popup.
-      // (Pre-Layer-3-revision this used an inline row; the modal is the
-      // current form because the career choice is a one-time-per-lifetime
-      // moment that earns more visual weight than a footer button.)
 
       return `<div class="career-page">
         <div class="career-page-title">Choose a Career</div>
@@ -3183,21 +3010,20 @@ export function loadLegacyIntoDocument() {
         </div>`;
       }
 
-      const era = currentEra(G.year);
-      const name = career.nameByEra[era] || career.nameByEra[Object.keys(career.nameByEra).sort()[0]];
+      const name = careerLabel(career, player);
       const rankLabel = career.rankLadder[player.career.rank] || career.rankLadder[0];
       const yearsInCareer = G.year - (player.career.since || G.year);
-      const yearsAtRank = player.career.yearsAtRank || 0;
-      const yearsUntilCheck = Math.max(0, PROMOTION_CADENCE_YEARS - yearsAtRank);
-      const atTop = player.career.rank >= career.rankLadder.length - 1;
+      const maxRank = career.rankLadder.length - 1;
+      const atTop = player.career.rank >= maxRank;
       const retired = !player.isVampire && player.age >= RETIREMENT_AGE;
+      const wp = G.workplace;
+      const isBoss = !!wp?.isBoss;
+      const showPromotion = !retired && !atTop && !isBoss;
+      const promotionPct = Math.min(100, Math.round(player.career.promotionProgress ?? 0));
+      const blocked = isPromotionBlocked(player);
+      const salary = annualPay(player);
+      const peakSalary = peakAnnualPay(player, career);
 
-      const fitScore = careerFitScore(player);
-      const fitInfo = fitLabel(fitScore);
-
-      const target = careerWealthTarget(player);
-
-      // Build the four detail cells.
       const cells = [];
       const stillInSchool = player.education?.stage === 'primary' || player.education?.stage === 'secondary';
       if (stillInSchool) {
@@ -3211,55 +3037,22 @@ export function loadLegacyIntoDocument() {
       cells.push({
         label: 'Tenure',
         value: `${yearsInCareer} year${yearsInCareer === 1 ? '' : 's'} in career`,
-        note: yearsAtRank > 0 ? `${yearsAtRank} at current rank` : 'newly arrived at rank',
+        note: `Rank ${(player.career.rank ?? 0) + 1} of ${career.rankLadder.length}`,
       });
 
       if (retired) {
-        cells.push({
-          label: 'Status',
-          value: 'Retired',
-          note: 'Your career years are behind you.',
-        });
+        cells.push({ label: 'Status', value: 'Retired', note: 'Your career years are behind you.' });
+      } else if (isBoss || (atTop && career.workplace?.type !== 'solo')) {
+        cells.push({ label: 'Status', value: 'You run the house', note: 'No superior remains above you.' });
       } else if (atTop) {
-        cells.push({
-          label: 'Status',
-          value: 'At the top of your field',
-          note: 'No higher rung remains.',
-        });
-      } else {
-        // Twin pathways to promotion:
-        //   1. Automatic review every 10 years (PROMOTION_CADENCE_YEARS).
-        //   2. Player-initiated petition via the Journal (decision card,
-        //      ships in a later layer — UI text references it now as a
-        //      forward-looking hint so the system reads as intentional
-        //      when the petition feature lands).
-        // We surface both in one cell so the player understands the
-        // structure: a slow river and an active lever.
-        cells.push({
-          label: 'Next Review',
-          value: yearsUntilCheck === 0 ? 'This year' : `${yearsUntilCheck} year${yearsUntilCheck === 1 ? '' : 's'} away`,
-          note: 'Or petition for promotion early from your Journal.',
-        });
+        cells.push({ label: 'Status', value: 'At the top of your field', note: 'No higher rung remains.' });
       }
 
       cells.push({
-        label: 'Fit',
-        value: fitInfo.text,
-        note: `Your ${career.primary} and ${career.secondary} matter most here.`,
+        label: 'Salary',
+        value: `£${salary} / year`,
+        note: `Peak rank pays about £${peakSalary} / year.`,
       });
-
-      if (target != null) {
-        const diff = target - player.wealth;
-        let note;
-        if (Math.abs(diff) < 4)     note = 'You live at your station.';
-        else if (diff > 0)          note = `Your station calls for more — drift +${Math.round(diff)} over time.`;
-        else                        note = `You hold wealth above your station — it will settle by ${Math.round(-diff)}.`;
-        cells.push({
-          label: 'Expected Wealth',
-          value: `${target}`,
-          note,
-        });
-      }
 
       const cellsHtml = cells.map(c => `
         <div class="career-detail-cell">
@@ -3268,6 +3061,28 @@ export function loadLegacyIntoDocument() {
           <div class="career-detail-cell-note">${escapeHtml(c.note)}</div>
         </div>`).join('');
 
+      let promotionHtml = '';
+      if (showPromotion) {
+        const blockedNote = blocked
+          ? '<div class="career-promotion-blocked">Your superior blocks your path.</div>'
+          : '';
+        const workHardDisabled = canSpendActionPoints(player, WORK_HARD_AP_COST) ? '' : ' disabled';
+        promotionHtml = `
+          <div class="edu-grade-block career-promotion-block">
+            <div class="edu-grade-head">
+              <span class="edu-grade-label-text">Promotion Chance</span>
+              <span class="edu-grade-value">${promotionPct}%</span>
+            </div>
+            <div class="stat-bar edu-grade-bar"><div class="stat-fill" style="width:${promotionPct}%; background:var(--gold);"></div></div>
+            ${blockedNote}
+            <div class="edu-grade-actions">
+              <button class="career-confirm-btn edu-study-btn" type="button" data-career-work-hard${workHardDisabled}>Work Hard (${WORK_HARD_AP_COST} AP)</button>
+            </div>
+          </div>`;
+      }
+
+      const workplaceHtml = buildWorkplaceSocialViewHtml(player);
+
       return `<div class="career-page">
         <div class="career-detail-headline">
           <div class="career-detail-rank">${escapeHtml(rankLabel)}</div>
@@ -3275,6 +3090,8 @@ export function loadLegacyIntoDocument() {
           <div class="career-detail-since">Since ${player.career.since}</div>
         </div>
         <div class="career-detail-grid">${cellsHtml}</div>
+        ${promotionHtml}
+        ${workplaceHtml}
       </div>`;
     }
 
@@ -3329,7 +3146,7 @@ export function loadLegacyIntoDocument() {
       // Wire chip clicks
       panel.querySelectorAll('.career-chip').forEach(chip => {
         chip.addEventListener('click', () => {
-          careerPickerState.category = chip.dataset.cat;
+          careerPickerState.socialGroup = chip.dataset.cat;
           renderVocation();
         });
       });
@@ -3341,6 +3158,21 @@ export function loadLegacyIntoDocument() {
       panel.querySelectorAll('.career-card:not(.locked)').forEach(card => {
         card.addEventListener('click', () => {
           openCareerConfirmModal(player, card.dataset.careerId);
+        });
+      });
+
+      const workHardBtn = panel.querySelector('[data-career-work-hard]');
+      if (workHardBtn) {
+        workHardBtn.addEventListener('click', () => {
+          if (!workHardForPromotion(player)) return;
+          render();
+        });
+      }
+
+      panel.querySelectorAll('.school-person-card[data-person-id]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const id = Number(btn.getAttribute('data-person-id'));
+          if (Number.isFinite(id)) openPersonInfoModal(id);
         });
       });
     }
@@ -3363,26 +3195,13 @@ export function loadLegacyIntoDocument() {
       const eligibility = careerEligibilityForPlayer(player, career);
       if (!eligibility.eligible) return;
 
-      const era = currentEra(G.year);
-      const name = career.nameByEra[era] || careerId;
+      const name = careerLabel(career, player);
       const entryRank = career.rankLadder[0] || name;
 
       const fit = playerCareerFitScore(player, career);
       const fitInfo = fitLabel(fit);
-
-      // Use the same target wealth helper used in the detail view, but we
-      // need to evaluate it for a hypothetical career-at-rank-0 instead of
-      // an actual assigned career. We construct a synthetic person view
-      // just for that calculation.
-      const ghostPerson = Object.assign(Object.create(Object.getPrototypeOf(player)), player, {
-        career: { id: careerId, rank: 0 },
-      });
-      const expectedWealth = careerWealthTarget(ghostPerson);
-
-      // Prestige dots, same shape as the picker card.
-      const dots = [0,1,2].map(i =>
-        `<span class="cc-prestige-dot ${i < career.prestige ? 'filled' : ''}"></span>`
-      ).join('');
+      const startPay = entryAnnualPay(player, career);
+      const peakPay = peakAnnualPay(player, career);
 
       const stage = player.education?.stage;
       const inSchool = stage === 'primary' || stage === 'secondary';
@@ -3403,16 +3222,16 @@ export function loadLegacyIntoDocument() {
             <div class="career-confirm-stat-value ${fitInfo.cls}">${fitInfo.text}</div>
           </div>
           <div class="career-confirm-stat-cell">
-            <div class="career-confirm-stat-label">Prestige</div>
-            <div class="career-confirm-stat-value"><span class="cc-prestige">${dots}</span></div>
+            <div class="career-confirm-stat-label">Starting pay</div>
+            <div class="career-confirm-stat-value">£${startPay} / year</div>
+          </div>
+          <div class="career-confirm-stat-cell">
+            <div class="career-confirm-stat-label">Peak pay</div>
+            <div class="career-confirm-stat-value">£${peakPay} / year</div>
           </div>
           <div class="career-confirm-stat-cell">
             <div class="career-confirm-stat-label">Stats that matter</div>
             <div class="career-confirm-stat-value">${escapeHtml(career.primary)} · ${escapeHtml(career.secondary)}</div>
-          </div>
-          <div class="career-confirm-stat-cell">
-            <div class="career-confirm-stat-label">Expected Wealth</div>
-            <div class="career-confirm-stat-value">${expectedWealth != null ? Math.round(expectedWealth) : '—'}</div>
           </div>
         </div>
         <div class="career-confirm-actions">
@@ -3454,9 +3273,9 @@ export function loadLegacyIntoDocument() {
       const career = CAREERS_BY_ID[careerId];
       if (!career) return;
 
-      player.career = { id: careerId, since: G.year, rank: 0, yearsAtRank: 0 };
-      const era = currentEra(G.year);
-      const name = career.nameByEra[era] || careerId;
+      player.career = { id: careerId, since: G.year, rank: 0, promotionProgress: 0 };
+      generateWorkplace(player, careerId);
+      const name = careerLabel(career, player);
       recordMilestone(player, {
         title: 'Career Begun',
         narrative: `You have begun your career as ${name}.`,
@@ -3465,9 +3284,7 @@ export function loadLegacyIntoDocument() {
         year: G.year,
       });
 
-      // Reset picker filter so a hypothetical future career-switching
-      // session opens clean rather than retaining a stale category chip.
-      careerPickerState.category = 'all';
+      careerPickerState.socialGroup = 'all';
 
       render();
     }
@@ -3499,23 +3316,12 @@ export function loadLegacyIntoDocument() {
     }
 
     function canDropOutOfUniversity(player) {
-      return player.isAlive &&
-        player.isPlayer &&
-        HIGHER_ED_IN_PROGRESS_STAGES.has(player.education?.stage);
+      return player.isAlive && player.education?.stage === 'university';
     }
 
     function dropOutOfUniversity(player) {
-      const stage = player.education?.stage;
-      if (!HIGHER_ED_IN_PROGRESS_STAGES.has(stage)) return;
-
-      if (stage === 'baccalaureate_in_progress') {
-        player.education.stage = 'completed';
-      } else if (stage === 'licentiate_in_progress') {
-        player.education.stage = 'baccalaureate';
-      } else if (stage === 'doctorate_in_progress') {
-        player.education.stage = 'licentiate';
-      }
-      player.education.since = G.year;
+      if (player.education?.stage !== 'university') return;
+      leaveUniversity(player);
       grantTrait(player, 'university_dropout');
       recordMilestone(player, {
         title: 'Left University',
@@ -3529,7 +3335,60 @@ export function loadLegacyIntoDocument() {
     // Transient: true while the in-panel "Drop Out" confirm prompt is showing.
     let eduDropoutConfirming = false;
     // Social View: in secondary, toggle to also view the still-running primary school.
-    let schoolViewShowPrimary = false;
+    let schoolViewOtherTier = false;
+
+    function workplacePersonCardHtml(player, p, roleLabel) {
+      if (!p) return '';
+      const name = `${p.firstName || ''} ${p.surname || ''}`.trim();
+      const edge = getRelationshipOrDefault(player, p.id);
+      const disp = edge?.disposition ?? 0;
+      const meta = `${roleLabel} · Disposition ${disp}`;
+      return `<button type="button" class="school-person-card" data-person-id="${p.id}">
+        <span class="school-person-name">${escapeHtml(name)}</span>
+        <span class="school-person-meta">${escapeHtml(meta)}</span>
+      </button>`;
+    }
+
+    function buildWorkplaceSocialViewHtml(player) {
+      const wp = G.workplace;
+      if (!wp || !player.career) return '';
+
+      const cards = [];
+      if (wp.grandBossId) {
+        const gb = getPerson(wp.grandBossId);
+        if (gb?.isAlive) {
+          cards.push(workplacePersonCardHtml(player, gb, workplaceRoleLabel(gb.id) || 'Superior'));
+        }
+      }
+      if (wp.bossId && !wp.isBoss) {
+        const boss = getPerson(wp.bossId);
+        if (boss?.isAlive) {
+          cards.push(workplacePersonCardHtml(player, boss, workplaceRoleLabel(boss.id) || 'Superior'));
+        }
+      }
+      for (const id of wp.coworkerIds || []) {
+        const c = getPerson(id);
+        if (c?.isAlive) {
+          cards.push(workplacePersonCardHtml(player, c, workplaceRoleLabel(id) || 'Colleague'));
+        }
+      }
+      for (const id of wp.peerIds || []) {
+        const peer = getPerson(id);
+        if (peer?.isAlive) {
+          cards.push(workplacePersonCardHtml(player, peer, workplaceRoleLabel(id) || 'Associate'));
+        }
+      }
+
+      if (!cards.length) return '';
+
+      return `
+        <div class="school-view workplace-view">
+          <div class="school-view-head">
+            <span class="school-view-title">At Work</span>
+          </div>
+          <div class="school-staff-row">${cards.join('')}</div>
+        </div>`;
+    }
 
     function schoolPersonCardHtml(p, metaLabel) {
       if (!p) return '';
@@ -3553,17 +3412,19 @@ export function loadLegacyIntoDocument() {
         .map((s) => ({ p: getPerson(s.id), role: s.role }))
         .filter((s) => s.p && s.p.isAlive);
 
-      const showPrimary = stage === 'secondary' ? schoolViewShowPrimary : true;
-      const wantStage = showPrimary ? 'primary' : 'secondary';
+      // Default to the player's own tier; the toggle flips to the other tier
+      // (a primary schooler can peek at secondary and vice-versa).
+      const ownStage = stage;
+      const otherStage = ownStage === 'primary' ? 'secondary' : 'primary';
+      const wantStage = schoolViewOtherTier ? otherStage : ownStage;
       const students = (school.studentIds || [])
         .map(getPerson)
         .filter((p) => p && p.isAlive && p.education?.stage === wantStage)
         .sort((a, b) => b.age - a.age);
 
-      const title = showPrimary ? 'Primary School' : 'Secondary School';
-      const toggleHtml = stage === 'secondary'
-        ? `<button type="button" class="school-toggle-btn" data-school-toggle>${schoolViewShowPrimary ? 'View Secondary' : 'View Primary'}</button>`
-        : '';
+      const title = wantStage === 'primary' ? 'Primary School' : 'Secondary School';
+      const toggleTargetLabel = wantStage === 'primary' ? 'Secondary' : 'Primary';
+      const toggleHtml = `<button type="button" class="school-toggle-btn" data-school-toggle>View ${toggleTargetLabel}</button>`;
       const staffHtml = staff.map((s) => schoolPersonCardHtml(s.p, s.role)).join('');
       const studentHtml = students.length
         ? students.map((p) => schoolPersonCardHtml(p, `Age ${p.age}`)).join('')
@@ -3620,66 +3481,33 @@ export function loadLegacyIntoDocument() {
             ? 'You were expelled in disgrace. Whatever wisdom comes to you now comes from the world itself, not its teachers — and the schoolhouse doors are barred to you.'
             : 'You left school behind. Whatever wisdom comes to you now comes from the world itself, not its teachers.';
           break;
-        case 'baccalaureate_in_progress': {
-          const tier = EDUCATION_LADDER_BY_ID.baccalaureate;
-          const remaining = Math.max(0, tier.duration - yearsInStage);
-          stageLabel = 'Pursuing Baccalaureate';
-          yearsText  = remaining === 0 ? 'Completing this year' : `${remaining} ${remaining === 1 ? 'year' : 'years'} remaining`;
-          body       = trackLabel(ed.track)
-            ? `You study ${trackLabel(ed.track)}. Lectures by day, texts by night.`
-            : 'You spend your days at lectures, your nights at books. The world of letters opens before you.';
+        case 'university': {
+          const uni = ed.university;
+          const schoolLabel = UNIVERSITIES[uni?.school]?.label ?? 'University';
+          const degree = uni?.degreeId ? DEGREES_BY_ID[uni.degreeId] : null;
+          stageLabel = schoolLabel;
+          yearsText  = `${yearsInStage} ${yearsInStage === 1 ? 'year' : 'years'} enrolled`;
+          body       = degree
+            ? `You pursue ${degree.label}. Lectures by day, texts by night.`
+            : 'You have matriculated. Declare your degree and choose your course load each year.';
           break;
         }
-        case 'baccalaureate':
-          stageLabel = 'Baccalaureate';
-          yearsText  = `Earned ${ed.since ?? '—'}`;
-          body       = 'You hold a Baccalaureate. The educated trades and professions are within your reach.';
-          break;
-        case 'licentiate_in_progress': {
-          const tier = EDUCATION_LADDER_BY_ID.licentiate;
-          const remaining = Math.max(0, tier.duration - yearsInStage);
-          stageLabel = 'Pursuing Licentiate';
-          yearsText  = remaining === 0 ? 'Completing this year' : `${remaining} ${remaining === 1 ? 'year' : 'years'} remaining`;
-          body       = 'You pursue mastery. The faculty knows you by name; the arguments grow finer.';
-          break;
-        }
-        case 'licentiate':
-          stageLabel = 'Licentiate';
-          yearsText  = `Earned ${ed.since ?? '—'}`;
-          body       = 'You hold a Licentiate. The bench, the academy, and the higher civic offices await.';
-          break;
-        case 'doctorate_in_progress': {
-          const tier = EDUCATION_LADDER_BY_ID.doctorate;
-          const remaining = Math.max(0, tier.duration - yearsInStage);
-          stageLabel = 'Pursuing Doctorate';
-          yearsText  = remaining === 0 ? 'Completing this year' : `${remaining} ${remaining === 1 ? 'year' : 'years'} remaining`;
-          body       = trackLabel(ed.track)
-            ? `The thesis weighs on you — ${trackLabel(ed.track)} is your field, and the title is within reach.`
-            : 'The thesis weighs on you, but the title weighs more — Medicine, Law, or Theology, whatever path you chose.';
-          break;
-        }
-        case 'doctorate':
-          stageLabel = 'Doctorate';
-          yearsText  = `Earned ${ed.since ?? '—'}`;
-          body       = 'You hold the Doctorate. The classic elite professions are open to you. Few rise this far.';
-          break;
         default:
-          stageLabel = 'Unknown';
-          yearsText  = '';
-          body       = '';
+          if ((player.degrees || []).length) {
+            const labels = player.degrees.map((id) => DEGREES_BY_ID[id]?.label ?? id);
+            stageLabel = 'Degrees Earned';
+            yearsText  = '';
+            body       = `You hold: ${labels.join(', ')}.`;
+          } else {
+            stageLabel = educationStageLabel(stage);
+            yearsText  = '';
+            body       = '';
+          }
       }
 
       let progressHtml = '';
-      if (HIGHER_ED_IN_PROGRESS_STAGES.has(stage)) {
-        const tier = EDUCATION_LADDER.find(d => d.inProgress === stage);
-        if (tier) {
-          const pct = Math.min(100, Math.round((yearsInStage / tier.duration) * 100));
-          progressHtml = `
-            <div class="edu-progress-wrap">
-              <div class="edu-progress-bar"><div class="edu-progress-fill" style="width:${pct}%"></div></div>
-              <div class="edu-progress-label">Year ${yearsInStage + 1} of ${tier.duration}</div>
-            </div>`;
-        }
+      if (stage === 'university') {
+        progressHtml = buildUniversityProgressHtml(player);
       }
 
       const distinctionsHtml = renderEarnedTraitsHtml(player);
@@ -3690,32 +3518,15 @@ export function loadLegacyIntoDocument() {
           </div>`
         : '';
 
-      // Build the apply card if there's a next degree available. The card
-      // shows the tier name, duration, wealth threshold, and a Confirm
-      // button that's disabled when wealth is insufficient.
-      let applyCardHtml = '';
-      const next = nextDegreeFor(player);
-      if (next) {
-        const qualifies = player.wealth >= next.wealthGate;
-        const wealthClass = qualifies ? 'qualifies' : 'short';
-        const buttonAttrs = qualifies ? '' : 'disabled';
-        const ctaLabel = `Begin ${next.label}`;
-        const hint = qualifies
-          ? `You may begin this term. The years will pass; the title will be yours.`
-          : `Your station is not yet enough. Reach wealth ${next.wealthGate} and the gate opens.`;
-        applyCardHtml = `
-          <div class="edu-apply-card">
-            <div class="edu-apply-title">${escapeHtml(next.label)}</div>
-            <div class="edu-apply-rows">
-              <div class="edu-apply-row"><span>Duration</span><span>${next.duration} years</span></div>
-              <div class="edu-apply-row"><span>Required Wealth</span><span class="${wealthClass}">${player.wealth} / ${next.wealthGate}</span></div>
-            </div>
-            <div class="edu-apply-hint">${escapeHtml(hint)}</div>
-            <div class="career-confirm-actions">
-              <button class="career-confirm-btn" data-degree-apply="${next.id}" ${buttonAttrs}>${escapeHtml(ctaLabel)}</button>
-            </div>
-          </div>`;
-      }
+      const earnedDegreesHtml = (player.degrees || []).length
+        ? `<div class="edu-distinctions">
+            <div class="edu-distinctions-title">Degrees</div>
+            <div class="edu-distinctions-chips">${(player.degrees || []).map((id) => {
+              const d = DEGREES_BY_ID[id];
+              return `<span class="edu-distinction-chip">${escapeHtml(d?.label ?? id)}</span>`;
+            }).join('')}</div>
+          </div>`
+        : '';
 
       // Grade progress bar (primary/secondary only) with Study shortcut and the
       // relocated Drop Out control (with an in-panel confirm prompt).
@@ -3736,15 +3547,21 @@ export function loadLegacyIntoDocument() {
         } else if (canDropOutOfSchool(player)) {
           dropoutControl = `<button class="career-confirm-btn edu-dropout-btn" type="button" data-edu-dropout>Drop Out</button>`;
         }
+        const studyDisabled = studyEligible(player) ? '' : ' disabled';
+        const studyControl = `<button class="career-confirm-btn edu-study-btn" type="button" data-edu-study${studyDisabled}>Study</button>`;
+        const gradeFlavor = stage === 'primary'
+          ? 'You will graduate primary school at age 12. You must achieve your desired grade before then. Diligence separates the scholars from the street sweepers. Apply yourself to the texts, for the masters are always watching.'
+          : 'Your secondary education concludes at age 17. You must achieve your desired grade before then. The final examinations will determine your place in the world. Burn the midnight oil and train your mind, or prepare to be discarded by high society.';
         gradeBlockHtml = `
           <div class="edu-grade-block">
+            <p class="edu-grade-flavor">${escapeHtml(gradeFlavor)}</p>
             <div class="edu-grade-head">
               <span class="edu-grade-label-text">Grade</span>
               <span class="edu-grade-value"><span class="edu-grade-letter">${escapeHtml(grade.letter)}</span> ${Math.round(grade.points)} / 100</span>
             </div>
             <div class="stat-bar edu-grade-bar"><div class="stat-fill" style="width:${pct}%; background:var(--green);"></div></div>
             <div class="edu-grade-actions">
-              <button class="career-confirm-btn edu-study-btn" type="button" data-edu-study>Study</button>
+              ${studyControl}
               ${dropoutControl}
             </div>
           </div>`;
@@ -3755,7 +3572,7 @@ export function loadLegacyIntoDocument() {
         uniDropoutHtml = `
           <div class="edu-apply-card edu-dropout-card">
             <div class="edu-apply-title">Leave University</div>
-            <div class="edu-apply-hint">Walk away from your current degree. Any completed tiers remain — but the in-progress work is abandoned.</div>
+            <div class="edu-apply-hint">Walk away from your current degree. Earned degrees remain on your record.</div>
             <div class="career-confirm-actions">
               <button class="career-confirm-btn edu-dropout-btn" type="button" data-edu-uni-dropout>Leave University</button>
             </div>
@@ -3773,29 +3590,10 @@ export function loadLegacyIntoDocument() {
         <div class="career-page-subtitle">${escapeHtml(body)}</div>
         ${buildSchoolSocialViewHtml(player)}
         ${progressHtml}
+        ${earnedDegreesHtml}
         ${distinctionsBlock}
         ${uniDropoutHtml}
-        ${applyCardHtml}
       </div>`;
-
-      // Wire the apply button if present.
-      const applyBtn = panel.querySelector('[data-degree-apply]');
-      if (applyBtn && !applyBtn.disabled) {
-        applyBtn.addEventListener('click', () => {
-          const degreeId = applyBtn.getAttribute('data-degree-apply');
-          if (degreeId === 'baccalaureate') {
-            fireSituation(player, 'university_enrollment');
-          } else if (degreeId === 'licentiate') {
-            fireSituation(player, 'licentiate_enrollment');
-          } else if (degreeId === 'doctorate') {
-            fireSituation(player, 'doctorate_enrollment');
-          } else {
-            const degree = EDUCATION_LADDER_BY_ID[degreeId];
-            if (degree) commitDegreeApplication(player, degree);
-          }
-          render();
-        });
-      }
 
       // Social View: classmate/staff cards open the person modal; secondary toggle.
       panel.querySelectorAll('.school-person-card[data-person-id]').forEach((btn) => {
@@ -3807,22 +3605,18 @@ export function loadLegacyIntoDocument() {
       const schoolToggleBtn = panel.querySelector('[data-school-toggle]');
       if (schoolToggleBtn) {
         schoolToggleBtn.addEventListener('click', () => {
-          schoolViewShowPrimary = !schoolViewShowPrimary;
+          schoolViewOtherTier = !schoolViewOtherTier;
           render();
         });
       }
 
-      // Study shortcut → open the Study decision directly (falls back to the
-      // Decisions list if it isn't currently eligible, e.g. no AP left).
       const studyBtn = panel.querySelector('[data-edu-study]');
       if (studyBtn) {
         studyBtn.addEventListener('click', () => {
-          if (isDecisionEligible('study_school', player)) {
-            openDecisionFromItem('study_school');
-          } else {
-            showSection('decisions');
-            setSubTab('decisions', 'decisions');
-          }
+          if (!studyEligible(player)) return;
+          closeStudyPopup();
+          eduDropoutConfirming = false;
+          openStudyPopup(player, { escapeHtml, onComplete: () => render() });
         });
       }
 
@@ -3831,6 +3625,7 @@ export function loadLegacyIntoDocument() {
       if (dropoutBtn) {
         dropoutBtn.addEventListener('click', () => {
           if (!canDropOutOfSchool(player)) return;
+          closeStudyPopup();
           eduDropoutConfirming = true;
           render();
         });
@@ -3906,11 +3701,11 @@ export function loadLegacyIntoDocument() {
     // (e.g. "X has died, choose how to mourn" needs the deceased's name)
     // will add a `ctx` field. The shape is forward-compatible.
     const SITUATIONS = [
-      ...buildEducationSituations({ EDUCATION_LADDER_BY_ID }),
+      ...buildEducationSituations(),
       ...buildEducationImmersiveEvents(),
       ...buildImmersiveEvents(),
-      ...buildEstateImmersiveEvents(),
-      ...buildEstateSituations(),
+      ...buildParticularsImmersiveEvents(),
+      ...buildParticularsSituations(),
       ...buildRookeriesSituations(),
       ...buildPrisonSituations(),
     ];
@@ -4070,10 +3865,10 @@ export function loadLegacyIntoDocument() {
 
       if (templateId === 'peculiar_patron_offer') {
         player.patronArc = null;
-        delete player._estateFollowUp;
+        delete player._particularsFollowUp;
       } else if (templateId === 'mudlarks_lockbox_find') {
         player.mudlarkLockbox = null;
-        delete player._estateFollowUp;
+        delete player._particularsFollowUp;
       } else if (templateId === 'peculiar_patron_annual') {
         player.patronArc = {
           active: true,
@@ -4160,8 +3955,11 @@ export function loadLegacyIntoDocument() {
         player.situations.splice(idx, 1);
         return true;
       }
-      const button = tpl.buttons.find(b => b.id === buttonId);
-      if (!button) return false;
+      const buttons = typeof tpl.buttons === 'function'
+        ? tpl.buttons(player, inst)
+        : (tpl.buttons || []);
+      const button = buttons.find(b => b.id === buttonId);
+      if (!button || button.disabled) return false;
 
       if (button.showResultPopup) {
         button.apply(player);
@@ -4188,6 +3986,7 @@ export function loadLegacyIntoDocument() {
         reward: button.reward ?? tpl.reward,
         type: button.annalsType ?? tpl.annalsType,
         apply: () => button.apply(player),
+        declaredEffects: button.effects,
       });
 
       const keepPending = typeof button.keepPending === 'function'
@@ -4235,7 +4034,7 @@ export function loadLegacyIntoDocument() {
         year: G.year,
         getPlayer,
         onResolved: () => {
-          processEstateFollowUp(getPlayer(), fireSituation);
+          processParticularsFollowUp(getPlayer(), fireSituation);
           render();
         },
       });
@@ -4416,10 +4215,7 @@ export function loadLegacyIntoDocument() {
       const panel = document.getElementById('dec-panel-focus');
       if (!panel) return;
 
-      const html = buildFocusPanelHtml(player, {
-        EDUCATION_LADDER_BY_ID,
-        HIGHER_ED_IN_PROGRESS_STAGES,
-      });
+      const html = buildFocusPanelHtml(player);
 
       if (!html) {
         panel.innerHTML = `<div class="placeholder-card">

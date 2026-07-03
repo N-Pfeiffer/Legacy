@@ -114,14 +114,15 @@ export function renderProposeMarriagePanelHtml(player, opts = {}) {
     const actionId = proposalRingActionId(tier.id);
     const apCost = getActionPointCost(actionId);
     const apOk = canSpendActionPoints(player, apCost);
-    const wealthOk = canAffordProposalRingTier(player, tier);
-    const disabled = apOk && wealthOk ? '' : ' disabled';
+    const moneyOk = canAffordProposalRingTier(player, tier);
+    const cost = tier.moneyCost ?? tier.wealthCost ?? 0;
+    const disabled = apOk && moneyOk ? '' : ' disabled';
     const title = !apOk
       ? 'No action points left this year'
-      : wealthOk
-        ? `Costs ${tier.wealthCost} wealth and ${apCost} AP`
-        : `Requires ${tier.wealthCost} wealth`;
-    return `<button type="button" class="career-confirm-btn situation-choice-btn"${disabled} data-${actionAttr}="${escapeHtml(actionId)}" title="${escapeHtml(title)}">Propose with ${escapeHtml(tier.label)} (${tier.wealthCost}, ${apCost} AP)</button>`;
+      : moneyOk
+        ? `Costs ${cost} pounds and ${apCost} AP`
+        : `Requires ${cost} pounds`;
+    return `<button type="button" class="career-confirm-btn situation-choice-btn"${disabled} data-${actionAttr}="${escapeHtml(actionId)}" title="${escapeHtml(title)}">Propose with ${escapeHtml(tier.label)} (${cost}, ${apCost} AP)</button>`;
   }).join('');
 
   return `<div class="person-interact-panel person-propose-panel">

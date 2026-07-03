@@ -5,6 +5,7 @@
 import { rollNormal } from '../utils/random.js';
 import { PERSON_DEFAULTS } from './person.js';
 import { nextId } from './gameState.js';
+import { parentWealthForInheritance } from '../sim/money.js';
 
 function freshPersonDefaults() {
   const p = {};
@@ -101,7 +102,7 @@ export function inheritStats(parentA, parentB) {
     cunning: stat(aBirth.cunning, bBirth.cunning, 8),
     fertilityBase: stat(aBirth.fertility, bBirth.fertility, 8),
     prowessBase: stat(aBirth.prowess ?? 5, bBirth.prowess ?? 5, 4),
-    wealth: Math.round(((parentA?.wealth ?? 0) + (parentB?.wealth ?? 0)) / 2),
+    wealth: Math.round((parentWealthForInheritance(parentA) + parentWealthForInheritance(parentB)) / 2),
   };
 }
 

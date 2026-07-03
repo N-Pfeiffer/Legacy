@@ -8,6 +8,7 @@ import {
 } from '../state/gameState.js';
 import { closeSituationPopup, isSituationPopupOpen } from '../sim/situationPopup.js';
 import { closeHobbiesDrillDown } from './hobbiesPanel.js';
+import { resetInventoryFiltersOnEnter } from './renderPossessions.js';
 import { currentMode } from './theme.js';
 
 let hooks = {
@@ -49,10 +50,10 @@ export const SUBNAV = {
     { key: 'career',    label: 'Career',    vocab: 'vocation.career', panelId: 'voc-panel-career'    },
     { key: 'education', label: 'Education', vocab: 'vocation.edu',    panelId: 'voc-panel-education' },
   ],
-  estate: [
-    { key: 'hobbies',     label: 'Hobbies',     vocab: 'estate.hobbies',     panelId: 'est-panel-hobbies'     },
-    { key: 'equipment',   label: 'Equipment',   vocab: 'estate.equipment',   panelId: 'est-panel-equipment'   },
-    { key: 'possessions', label: 'Items',         vocab: 'estate.possessions', panelId: 'est-panel-possessions' },
+  particulars: [
+    { key: 'hobbies',     label: 'Hobbies',     vocab: 'particulars.hobbies',     panelId: 'part-panel-hobbies'     },
+    { key: 'equipment',   label: 'Equipment',   vocab: 'particulars.equipment',   panelId: 'part-panel-equipment'   },
+    { key: 'possessions', label: 'Items',         vocab: 'particulars.possessions', panelId: 'part-panel-possessions' },
   ],
   // Decisions / Journal / Ambitions:
   //   Situations  — blocking prompts the player must resolve (now first
@@ -89,6 +90,9 @@ export function setSubTab(section, key) {
   const wasAlreadyActive = currentSubTab[section] === key;
 
   currentSubTab[section] = key;
+  if (section === 'particulars' && key === 'possessions' && !wasAlreadyActive) {
+    resetInventoryFiltersOnEnter();
+  }
   renderSubNav();
 
   // Situations / Decisions detail views are transient — reset when the

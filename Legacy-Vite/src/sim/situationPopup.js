@@ -69,8 +69,14 @@ function formatBodyHtml(body, escapeHtml) {
     .replace(/$/, '</p>');
 }
 
+function getTemplateButtons(tpl, player, inst) {
+  const raw = tpl?.buttons;
+  if (typeof raw === 'function') return raw(player, inst) || [];
+  return raw || [];
+}
+
 function filterVisibleButtons(tpl, player, inst, hasTrait) {
-  return (tpl.buttons || []).filter((b) => {
+  return getTemplateButtons(tpl, player, inst).filter((b) => {
     if (b.requiresTrait && !hasTrait(player, b.requiresTrait)) return false;
     if (b.requiresAnyTrait && !b.requiresAnyTrait.some((id) => hasTrait(player, id))) return false;
     if (typeof b.visible === 'function' && !b.visible(player, inst)) return false;
@@ -91,7 +97,8 @@ function renderModalContent(modal, player, inst, tpl, escapeHtml, hasTrait) {
   const buttonsHtml = visibleButtons.map((b) => {
     const label = typeof b.label === 'function' ? b.label(player, inst) : b.label;
     const effectsSuffix = formatChoiceEffectsLine(b.effects);
-    return `<button type="button" class="career-confirm-btn situation-choice-btn" data-situation-button="${escapeHtml(b.id)}">${escapeHtml(label)}${effectsSuffix}</button>`;
+    const disabled = b.disabled ? ' disabled' : '';
+    return `<button type="button" class="career-confirm-btn situation-choice-btn"${disabled} data-situation-button="${escapeHtml(b.id)}">${escapeHtml(label)}${effectsSuffix}</button>`;
   }).join('');
   const choicesBlock = buttonsHtml
     ? `<div class="situation-choices situation-popup-choices">${buttonsHtml}</div>`

@@ -21,7 +21,7 @@ function spyDetail(target) {
   }
   const career = target.career?.id ? CAREERS_BY_ID[target.career.id] : null;
   if (career) {
-    const name = career.nameByEra?.[1800] || career.id.replace(/_/g, ' ');
+    const name = career.label || career.labelBySex?.[target.sex] || career.id.replace(/_/g, ' ');
     return `they earn their keep as a ${name.toLowerCase()}`;
   }
   if (target.enemyIds?.length) return 'they quarrel with half the parish';

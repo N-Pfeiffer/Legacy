@@ -2,6 +2,7 @@ import { G, getAlive, getPlayer } from '../state/gameState.js';
 import { refreshActionPoints } from './actionPoints.js';
 import { recomputeJournalFlags } from './journal.js';
 import { tickRelationshipDecay } from './relationshipDecay.js';
+import { deductCareerUpkeep } from './workplace.js';
 
 /**
  * Advance the simulation by one calendar year (no DOM).
@@ -48,6 +49,9 @@ export function runYearTick(deps) {
     processPlayerEvents(player);
   }
   checkMortality();
-  if (player?.isAlive) refreshActionPoints(player);
+  if (player?.isAlive) {
+    refreshActionPoints(player);
+    deductCareerUpkeep(player);
+  }
   return true;
 }

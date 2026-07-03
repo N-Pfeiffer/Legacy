@@ -27,7 +27,85 @@ Flag changes that touch any of:
 
 ### Added
 
-- **School grades wired up** — grade now moves via **passive intelligence accrual** each enrolled year (Int ~30 coasts to a C, Int ~10 fails), school-event choices (which keep their stat effects and now also show/grant a grade delta), a repeatable **Study** decision (2 AP → +25 grade, +0.25 Int; in university grants only the Int trickle), and a **Study with** classmate interaction (2 AP, needs disposition > 19 with an enrolled classmate → +34 grade, +5 disposition). At the end of each tier the grade is cashed out: A → +5 Int/+2 Insight/+1 Cha, B → +3/+1/+1, C → +1 Int, D → nothing, **F → −10 Health and expulsion** (ends formal schooling — no higher tier). The Education panel's Study button opens the Study decision directly (`sim/grade.js`, `sim/educationTick.js`, `data/decisions.js`, `data/educationSituations.js`, `sim/personInteractions.js`, `sim/actionPoints.js`, `sim/situationLog.js`, `legacy.js`).
+- **Workplace & player promotion (Phase 4)** — joining a career spawns boss/coworkers/peers (`G.workplace`, `sim/workplace.js`); player promotion uses boss disposition + Promotion Chance bar; **Work Hard** (5 AP → +5%); 5 AP yearly career upkeep after AP refresh (`sim/careers.js`, `sim/yearTick.js`, `legacy.js`).
+
+- **Career catalog replacement (Phase 3)** — Victorian social-class careers (Elite / Rich / Middle / Poor / Criminal + NPC-only destitute/poor/rich roles), requirements engine, £ pay tiers, yearly salary annals, hobby yearly effects, and Courtesan STD hook (`data/careers.js`, `sim/careers.js`, `legacy.js`).
+
+- **University higher education (Phase 2)** — Oxford / UCL matriculation with immersive acceptance paths (melancholic patron, Oxford-qualified father, Gower Street default), degree choice, yearly class loads, sponsorship lifecycle, and progress-based graduation into `player.degrees[]` (`data/education.js`, `sim/university.js`, `data/educationSituations.js`, `sim/educationTick.js`).
+- **Player currency (Phase 1)** — player wealth is now literal pounds (`player.money`) shown as **Purse** in the HUD, with a stacking **Sovereign** material mirror in Possessions (`sim/money.js`, `data/items.js`, `ui/renderHud.js`).
+- **Marriage dowry** — player marriage no longer pools spouse wealth; a one-time dowry is paid from the spouse's social standing (`sim/marriage.js`).
+
+### Changed
+
+- ⚠ **High impact** — **`G.workplace` persisted in saves** — boss, coworkers, peer roles, and `promotionProgress` round-trip with schema 30 saves; missing workplace backfills on load (`state/saveSystem.js`, `sim/workplace.js`). *Watch for:* first load after update may generate fresh colleagues.
+- **Player career shape** — `promotionProgress` replaces `yearsAtRank` for the player; NPCs keep the old promotion cadence (`sim/careers.js`).
+
+- ⚠ **High impact** — **Career schema replaced** — removed era-flavored `nameByEra`, `prestige`, `requiresDegree`, and `category`; careers now use `socialGroup`, `payTier` / `payTierRange`, and `requirements` (degrees, stats, hobbies, father's wealth). Stale career ids clear on load (`migrateStaleCareer`). *Watch for:* old saves lose prior career assignment; NPC world re-rolls careers.
+- **Player wages** — year tick pays `annualPay()` into the purse with an annals line; NPC wealth gravity uses pay tier (`sim/careers.js`).
+- **Career picker UI** — social-class filter chips, pay range, met/unmet requirement lines, confirm modal shows starting/peak £ (`legacy.js`, `styles/legacy.css`).
+
+- ⚠ **High impact** — **Higher-ed ladder replaced** — baccalaureate/licentiate/doctorate stages removed; university is a single `education.stage === 'university'` with per-school degrees and progress costs. `player.degrees[]` holds earned titles; legacy `requiresDegree: 'baccalaureate'` careers still gate via shim (`sim/university.js`, `legacy.js`). *Watch for:* old in-progress degree saves (schema 30+) may show odd education state until you start fresh.
+- **Careers during university** — players may hold a career while enrolled; AP costs gate class loads instead of a hard career block (`legacy.js`).
+- **Study at university** — Study decision remains available at university (grade trickle only) (`data/decisions.js`).
+- ⚠ **High impact** — **`SAVE_SCHEMA` 30** — saves below schema 30 are rejected on load with a clear message. Pre-30 migration chain removed (`state/saveSystem.js`, `legacy.js`). *Watch for:* old saves cannot be loaded until you start fresh.
+- **Social class point costs** — creation point buy for social class reduced to 25% of the old wealth values (`data/socialClass.js`).
+- **Starting purse** — new games grant class-based starting £ (Destitute £0, Poor £4, Middle £20, Rich £60); `player.wealth` stays 0 for the player (`legacy.js`).
+- **Parent household wealth** — mother now shares father's household wealth at character creation (`legacy.js`).
+- **Player wealth touchpoints** — prison, marriage rings, windfall events, mudlark/rookeries rewards, child inheritance, and situation snapshots use £ for the player; NPCs keep 0–100 wealth (`sim/prison.js`, `data/playerEvents.js`, `data/marriageProposal.js`, etc.).
+- **NPC wealth gravity** — career wealth drift no longer applies to the player (`sim/careers.js`).
+
+### Fixed
+
+- **"Kin" on unrelated profiles** — people with no tie to the player (classmates, in-laws, colleagues, strangers) no longer show the relation label "Kin"; the relation line is now blank for them (matching person cards and search). Known family/social relations are unchanged (`ui/personModal.js`, `ui/bloodline.js`).
+
+- **Player Items button** — fixed a runtime error (`clearInventoryItemHighlight is not defined`) that prevented the Items button from navigating to Particulars → Items (`ui/itemAnnalsNav.js`).
+
+- **Secondary school population** — generated classmates no longer all count as "destitute": `generateNpcWithFamily` now rolls a per-family household wealth across social classes (skewed middle-class) and children inherit it, so the wealth-based school-dropout curve doesn't cull nearly the whole cohort. Secondary now holds a proper class (~10–14 roster classmates while the player is enrolled) instead of a couple who leave within a year or two (`sim/npcFamilyGen.js`).
+
+### Removed
+
+- **Legacy career taxonomy** — pre-Phase-3 careers (farmer, laborer, doctor, lawyer, etc.) and education track stubs (`data/careers.js`, `data/education.js`).
+- **Education ladder data** — `educationTracks.js` and `EDUCATION_LADDER` / scholarship enrollment situations deleted; stubs remain in `data/education.js` until Phase 3 career-track cleanup (`data/educationTracks.js`, `data/educationSituations.js`).
+
+- **A Lesson in the Alley** — removed the secondary-school age-13 popup event and its year-tick trigger (`data/educationSituations.js`, `sim/educationTick.js`).
+
+### Changed
+
+- **Pass the Year placement** — sidebar year-advance button now sits above the **You** player card (`index.html`).
+
+- **Crafting recipe visibility** — hobby crafting lists now only show recipes when you hold at least one required material (or the required relic item for scholarship studies) (`sim/crafting.js`, `ui/hobbiesPanel.js`).
+
+- **Humors annals entries** — birth humor resolution now logs a short line ending when the physician names your temperament; the full prognosis still appears in the immersive popup (`data/immersiveEvents.js`).
+
+- **Annals show mechanical gains** — person interactions (Spend time, Flirt, Insult, Make Love, Study with), Education **Study**, and school/situation events now append an italic outcome line (e.g. *(+34 Grade, +5 Disposition)*) to annals entries (`sim/situationLog.js`, `sim/personInteractions.js`, `ui/personInteract.js`, `data/decisions.js`, `legacy.js`, `sim/immersivePopup.js`, `styles/legacy.css`).
+
+- **School Social View toggle is bidirectional** — the tier toggle now works in both directions: primary schoolers can "View Secondary" and secondary schoolers can "View Primary" (defaults to the player's own tier). Previously only secondary students could view the primary school (`legacy.js`).
+
+- **Grade panel flavor text** — primary and secondary Education panels now show tier-specific copy above the grade bar (`legacy.js`, `styles/legacy.css`).
+
+- ⚠ **High impact** — **Inventory rework** — Particulars → **Items** now shows **all inventory in one grid** by default; category buttons are **multi-select filters** (Equipment, Consumables, Unique Items, Materials, Components); sort dropdown on the Inventory header (**Recently added** default, Alphabetical, By category). **Unique Items** filter added; Mudlark's Lockbox is unique-only. Acquisition order tracked via `equipment[].acq` and `materialAcq` (save schema **29**). **Watch for:** old saves backfill acquisition order best-effort (`ui/renderPossessions.js`, `sim/personItems.js`, `data/items.js`, `state/saveSystem.js`, `styles/legacy-items.css`).
+
+- **Estate → Particulars rename** — internal section key, DOM IDs (`section-particulars`, `part-panel-*`), vocab keys, situation domain, and `estateSituations.js` → `particularsSituations.js` aligned with the player-facing **Particulars** label (`navigation.js`, `index.html`, `data/vocab.js`, `data/particularsSituations.js`, and related imports).
+
+- **Equipped item clicks open popup** — clicking a filled equipment slot now opens the item info popup instead of unequipping; **Unequip** remains available as a button in the popup (`ui/renderPossessions.js`).
+
+- **School event balance pass** — retuned primary/secondary popup rewards: **You Begin School** (Eager +10 grade; Dragged +4 prowess, no grade), **Sharp Eyes in the Yard** (no grade on Watch; Keep Head Down +2 Int), **A Crossroads at School** (Teacher's Pet +2 Int/+40 grade; Rule the Playground +4 prowess, no grade; Skip Class +6 Cha/−30 grade), and **Secondary School** enrollment (no grade on any track; Arts +2 Cha/+1 prowess) (`data/educationSituations.js`).
+
+- **Study uses a dismissible popup** — the Education panel **Study** button opens a modal with the study flavor text; click outside or **Study (2 AP)** to confirm (`ui/studyPopup.js`, `legacy.js`, `index.html`).
+
+- **Study moved out of Decisions** — the Education panel **Study** button now opens an in-panel confirm prompt (2 AP → +25 grade, +0.25 Int) instead of routing to Journal → Decisions; annals flavor text is chosen at random from four study-session lines (`data/decisions.js`, `legacy.js`).
+
+### Added
+
+- ⚠ **High impact** — **Extended family / cousins** — at game start the player's aunts and uncles now marry (≈75% of settled adults) and have children, giving the player a family of cousins. Married-in spouses take the family surname convention and get careers; cousins inherit their parents' stats. Also fixed `getCousins` — it previously looked one generation too high and always returned empty; it now correctly returns the children of the player's aunts/uncles (so the Family tab's **Cousins** section and the "Cousin" relation label finally populate). **Watch for:** more NPCs generated at game start (~15–30), and any code relying on the old (empty) `getCousins` behavior (`legacy.js`, `state/gameState.js`).
+
+- **Persons of Note (pin/bookmark people)** — a ★ toggle beside the name in the person-info modal marks anyone worth tracking; marked people collect in a new **"Persons of Note"** category at the top of the Relations tab (player only). Dead pins stay listed (with †) until removed; you can't pin yourself. Stored on `player.pinnedIds` (added to `PERSON_DEFAULTS`, auto-backfilled on old saves — no schema bump) (`sim/pins.js`, `state/person.js`, `ui/bloodline.js`, `ui/personModal.js`, `styles/legacy.css`).
+
+- **Player Items button** — **Items** on the player (person modal or bloodline focal) now opens Particulars → Items instead of an inline inventory panel; NPCs still use the in-panel item grid (`ui/personModal.js`, `ui/bloodline.js`, `ui/itemAnnalsNav.js`).
+
+- **Annals item quicklinks** — item names in annals (acquisitions, gathering, hunting) are clickable like person links; they open Particulars → Items, scroll to the item, and pulse a journal-style indicator on the top-left of the matching inventory card until you open it (`utils/itemAnnalsLink.js`, `ui/itemAnnalsNav.js`, `ui/possessionsState.js`, `sim/personItems.js`, `sim/gathering.js`, `sim/hunting.js`, `ui/renderPossessions.js`, `styles/legacy.css`, `styles/legacy-items.css`).
+
+- **School grades wired up** — grade now moves via **passive intelligence accrual** each enrolled year (Int ~30 coasts to a C, Int ~10 fails), school-event choices (which keep their stat effects and now also show/grant a grade delta), a repeatable **Study** action in the Education panel (2 AP → +25 grade, +0.25 Int; in university grants only the Int trickle), and a **Study with** classmate interaction (2 AP, needs disposition > 19 with an enrolled classmate → +34 grade, +5 disposition). At the end of each tier the grade is cashed out: A → +5 Int/+2 Insight/+1 Cha, B → +3/+1/+1, C → +1 Int, D → nothing, **F → −10 Health and expulsion** (ends formal schooling — no higher tier). The Education panel's Study button opens an in-panel confirm prompt (`sim/grade.js`, `sim/educationTick.js`, `data/decisions.js`, `data/educationSituations.js`, `sim/personInteractions.js`, `sim/actionPoints.js`, `sim/situationLog.js`, `legacy.js`).
 
 - ⚠ **High impact** — **School cohort & Social View** — entering primary now generates a living school: classmates (3–5 students per age 6–11), each with a full nuclear family, plus exactly 3 staff (two female teachers + a headmaster) **filled from existing `schoolmaster`-career NPCs** when available (e.g. a relative already in the role), generating new ones only as a fallback and self-healing when a staff member dies. New 6-year-olds arrive yearly; the roster prunes students who leave; the cohort persists permanently in the world. The Education panel shows a **Social View** of staff + classmates sorted by age, with a secondary→primary toggle; cards open the person modal. Adds reusable `generateNpcWithFamily` and new `G.school` world state. **Watch for:** `G.school` is new top-level state added to the save object (old saves load with it null and repopulate on the next year tick); the player's school years now add ~100+ NPCs to `G.people` (bounded by `SCHOOL_COHORT_CAP`, currently very high) (`sim/npcFamilyGen.js`, `sim/schoolStaff.js`, `sim/schoolCohort.js`, `sim/educationTick.js`, `state/gameState.js`, `state/saveSystem.js`, `legacy.js`, `styles/legacy.css`).
 

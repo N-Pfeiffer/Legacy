@@ -3,6 +3,7 @@
 import { migrateLegacyItemAcquireBonuses } from '../sim/itemEffects.js';
 import { migrateTraitIds } from '../sim/traits.js';
 import { assignRandomHumor } from '../sim/humorPersonality.js';
+import { migrateStaleCareer } from '../sim/careers.js';
 import { ensureInventoryStores } from '../sim/personItems.js';
 
 export const PERSON_DEFAULTS = {
@@ -35,6 +36,7 @@ export const PERSON_DEFAULTS = {
   charisma: 50,
   intelligence: 50,
   wealth: 0,
+  money: 0,
   insight: 0,
   cunning: 0,
   prowessBase: 0,
@@ -46,13 +48,15 @@ export const PERSON_DEFAULTS = {
   birthStats: null,
   career: null,
   careerPickAge: 18,
-  education: { stage: 'none', since: null, track: null },
+  education: { stage: 'none', since: null, track: null, university: null, universityMatriculated: false, universityDeclinedYear: null },
+  degrees: [],
   traits: [],
   situations: [],
   resolvedSituations: {},
   decisionsSeen: [],
   items: [],
   materials: {},
+  materialAcq: {},
   equipment: [],
   equipped: {
     mainHand: null,
@@ -69,6 +73,7 @@ export const PERSON_DEFAULTS = {
   actionPoints: 20,
   actionPointsMax: 20,
   hobbies: {},
+  pinnedIds: [], // "Persons of Note" bookmarks (player only)
 };
 
 /**
@@ -115,8 +120,16 @@ export function migratePerson(p) {
   if (!Array.isArray(p.items)) p.items = [];
   ensureInventoryStores(p);
   if (p.education && !('track' in p.education)) p.education.track = null;
+  if (p.education && !('university' in p.education)) p.education.university = null;
+  if (p.education && !('universityMatriculated' in p.education)) p.education.universityMatriculated = false;
+  if (p.education && !('universityDeclinedYear' in p.education)) p.education.universityDeclinedYear = null;
+  if (!Array.isArray(p.degrees)) p.degrees = [];
+  if (p.isPlayer && p.career && p.career.promotionProgress == null) {
+    p.career.promotionProgress = 0;
+  }
   migrateLegacyItemAcquireBonuses(p);
   migrateTraitIds(p);
+  migrateStaleCareer(p);
   assignRandomHumor(p);
   return p;
 }

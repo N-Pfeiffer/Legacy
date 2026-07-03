@@ -5,7 +5,7 @@ export const VOCAB = {
     // Top section nav
     'section.bloodline': 'Bloodline',
     'section.vocation': 'Station',
-    'section.estate': 'Particulars',
+    'section.particulars': 'Particulars',
     'section.decisions': 'Journal',
 
     // Bloodline sub-tabs
@@ -35,13 +35,13 @@ export const VOCAB = {
       'A path will open in time. Few work before eighteen.',
 
     // Particulars sub-tabs
-    'estate.title': 'Particulars',
-    'estate.possessions': 'Items',
-    "estate.possessions_empty":
+    'particulars.title': 'Particulars',
+    'particulars.possessions': 'Items',
+    "particulars.possessions_empty":
       "You own nothing yet. The world is still your parents'.",
-    'estate.equipment': 'Equipment',
-    'estate.hobbies': 'Hobbies',
-    'estate.hobbies_empty':
+    'particulars.equipment': 'Equipment',
+    'particulars.hobbies': 'Hobbies',
+    'particulars.hobbies_empty':
       "No pastimes taken up. Idle hands are the devil's workshop.",
 
     // Journal sub-tabs — five panels with mortal flavor
@@ -65,7 +65,7 @@ export const VOCAB = {
   vampire: {
     'section.bloodline': 'Bloodline',
     'section.vocation': 'Domain & Disciplines',
-    'section.estate': 'Relics & Pursuits',
+    'section.particulars': 'Relics & Pursuits',
     'section.decisions': 'Ambitions',
 
     'bl.family': 'Mortal Family',
@@ -88,13 +88,13 @@ export const VOCAB = {
     'vocation.career_empty':
       'You hold no territory. Other things hunt where you have not yet claimed.',
 
-    'estate.title': 'Relics & Pursuits',
-    'estate.possessions': 'Relics',
-    'estate.possessions_empty':
+    'particulars.title': 'Relics & Pursuits',
+    'particulars.possessions': 'Relics',
+    'particulars.possessions_empty':
       'Nothing of import has been gathered. The dead are patient collectors.',
-    'estate.equipment': 'Equipment',
-    'estate.hobbies': 'Pursuits',
-    'estate.hobbies_empty':
+    'particulars.equipment': 'Equipment',
+    'particulars.hobbies': 'Pursuits',
+    'particulars.hobbies_empty':
       'Idleness is the curse of the immortal. Cultivate something, or rot.',
 
     // Ambitions sub-tabs — same structure as mortal Journal,

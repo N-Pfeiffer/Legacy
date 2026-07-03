@@ -1,40 +1,215 @@
-Ideas:
-    Two universities, Oxford and Cambridge that are fiercly elitist,
-    deeply traditional, required to swear oath to church of england
 
-    Then enter: The "Godless" institution, University College London 
-    Taught cutting edge education, medicine, chemistry, engineering, language 
+Plan: 
+    One general University option, but flavor text when applying varies depending on Fathers wealth. If Father is alive and  Wealth > 70 
+    and player is a male, then player gets Oxford acceptance letter. Else, player gets University College London acceptance letter. 
+    Oxford is free (paid for by Father), while University College London costs 40 pounds a year for player
 
-    Upon graduating Secondary School player gets couple options 
-        If wealthy and intelligent: invited to Oxford 
-            else 
-        If not-wealthy and very intelligent: invited to Oxford with scholarship
-            else 
-        If Very wealthy: invited to oxford 
-            else 
-        Player can apply to Oxford but must pass difficult exam
+    After joining University, player can select between different education "degrees." These each unlock a degree that
+    unlocks certain careers. Their selection has little 
+    impact on the mechanics, and only changes some flavor text/events, and the graduation/degree. 
+    Each degree cost progress (described below)
+
+        1. Theology (Only available at Oxford) (requires 600 progress)
+        2. Liberal Arts (only available at Oxford) (requires 400 progress)
+        3. Medicine (requires 800 progress)
+        4. Law (requires 800 progress) 
+        5. Bachelor of Science (only available at University College of London) (requires 400 progress)
+        6. Bachelor of Arts (requires 400 progress)
+
+    Melancholy Humor Player can choose between Oxford and University College, and attends for free (Impliment event for 
+    a patron to sponser the player, generate patron as a professor)
+
+    Impliment Currency system
+        Players Wealth attribute changes from social class to literal currency value (NPCs keep wealth attribute/social class)
+        add Sovereign (gold coin) item in inventory as a unique item. Icon is coinpurse. Stacking infinitely. 
+        Description: "A gold Sovereign with the face of King George on it. Worth £1"
+        Change Player "wealth" attribute from a 0-100 bar to the combined worth of the Sovereigns in coinpurse labeled with a £ sign
+        change character creation option for starting social class to effect father+mother, reduce cost of this option by 75%
+
+
+    Instead of a grade system, player has a progress bar and each year gets popup to choose their number of classes 
+    that year. 15AP is standard classes required to get 100 base progress. Reduced classes is 10AP to get 75 progress, or 
+    5 Few classes for 50 progress. 
+
+    Additionally, this popup options will cost the tuition, so 40 pounds for Standard, 30 for Reduced, and 15 for Few classes at
+    University College London (or none for Oxford).
+    If player cannot pay, they select the Don't Participate this Year option which saves their AP but earns them no progress, 
+    simulating the player not attending classes that year. 
 
 
 
-Use existing Baccalaureate system for applying to UCL as path for lower/middle class to 
-high society jobs?
 
 
-    Careers and Jobs 
-        High Society
-            Law 
-                Entry: Bar-Student 
-                    Studies on their own in the great hall of the Inn of the Court (NO PROFIT)
-                Junior: Junior Barrister 
-                    Attends court outside of the bar, costs money to live in the Inn of the Court. 
-                    Wait for solicitor to give them legal briefs/work (Cost wealth) 
-                Official: Kings Counsel 
-                    Formal silk gown upgrade, attends court inside the bar and leads prosecution or defense 
-                    and makes money from clients (gain wealth)
-                Elite: Sejeant-At-Law 
-                    UElite order of senior barristers. Strict monopolo on cases in Court of Common Pleas 
-                    (highest court). (Lot of money)
-                Pinacle: Judiciary 
-                    Judges, heavily political. Appointments made by Crown/prime minister. Highly Specific
-                    titles: The Lord Chief Justice(biggest dog), Master of the Rolls (Second biggest), 
-                    Baron of the Exchequer (financial/tax disputes) (Mucho Dinero)
+
+Career
+    Pay scale 1 is very poor, 10 is very rich. Representative of peak of career, pay generally begins at 50% of max 
+    and scales up with promotions. But this should vary significantly from baseline based on career and rank. 
+        Tiers 1–3 (£10 to £50): The brutal reality of the working poor.
+
+        Tiers 4–6 (£85 to £300): The comfortable, respectable middle class.
+
+        Tiers 7–8 (£550 to £700): Upper-middle-class luxury (carriages, multiple servants).
+
+        Tiers 9–10 (£1000 to £4000+): The absolute aristocratic and professional elite.
+
+
+    When player joins a career, display and generate immediate coworkers and boss
+
+    Promotion Section (parallel to grade)
+        Promotion depends on relationship with boss and "promotion chance", which is simply a progress bar and represents their 
+        progress towards a promotion. It reads promotion chance because the factors behind the below will be hidden from player.
+        Scaing gradually:
+            Relationship with boss greater than 50 disposition = Promotion at 50% Promotion chance 
+            Relationship with boss less than 0 dispositon = Promotion at 100% promotion chance 
+            Relationship with boss less that 50 disposition = Promotion Impossible 
+        
+        Work Hard option to increase promotion chance by 5%
+
+    
+
+
+    Career Options by Social Class
+        Description flavor text will be entered later. 
+
+        Elite
+            Barrister/Solicitor (Requires: Law)
+                Pay 9
+            
+            Clergy (Requires: theology)
+                Pay 8
+                
+            Physician (Requires: Medicine)
+                Pay 9
+
+        Rich
+            Diplomat (Requires: any degree, Charisma 40)
+                pay 6
+            
+            Foreign Discretionary Agent (Requires: any degree, cunning 40, charisma 40)
+                Pay 7
+            
+            Gentry (Requires: Father Wealth 80)
+                pay 6
+                
+            Engineer (Requires: Bachelor of Science)
+                Pay 6
+            
+            Banker/Financier (req: any degree)    
+                pay 6
+            
+            Antiquarian (Requires: Bachelor of Arts, or Liberal Arts)
+                pay 6
+
+        Middle Class 
+            Blacksmith (Requires: Secondary)
+                Pay 4
+                +2 Metallurgy skill per year 
+
+            House Servant (Requires: Charisma 30)
+                Pay 4
+            
+            Butler/Maid (Requires: Secondary)
+                Pay 3
+
+            Artisan (Requires: Secondary)
+                Pay 4 
+
+            Tailor (Requires: Tailor 40)
+               Pay 4
+                +2 Tailor skill per year 
+            
+            Schoolmaster (Requires: Any Degree)
+                pay 6
+
+            Alchemist (Requires: Alchemy 15)
+                pay 6 
+
+            Merchant (Requires: Secondary)
+                Pay 3-6 (scales off charisma)
+
+            Baker (Requires: Primary)
+                Pay 4
+            
+            Medium (Requires: Insight 20 or Charisma 40)
+                pay 4
+
+
+        Poor
+            Dockworker (Requires: None)
+                Pay 3
+
+            Sailor (Requires: None)
+                Pay 3
+            
+            Soldier (Requires: None)
+                Pay 3
+            
+            Performer (Requires: Charisma 50)
+                Pay 2-6 (scales off charisma)
+                +2 Performance skill per year 
+            
+            Courtesan (Requires: Charimsa 40)
+                Pay 2-8 (Scales off charisma)
+                15% chance to catch an STD per year 
+            
+            Constable (Requires: Prowess 30)
+                pay 3
+
+            Fisherman (Requires: Fishing 20)
+                Pay 3
+                +2 angling skill per year
+            
+        Criminal 
+             Poacher  (Requires: Hunting 15)
+                Pay 5
+                +2 hunting skill per year
+
+            
+            River Pirate 
+                Pay 5
+
+        NPC Only
+            Destitute 
+                Street Sweeper 
+            
+                Bone Grubber 
+
+                Beggar 
+            
+            Poor 
+                Factory Hand 
+
+                Farmhand 
+            
+            Middle Class 
+                Clerk 
+
+                Workhouse Manager 
+
+                Shopkeeper 
+
+                Toll-Gate Keeper 
+
+            Rich 
+                Magistrate 
+
+                Landholder
+
+                Estate Manager 
+
+                Dowager
+
+
+
+
+
+
+
+
+
+Ideas to explore in the future
+    1-2 events for each career
+    rare events for sailors to get marooned
+    events for soldiers
+    events/opportunities for schoolmasters
+    Elite upgrades to careers. Constables -> royal guard. Bank Manager -> Master of coin type position. Diplomat -> Prime Minister 

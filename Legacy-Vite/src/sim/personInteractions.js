@@ -47,6 +47,7 @@ import { clamp, statCap } from '../utils/index.js';
 import { G } from '../state/gameState.js';
 
 import { addGrade } from './grade.js';
+import { trySpendMoney } from './money.js';
 
 
 
@@ -228,11 +229,7 @@ export function performMarriageProposal(player, target, actionId, year) {
 
 
   if (ringTier) {
-
-    const cap = statCap('wealth', player.isVampire);
-
-    player.wealth = clamp(player.wealth - ringTier.wealthCost, 0, cap);
-
+    trySpendMoney(player, ringTier.moneyCost ?? ringTier.wealthCost ?? 0);
   }
 
 
@@ -355,6 +352,11 @@ export function performPersonInteraction(player, target, actionId, year, {
 
         message: `You spent time with ${name}.`,
 
+        effects: [
+          { kind: 'disposition', delta: 3 },
+          { kind: 'intimacy', delta: 2 },
+        ],
+
       };
 
     }
@@ -381,6 +383,8 @@ export function performPersonInteraction(player, target, actionId, year, {
 
         message: `You flirted with ${name}.`,
 
+        effects: [{ kind: 'intimacy', delta: 5 }],
+
       };
 
     }
@@ -406,6 +410,8 @@ export function performPersonInteraction(player, target, actionId, year, {
         type: 'bad',
 
         message: `You insulted ${name}.`,
+
+        effects: [{ kind: 'disposition', delta: -8 }],
 
       };
 
@@ -451,6 +457,11 @@ export function performPersonInteraction(player, target, actionId, year, {
 
           : baseMsg,
 
+        effects: [
+          { kind: 'intimacy', delta: 10 },
+          { kind: 'disposition', delta: 3 },
+        ],
+
       };
 
     }
@@ -484,6 +495,11 @@ export function performPersonInteraction(player, target, actionId, year, {
         type: 'info',
 
         message: `You studied with ${name}.`,
+
+        effects: [
+          { kind: 'grade', delta: 34 },
+          { kind: 'disposition', delta: 5 },
+        ],
 
       };
 

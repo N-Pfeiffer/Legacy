@@ -14,6 +14,8 @@ import { statCap } from '../utils/index.js';
 import { currentProwess } from '../sim/prowess.js';
 import { currentFertility } from '../sim/conception.js';
 import { wealthTierLabel, careerDisplay } from '../sim/careers.js';
+import { formatMoney, getMoney, moneyStandingLabel } from '../sim/money.js';
+import { pinnedPeople } from '../sim/pins.js';
 import {
   renderFamilyTab,
   defaultFamilyCollapseState,
@@ -22,6 +24,7 @@ import {
 import { escapeHtml } from './eventLog.js';
 import { relationLabel } from './relations.js';
 import { relationshipBondPanelHtml, relationshipCardBarsHtml } from './relationshipBars.js';
+import { navigateToPlayerInventory } from './itemAnnalsNav.js';
 import {
   renderPersonActionBarHtml,
   renderPersonTraitsPanelHtml,
@@ -181,7 +184,7 @@ export function renderBloodline() {
   const player = getPlayer();
   const relLabel = relationLabel(focal, player, {
     prefix:    'Your ',
-    fallback:  'Kin',
+    fallback:  '',
     selfLabel: 'Yourself',
   });
   document.getElementById('bl-focal-rel').textContent = relLabel;
@@ -252,22 +255,28 @@ export function focalStatsHtml(p) {
     { key: 'prowess',        label: 'Prowess',        value: prowess,          color: 'var(--red)'     },
     { key: 'charisma', label: 'Charisma',        value: p.charisma, color: 'var(--accent2)' },
     { key: 'intelligence',   label: 'Intelligence',   value: p.intelligence,   color: 'var(--blue)'    },
-    { key: 'wealth',         label: 'Wealth',         value: p.wealth,         color: 'var(--green)'   },
+    {
+      key: 'wealth',
+      label: p.isPlayer ? 'Purse' : 'Wealth',
+      value: p.isPlayer ? getMoney(p) : p.wealth,
+      color: 'var(--green)',
+    },
     { key: 'insight',        label: insightLabel,     value: p.insight,        color: 'var(--gold)'    },
     { key: 'cunning',        label: 'Cunning',        value: p.cunning ?? 0,   color: 'var(--accent2)' },
     { key: 'fertility',      label: 'Fertility',      value: fertility,        color: 'var(--accent2)' },
   ];
 
   const rowsHtml = rows.map(r => {
-    const cap = statCap(r.key, p.isVampire);
+    const cap = r.key === 'wealth' && p.isPlayer ? 1 : statCap(r.key, p.isVampire);
     const value = Math.max(0, Math.round(r.value));
-    const pct = Math.max(0, Math.min(100, (value / cap) * 100));
-    // NPC wealth: tier label only (no raw number). Player keeps number + tier.
+    const pct = r.key === 'wealth' && p.isPlayer
+      ? 0
+      : Math.max(0, Math.min(100, (value / cap) * 100));
     let valueHtml;
     if (r.key === 'wealth' && !p.isPlayer) {
       valueHtml = `<span class="focal-stat-tier focal-stat-tier--primary">${escapeHtml(wealthTierLabel(value))}</span>`;
-    } else if (r.key === 'wealth') {
-      valueHtml = `${value} <span class="focal-stat-tier">${escapeHtml(wealthTierLabel(value))}</span>`;
+    } else if (r.key === 'wealth' && p.isPlayer) {
+      valueHtml = `${escapeHtml(formatMoney(value))} <span class="focal-stat-tier">${escapeHtml(moneyStandingLabel(value))}</span>`;
     } else {
       valueHtml = String(value);
     }
@@ -347,6 +356,10 @@ export function renderBlFocalActions(focal, player) {
       renderBloodline();
     },
     onItems: () => {
+      if (focal.isPlayer) {
+        navigateToPlayerInventory();
+        return;
+      }
       blFocalView = blFocalView === 'items' ? 'profile' : 'items';
       renderBloodline();
     },
@@ -409,19 +422,23 @@ export function renderBlFocalStats(focal, player) {
   }
 
   if (blFocalView === 'items') {
-    statsEl.style.display = '';
-    statsEl.innerHTML = renderPersonItemsPanelHtml(
-      focal,
-      escapeHtml,
-      hooks.getItemPopupOptions(),
-      { actionAttr: 'bl-focal-action' },
-    );
-    wirePersonItemsPanel(statsEl, player, escapeHtml, hooks.getItemPopupOptions());
-    wirePersonPanelBack(statsEl, 'bl-focal-action', () => {
+    if (focal.isPlayer) {
       blFocalView = 'profile';
-      renderBloodline();
-    });
-    return;
+    } else {
+      statsEl.style.display = '';
+      statsEl.innerHTML = renderPersonItemsPanelHtml(
+        focal,
+        escapeHtml,
+        hooks.getItemPopupOptions(),
+        { actionAttr: 'bl-focal-action' },
+      );
+      wirePersonItemsPanel(statsEl, player, escapeHtml, hooks.getItemPopupOptions());
+      wirePersonPanelBack(statsEl, 'bl-focal-action', () => {
+        blFocalView = 'profile';
+        renderBloodline();
+      });
+      return;
+    }
   }
 
   if (focal.isPlayer) {
@@ -584,7 +601,19 @@ export function renderRelationsTab(focal) {
   const friends = getFriends(focal);
   const enemies = getEnemies(focal);
 
+  // "Persons of Note" — the player's own bookmarks, shown only on their Relations.
+  const notedHtml = focal.isPlayer
+    ? subsectionCollapsibleHtml(
+        'Persons of Note',
+        pinnedPeople(getPlayer()),
+        focal,
+        'No one marked yet. Tap the star on anyone to keep them here.',
+        'relationsNoted',
+      )
+    : '';
+
   return [
+    notedHtml,
     subsectionCollapsibleHtml('Lovers', lovers, focal, 'No known lovers.', 'relationsLovers'),
     subsectionCollapsibleHtml('Friends', friends, focal, 'No close friends.', 'relationsFriends'),
     subsectionCollapsibleHtml('Enemies', enemies, focal, 'No known enemies.', 'relationsEnemies'),

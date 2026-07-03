@@ -1,4 +1,5 @@
 import { ITEMS_BY_ID } from '../data/items.js';
+import { itemAnnalsLinkHtml } from '../utils/itemAnnalsLink.js';
 import {
   getGatheringConfig,
   getGatheringZone,
@@ -70,8 +71,8 @@ function formatDropList(totals) {
     .filter(([, n]) => n > 0)
     .sort((a, b) => (ITEMS_BY_ID[a[0]]?.label || a[0]).localeCompare(ITEMS_BY_ID[b[0]]?.label || b[0]))
     .map(([id, n]) => {
-      const label = ITEMS_BY_ID[id]?.label || id;
-      return `${n} ${label}`;
+      const link = itemAnnalsLinkHtml(id);
+      return n > 1 ? `${n}× ${link}` : link;
     });
 
   if (!parts.length) return 'nothing of note';

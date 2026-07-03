@@ -293,6 +293,10 @@
       <div class="sidebar-year" id="year-display">Year <span id="current-year">1990</span></div>
     </div>
 
+    <!-- Year-advance button lives in the sidebar so the scrolling main
+         column doesn't bump it around as the chronicle grows. -->
+    <button class="action-btn primary sidebar-action" id="btn-age-up" data-vocab="btn.passYear">Pass the Year ▶</button>
+
     <div class="panel player-section">
       <button type="button" class="player-card" id="player-panel" title="View your family">
         <span class="player-card-label" data-vocab="panel.thyself">You</span>
@@ -307,10 +311,6 @@
         <div class="stat-bar"><div class="stat-fill" id="sb-action-points" style="background:var(--gold)"></div></div>
       </div>
     </div>
-
-    <!-- Year-advance button lives in the sidebar so the scrolling main
-         column doesn't bump it around as the chronicle grows. -->
-    <button class="action-btn primary sidebar-action" id="btn-age-up" data-vocab="btn.passYear">Pass the Year ▶</button>
 
     <div class="panel">
       <div class="panel-heading" data-vocab="panel.attributes">Attributes</div>
@@ -352,14 +352,11 @@
 
       <div class="stat">
         <div class="stat-label">
-          <span>Wealth</span>
-          <span id="sv-wealth">—</span>
+          <span>Purse</span>
+          <span id="sv-purse">—</span>
         </div>
-        <div class="stat-bar"><div class="stat-fill" id="sb-wealth" style="background:var(--green)"></div></div>
-        <!-- Tier label sits below the bar in dim italic so it
-             complements rather than competes with the numeric value.
-             Populated by render() from wealthTierLabel(). -->
-        <div class="stat-tier" id="sv-wealth-tier">—</div>
+        <div class="stat-bar stat-bar--hidden"><div class="stat-fill" id="sb-purse" style="background:var(--green)"></div></div>
+        <div class="stat-tier" id="sv-purse-tier">—</div>
       </div>
 
       <div class="stat">
@@ -385,7 +382,7 @@
     <nav class="section-nav" id="section-nav">
       <button class="section-tab active" data-section="bloodline" data-vocab="section.bloodline">Bloodline</button>
       <button class="section-tab" data-section="vocation" data-vocab="section.vocation">Station</button>
-      <button class="section-tab" data-section="estate" data-vocab="section.estate">Particulars</button>
+      <button class="section-tab" data-section="particulars" data-vocab="section.particulars">Particulars</button>
       <button class="section-tab" data-section="decisions" data-vocab="section.decisions">Journal</button>
     </nav>
 
@@ -462,20 +459,20 @@
     </div>
 
     <!-- ── Estate section (Particulars / Relics & Pursuits) ─ -->
-    <div class="section" id="section-estate" style="display:none;">
-      <div class="sub-panel" id="est-panel-hobbies" style="display:none;">
+    <div class="section" id="section-particulars" style="display:none;">
+      <div class="sub-panel" id="part-panel-hobbies" style="display:none;">
         <div class="placeholder-card">
           <div class="placeholder-emblem">♛</div>
-          <div class="placeholder-text" data-vocab="estate.hobbies_empty">
+          <div class="placeholder-text" data-vocab="particulars.hobbies_empty">
             No pastimes taken up. Idle hands are the devil's workshop.
           </div>
         </div>
       </div>
-      <div class="sub-panel" id="est-panel-equipment" style="display:none;"></div>
-      <div class="sub-panel" id="est-panel-possessions" style="display:none;">
+      <div class="sub-panel" id="part-panel-equipment" style="display:none;"></div>
+      <div class="sub-panel" id="part-panel-possessions" style="display:none;">
         <div class="placeholder-card">
           <div class="placeholder-emblem">♛</div>
-          <div class="placeholder-text" data-vocab="estate.possessions_empty">
+          <div class="placeholder-text" data-vocab="particulars.possessions_empty">
             You own nothing yet. The world is still your parents'.
           </div>
         </div>
@@ -708,6 +705,11 @@
 <!-- Decision action popup — e.g. Open Mudlark's Lockbox -->
 <div id="decision-overlay">
   <div class="decision-modal situation-modal" id="decision-modal"></div>
+</div>
+
+<!-- Education Study confirm popup -->
+<div id="study-overlay">
+  <div class="situation-modal study-modal" id="study-modal"></div>
 </div>
     <script type="module" src="/src/main.js"></script>
   </body>

@@ -1,6 +1,7 @@
 import { ITEMS_BY_ID, itemInventoryStore } from '../data/items.js';
 import { nextId } from '../state/gameState.js';
 import { logEvent } from './annals.js';
+import { itemAnnalsLinkHtml } from '../utils/itemAnnalsLink.js';
 import {
   ensureEquippedSlots,
   EQUIPPED_SLOT_DEFAULTS,
@@ -19,6 +20,9 @@ export function ensureInventoryStores(person) {
   if (!person.materials || typeof person.materials !== 'object') {
     person.materials = {};
   }
+  if (!person.materialAcq || typeof person.materialAcq !== 'object') {
+    person.materialAcq = {};
+  }
   if (!Array.isArray(person.equipment)) person.equipment = [];
   ensureEquippedSlots(person);
 }
@@ -31,6 +35,7 @@ export function addMaterial(person, itemId, n = 1) {
   if (!person || !ITEMS_BY_ID[itemId] || n <= 0) return false;
   ensureInventoryStores(person);
   person.materials[itemId] = (person.materials[itemId] || 0) + n;
+  person.materialAcq[itemId] = nextId();
   return true;
 }
 
@@ -40,8 +45,12 @@ export function removeMaterial(person, itemId, n = 1) {
   const cur = person.materials[itemId] || 0;
   if (cur < n) return false;
   const next = cur - n;
-  if (next <= 0) delete person.materials[itemId];
-  else person.materials[itemId] = next;
+  if (next <= 0) {
+    delete person.materials[itemId];
+    delete person.materialAcq[itemId];
+  } else {
+    person.materials[itemId] = next;
+  }
   return true;
 }
 
@@ -55,7 +64,8 @@ export function addEquipment(person, itemId) {
   if (!person || !ITEMS_BY_ID[itemId]) return null;
   ensureInventoryStores(person);
   const uid = newEquipmentUid();
-  person.equipment.push({ uid, id: itemId });
+  const acq = nextId();
+  person.equipment.push({ uid, id: itemId, acq });
   return uid;
 }
 
@@ -97,15 +107,17 @@ export function ownedItemIds(person) {
   return [...ids];
 }
 
-function logPlayerItemGained(person, itemId) {
+function logPlayerItemGained(person, itemId, { equipmentUid } = {}) {
   if (!person?.isPlayer || (person.age ?? 0) === 0) return;
   const item = ITEMS_BY_ID[itemId];
   if (!item) return;
+  const link = itemAnnalsLinkHtml(itemId, { equipmentUid });
   logEvent({
-    msg: `You acquired ${item.label || item.name || itemId}.`,
+    msg: `You acquired ${link}.`,
     type: 'good',
     category: 'item',
     title: item.label || item.name || itemId,
+    html: true,
   });
 }
 
@@ -116,8 +128,9 @@ export function grantItem(person, itemId, opts = {}) {
   const store = itemInventoryStore(itemId);
   if (!store) return false;
 
+  let equipmentUid = null;
   if (store === 'equipment') {
-    addEquipment(person, itemId);
+    equipmentUid = addEquipment(person, itemId);
   } else {
     addMaterial(person, itemId, 1);
   }
@@ -125,7 +138,7 @@ export function grantItem(person, itemId, opts = {}) {
   if (person.isPlayer && itemId === 'mudlarks_lockbox' && !person.mudlarkLockbox) {
     person.mudlarkLockbox = { active: true, resolved: false };
   }
-  if (!opts.silent) logPlayerItemGained(person, itemId);
+  if (!opts.silent) logPlayerItemGained(person, itemId, { equipmentUid });
   return true;
 }
 
@@ -163,8 +176,33 @@ export function clearItems(person) {
   if (!person) return;
   person.items = [];
   person.materials = {};
+  person.materialAcq = {};
   person.equipment = [];
   person.equipped = structuredClone(EQUIPPED_SLOT_DEFAULTS);
+}
+
+/** Backfill acquisition order for saves predating schema 29. */
+export function migrateInventoryAcquisition(person, seqStart = 1) {
+  if (!person) return seqStart;
+  ensureInventoryStores(person);
+  let seq = seqStart;
+
+  for (const inst of person.equipment) {
+    if (inst && typeof inst.acq !== 'number') {
+      inst.acq = seq;
+      seq += 1;
+    }
+  }
+
+  for (const itemId of Object.keys(person.materials)) {
+    if ((person.materials[itemId] || 0) <= 0) continue;
+    if (typeof person.materialAcq[itemId] !== 'number') {
+      person.materialAcq[itemId] = seq;
+      seq += 1;
+    }
+  }
+
+  return seq;
 }
 
 /**

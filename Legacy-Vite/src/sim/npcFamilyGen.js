@@ -21,15 +21,34 @@ import { randomName, randomSurname } from '../data/names.js';
 import { assignRandomHumor } from './humorPersonality.js';
 import { rollSiblingCount } from './familyGeneration.js';
 import { clamp } from '../utils/index.js';
+import { weightedPick } from '../utils/weightedPick.js';
+import { SOCIAL_CLASS_BY_ID } from '../data/socialClass.js';
 
 const PARENT_AGE_GAP_MIN = 20; // BALANCE: provisional
 const PARENT_AGE_GAP_MAX = 38;
 const SIBLING_MIN = 0;         // BALANCE: provisional — small families for cohort scale
 const SIBLING_MAX = 3;
 
+// Household wealth distribution for generated families. Skews middle-class so the
+// wealth-based school-dropout curve (npcEducationCurve.js) doesn't cull nearly the
+// whole cohort — poor/destitute families still exist and still drop out realistically.
+// BALANCE: provisional.
+const HOUSEHOLD_WEALTH_WEIGHTS = [
+  { id: 'destitute', weight: 1 },
+  { id: 'poor', weight: 3 },
+  { id: 'middle', weight: 4 },
+  { id: 'rich', weight: 2 },
+];
+
 const randInt = (min, max) => min + Math.floor(Math.random() * (max - min + 1));
 
-function makeAdult({ sex, age, surname, maidenName = null, generation = -1 }) {
+function rollHouseholdWealth() {
+  const tier = SOCIAL_CLASS_BY_ID[weightedPick(HOUSEHOLD_WEALTH_WEIGHTS).id];
+  const base = tier?.wealth ?? 0;
+  return Math.max(0, base + randInt(-6, 6)); // small jitter around the tier value
+}
+
+function makeAdult({ sex, age, surname, maidenName = null, generation = -1, wealth = 0 }) {
   const roll = rollAdultStats();
   const p = createPerson({ firstName: randomName(sex), surname, sex, age, generation });
   p.yearBorn = G.year - age;
@@ -39,6 +58,7 @@ function makeAdult({ sex, age, surname, maidenName = null, generation = -1 }) {
   p.cunning = roll.cunning;
   p.fertilityBase = roll.fertilityBase;
   p.prowessBase = roll.prowessBase;
+  p.wealth = wealth;
   if (maidenName) p.maidenName = maidenName;
   snapshotBirthStats(p);
   assignRandomHumor(p);
@@ -73,10 +93,13 @@ export function generateNpcWithFamily({ age, sex, surname } = {}) {
   const fam = surname || randomSurname();
   const members = [];
 
+  // Shared household wealth → children inherit it (inheritStats averages the parents),
+  // so families span classes instead of all being destitute.
+  const household = rollHouseholdWealth();
   const fatherAge = age + randInt(PARENT_AGE_GAP_MIN, PARENT_AGE_GAP_MAX);
   const motherAge = age + randInt(PARENT_AGE_GAP_MIN, PARENT_AGE_GAP_MAX);
-  const father = makeAdult({ sex: 'M', age: fatherAge, surname: fam });
-  const mother = makeAdult({ sex: 'F', age: motherAge, surname: fam, maidenName: randomSurname() });
+  const father = makeAdult({ sex: 'M', age: fatherAge, surname: fam, wealth: household });
+  const mother = makeAdult({ sex: 'F', age: motherAge, surname: fam, maidenName: randomSurname(), wealth: household });
   father.spouseIds.push(mother.id);
   mother.spouseIds.push(father.id);
 

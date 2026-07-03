@@ -90,7 +90,7 @@ function recordMudlarkAttempt(player, method) {
     choiceId: method,
     choiceLabel,
     logText: (p) => mudlarkAttemptLogText(p),
-    domain: 'estate',
+    domain: 'particulars',
     logContext: 'Thames Mudflats',
     age: player.age,
     // Each pick is a beat in the chronicle; only the successful open earns a Memory.

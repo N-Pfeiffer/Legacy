@@ -1,5 +1,5 @@
 import { TRAITS_BY_ID } from '../data/traits.js';
-import { trackLabel } from '../data/educationTracks.js';
+import { trackLabel } from '../data/education.js';
 import { appendAnnals } from './annals.js';
 import { recordMemory } from './memories.js';
 
@@ -68,7 +68,7 @@ export const SITUATION_DOMAINS = {
   career: { label: 'Career' },
   family: { label: 'Family' },
   clan: { label: 'Clan' },
-  estate: { label: 'Estate' },
+  particulars: { label: 'Particulars' },
 };
 
 const EDUCATION_TEMPLATE_PREFIXES = [
@@ -81,6 +81,8 @@ const EDUCATION_TEMPLATE_PREFIXES = [
   'doctorate_',
   'univ_',
 ];
+
+import { getMoney } from '../sim/money.js';
 
 const STAT_KEYS = ['charisma', 'intelligence', 'wealth', 'insight', 'cunning', 'health'];
 
@@ -100,12 +102,7 @@ const EDUCATION_STAGE_LABELS = {
   secondary: 'Secondary school',
   completed: 'School completed',
   dropped_out: 'Dropped out',
-  baccalaureate_in_progress: 'Baccalaureate (in progress)',
-  baccalaureate: 'Baccalaureate',
-  licentiate_in_progress: 'Licentiate (in progress)',
-  licentiate: 'Licentiate',
-  doctorate_in_progress: 'Doctorate (in progress)',
-  doctorate: 'Doctorate',
+  university: 'At university',
 };
 
 function educationStageLabel(stage) {
@@ -161,11 +158,15 @@ export function renderSituationPendingMetaHtml(tpl, inst, escapeHtml) {
   return `<div class="situation-pending-meta">${sourceHtml}${yearHtml}</div>`;
 }
 
+function playerWealthSnapshot(player) {
+  return player?.isPlayer ? getMoney(player) : (player.wealth ?? 0);
+}
+
 function snapshotForSituationResolve(player) {
   return {
     charisma: player.charisma ?? 0,
     intelligence: player.intelligence ?? 0,
-    wealth: player.wealth ?? 0,
+    wealth: playerWealthSnapshot(player),
     insight: player.insight ?? 0,
     cunning: player.cunning ?? 0,
     health: player.health ?? 0,
@@ -181,7 +182,8 @@ function diffSituationEffects(before, player) {
   const effects = [];
 
   for (const stat of STAT_KEYS) {
-    const delta = (player[stat] ?? 0) - (before[stat] ?? 0);
+    const after = stat === 'wealth' ? playerWealthSnapshot(player) : (player[stat] ?? 0);
+    const delta = after - (before[stat] ?? 0);
     if (delta !== 0) effects.push({ kind: 'stat', stat, delta });
   }
 
@@ -294,13 +296,14 @@ export function recordEvent(player, {
   const tier = (raw === 'flavor' || raw === 'milestone' || raw === 'silent') ? raw : 'silent';
   if (tier === 'silent') return;
 
-  appendAnnals({ year, msg: narrative, type, html: false });
-  if (tier !== 'milestone') return;
-
   const statLine = formatSituationOutcomeLine(effects);
   const rewardText = typeof reward === 'function' ? reward(player) : reward;
   let outcomeLine = statLine;
   if (rewardText) outcomeLine = outcomeLine ? `${outcomeLine} ${rewardText}` : rewardText;
+
+  const annalsMsg = appendAnnalsOutcomeHtml(narrative, effects, rewardText);
+  appendAnnals({ year, msg: annalsMsg, type, html: annalsMsg !== narrative });
+  if (tier !== 'milestone') return;
 
   if (import.meta.env?.DEV && warnIfEmpty && !outcomeLine) {
     console.warn(
@@ -338,12 +341,14 @@ export function recordSituationResolution(player, {
   reward,
   type,
   apply,
+  declaredEffects,
 }) {
   if (!player) return;
 
   const before = snapshotForSituationResolve(player);
   apply();
-  const effects = diffSituationEffects(before, player);
+  const diffEffects = diffSituationEffects(before, player);
+  const effects = declaredEffects?.length ? declaredEffects : diffEffects;
   // Resolve narrative after apply so logText functions can reflect outcomes (e.g. prowess checks).
   const narrative = resolveLogNarrative(logText, player, choiceLabel);
 
@@ -420,7 +425,8 @@ export function formatSituationEffectText(effect) {
   if (effect.kind === 'stat') {
     const label = STAT_LABELS[effect.stat] || effect.stat;
     const sign = effect.delta > 0 ? '+' : '−';
-    const magnitude = Math.abs(effect.delta);
+    const raw = Math.abs(effect.delta);
+    const magnitude = Number.isInteger(raw) ? raw : raw.toFixed(2).replace(/\.?0+$/, '');
     return `${sign}${magnitude} ${label}`;
   }
   if (effect.kind === 'trait') {
@@ -444,6 +450,14 @@ export function formatSituationEffectText(effect) {
     const sign = effect.delta > 0 ? '+' : '−';
     return `${sign}${Math.abs(effect.delta)} Grade`;
   }
+  if (effect.kind === 'disposition') {
+    const sign = effect.delta > 0 ? '+' : '−';
+    return `${sign}${Math.abs(effect.delta)} Disposition`;
+  }
+  if (effect.kind === 'intimacy') {
+    const sign = effect.delta > 0 ? '+' : '−';
+    return `${sign}${Math.abs(effect.delta)} Intimacy`;
+  }
   return '';
 }
 
@@ -459,5 +473,13 @@ export function formatSituationOutcomeLine(effects) {
     .filter(Boolean);
   if (!parts.length) return '';
   return `(${parts.join(', ')})`;
+}
+
+/** Append an italic mechanical outcome line to an annals message (HTML). */
+export function appendAnnalsOutcomeHtml(message, effects, rewardText) {
+  let line = formatSituationOutcomeLine(effects);
+  if (rewardText) line = line ? `${line} ${rewardText}` : rewardText;
+  if (!line) return message;
+  return `${message}<br><em>${line}</em>`;
 }
 

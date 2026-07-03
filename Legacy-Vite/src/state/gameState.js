@@ -15,6 +15,8 @@ export let G = {
   memories: [],
   // School cohort + staff (see sim/schoolCohort.js). null until the player enters school.
   school: null,
+  // Player workplace (boss/coworkers/peers). null until the player joins a career.
+  workplace: null,
 };
 
 /** Which top-level section tab is active. */
@@ -108,23 +110,20 @@ export const getAuntsUnclesOnLine = (parent) => {
   return getSiblings(parent);
 };
 
-/** Shares a grandparent but is not a parent, child, or sibling of focal. */
+/** Children of the focal's aunts/uncles (i.e. people who share a grandparent). */
 export const getCousins = (p) => {
-  const parentSet = new Set(p.parentIds);
-  if (!parentSet.size) return [];
-  const gpSet = new Set();
-  for (const parent of getParents(p)) {
-    for (const gpid of parent.parentIds) gpSet.add(gpid);
-  }
-  if (!gpSet.size) return [];
   const auIds = new Set(getAuntsUncles(p).map((au) => au.id));
-  return G.people.filter((q) => {
-    if (q.id === p.id) return false;
-    if (parentSet.has(q.id)) return false;
-    if (q.parentIds.some((id) => parentSet.has(id))) return false;
-    if (auIds.has(q.id)) return false;
-    return q.parentIds.some((id) => gpSet.has(id));
-  });
+  if (!auIds.size) return [];
+  const seen = new Set();
+  const out = [];
+  for (const q of G.people) {
+    if (q.id === p.id || seen.has(q.id)) continue;
+    if (q.parentIds.some((id) => auIds.has(id))) {
+      seen.add(q.id);
+      out.push(q);
+    }
+  }
+  return out;
 };
 
 /** Children of focal's children. */

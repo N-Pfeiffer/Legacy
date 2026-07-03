@@ -4,12 +4,20 @@ import { G } from '../state/gameState.js';
 import { refreshActionPoints } from './actionPoints.js';
 import { hasTrait } from './traits.js';
 import { recordMilestone } from './situationLog.js';
+import { addMoney, getMoney, trySpendMoney } from './money.js';
 
-export const PRIVATE_CELL_WEALTH_MIN = 63;
+export const PRIVATE_CELL_MONEY_MIN = 75;
 export const PRISON_DISEASE_HEALTH_LOSS = 30;
-export const PRISON_TURNKEY_WEALTH_COST = 10;
+export const PRISON_TURNKEY_MONEY_COST = 5;
 export const PRISON_TURNKEY_CANNOT_PAY_HEALTH = 20;
-export const PRISON_TURNKEY_WEALTH_MIN = 30;
+export const PRISON_TURNKEY_MONEY_MIN = 10;
+
+/** @deprecated use PRIVATE_CELL_MONEY_MIN */
+export const PRIVATE_CELL_WEALTH_MIN = PRIVATE_CELL_MONEY_MIN;
+/** @deprecated use PRISON_TURNKEY_MONEY_COST */
+export const PRISON_TURNKEY_WEALTH_COST = PRISON_TURNKEY_MONEY_COST;
+/** @deprecated use PRISON_TURNKEY_MONEY_MIN */
+export const PRISON_TURNKEY_WEALTH_MIN = PRISON_TURNKEY_MONEY_MIN;
 
 const TURNKEY_CHANCE_EARLY = 0.8;
 const EARLY_ERA_YEAR_MAX = 1850;
@@ -21,6 +29,10 @@ function bumpHealth(player, delta) {
 }
 
 function bumpWealth(player, delta) {
+  if (player?.isPlayer) {
+    addMoney(player, delta);
+    return;
+  }
   const cap = statCap('wealth', !!player.isVampire);
   player.wealth = clamp((player.wealth || 0) + delta, 0, cap);
 }
@@ -35,6 +47,9 @@ export function isVictorianPrisonEra(year = G.year) {
 
 /** @returns {'private' | 'dungeon'} */
 export function assignCellType(player) {
+  if (player?.isPlayer) {
+    return getMoney(player) >= PRIVATE_CELL_MONEY_MIN ? 'private' : 'dungeon';
+  }
   return (player?.wealth ?? 0) >= PRIVATE_CELL_WEALTH_MIN ? 'private' : 'dungeon';
 }
 
@@ -98,10 +113,17 @@ export function applyPrisonTurnkeyCannotPay(player) {
 }
 
 export function applyPrisonTurnkeyPay(player) {
+  if (player?.isPlayer) {
+    trySpendMoney(player, PRISON_TURNKEY_MONEY_COST);
+    return;
+  }
   bumpWealth(player, -PRISON_TURNKEY_WEALTH_COST);
 }
 
 export function canPayTurnkeyGarnish(player) {
+  if (player?.isPlayer) {
+    return getMoney(player) >= PRISON_TURNKEY_MONEY_MIN;
+  }
   return (player?.wealth ?? 0) > PRISON_TURNKEY_WEALTH_MIN;
 }
 

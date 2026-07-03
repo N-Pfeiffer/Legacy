@@ -4,7 +4,7 @@ import { PLAYER_EVENTS } from '../data/playerEvents.js';
 import { pick, weightedPick } from '../utils/index.js';
 import { ANNALS_PRIORITY, proposeAnnals } from './annals.js';
 import { isInPrison } from './prison.js';
-import { tickEstateSituations } from '../data/estateSituations.js';
+import { tickParticularsSituations } from '../data/particularsSituations.js';
 
 let hooks = {
   fireSituation: () => {},
@@ -73,5 +73,5 @@ export function processPlayerEvents(player) {
     }
   }
 
-  tickEstateSituations(player, G.year, hooks.fireSituation);
+  tickParticularsSituations(player, G.year, hooks.fireSituation);
 }

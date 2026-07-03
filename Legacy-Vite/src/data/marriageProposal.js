@@ -1,11 +1,13 @@
+import { getMoney } from '../sim/money.js';
+
 /** Minimum intimacy for a proposal to have any real chance of success. */
 export const PROPOSE_INTIMACY_REQUIRED = 50;
 
-/** Ring tiers: wealth cost and flat success bonus when proposing. */
+/** Ring tiers: £ cost and flat success bonus when proposing. */
 export const PROPOSAL_RING_TIERS = [
-  { id: 'silver', label: 'Silver ring', wealthCost: 20, chanceBonus: 0.10 },
-  { id: 'gold', label: 'Gold ring', wealthCost: 40, chanceBonus: 0.20 },
-  { id: 'diamond', label: 'Diamond ring', wealthCost: 60, chanceBonus: 0.32 },
+  { id: 'silver', label: 'Silver ring', moneyCost: 8, chanceBonus: 0.10 },
+  { id: 'gold', label: 'Gold ring', moneyCost: 25, chanceBonus: 0.20 },
+  { id: 'diamond', label: 'Diamond ring', moneyCost: 80, chanceBonus: 0.32 },
 ];
 
 /** Vampire may override a refusal when enthrallment is strictly above this value. */
@@ -53,7 +55,8 @@ export function isProposalAttemptAction(actionId) {
 
 export function canAffordProposalRingTier(player, tier) {
   if (!tier) return false;
-  return Math.round(player?.wealth ?? 0) >= tier.wealthCost;
+  const cost = tier.moneyCost ?? tier.wealthCost ?? 0;
+  return getMoney(player) >= cost;
 }
 
 export function proposalSuccessTitle(target) {

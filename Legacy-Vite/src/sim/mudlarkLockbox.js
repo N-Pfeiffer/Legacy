@@ -13,7 +13,7 @@ export const LOCKBOX_INTRO_BODY =
 export const LOCKBOX_SUCCESS_BODY =
   'The lockbox yields its hoard. You tuck the gold away before anyone else combs the flats.';
 
-export const LOCKBOX_SUCCESS_ACQUISITION = '+10 Wealth';
+export const LOCKBOX_SUCCESS_ACQUISITION = '+£10';
 
 export const LOCKBOX_COOLDOWN_LABEL = 'Cooldown: 1 year';
 
@@ -22,7 +22,13 @@ function rollStatCheck(statValue, threshold = LOCKBOX_CHECK_THRESHOLD) {
   return statValue + roll >= threshold;
 }
 
+import { addMoney } from './money.js';
+
 function bumpWealth(player, delta) {
+  if (player?.isPlayer) {
+    addMoney(player, delta);
+    return;
+  }
   const cap = statCap('wealth', !!player.isVampire);
   player.wealth = clamp((player.wealth || 0) + delta, 0, cap);
 }
