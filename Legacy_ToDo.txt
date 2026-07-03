@@ -133,9 +133,9 @@ UI
 
 	Filter/tag descendants possibly by bloodlines/family branches
 
-	Collapse left and right side bars with narrow (mobile) screen. Add buttons that appear under the main game window on either side to popout
-			the Stats/Settings left sidebar and the rightside Annals sidebar overtop of the main screen. Clicking the main screen minimizes the sidebar.
-			Only one sidebar allowed at a time, clicking the other one minimizes the previous one.
+	Collapse left and right side bars with narrow (mobile) screen. Add buttons that appear bottom of main game window on either side to popout
+			the Stats/Settings left sidebar and the rightside Annals sidebar overtop of the main screen. Clicking the main screen minimizes the 
+			open sidebar. Only one sidebar allowed at a time, clicking the other one minimizes the previous one.
 
 	Confirm button for choices such as Humor selection at character creation.
 
