@@ -45,6 +45,7 @@ Flag changes that touch any of:
 ### Changed
 
 - **Character creation & particulars** — stat steppers show per-stat point costs (2 for Charisma/Intelligence, 4 for Insight/Prowess); Choleric tagline renamed to **The Hasty**; Sanguine humor grants **+50 max Health** (trait `statMods.health` now raises the health ceiling via `statCap`); Items panel always shows inventory UI even when empty (`index.html`, `data/humors.js`, `utils/statCap.js`, `ui/renderPossessions.js`).
+- **Inventory category tabs** — always use a fixed three-column (two-row) grid sized to the inventory panel, not the viewport, so labels stay inside their buttons in the side-column layout (`styles/legacy-items.css`).
 
 - **Stalking hobby** — reframed as predator recon; requires Cunning 20 alongside Hunting 50; stat requirements respect equipped gear (`data/hobbies.js`, `sim/hobbies.js`).
 
