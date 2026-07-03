@@ -15,6 +15,7 @@ import {
   spendActionPoints,
 } from './actionPoints.js';
 import { addHobbySkill, getHobbyLevel, isHobbyUnlocked } from './hobbies.js';
+import { addSuspicion } from './crime.js';
 
 function meetsStatRequirement(player, req) {
   if (req.hunting != null && getHobbyLevel(player, 'hunting') < req.hunting) return false;
@@ -126,8 +127,24 @@ export function runHunt(player, zoneId) {
   applyCreatureDrops(player, creature, totals);
 
   let extra = '';
-  if (creature.witnessChance && Math.random() < creature.witnessChance) {
-    // TODO: witness event — roll consequence when crime/bounty system exists
+
+  if (creature.humanPrey) {
+    const witnessChance = creature.witnessChance ?? 0;
+    const witnessed = witnessChance > 0 && Math.random() < witnessChance;
+    if (witnessed) {
+      addSuspicion(player, 25, { type: 'murder', severity: 8, witnessed: true });
+      extra = ' Someone saw what you did — and they will talk.';
+    } else {
+      addSuspicion(player, 10, { type: 'murder', severity: 8 });
+      extra = ' The moor keeps its secrets, but a body is a body.';
+    }
+  } else if (zone.royalDomain) {
+    const witnessChance = creature.witnessChance ?? zone.witnessChance ?? 0;
+    if (witnessChance > 0 && Math.random() < witnessChance) {
+      addSuspicion(player, 8, { type: 'poaching', severity: 1, witnessed: true });
+      extra = ' A gamekeeper saw you — and gamekeepers talk.';
+    }
+  } else if (creature.witnessChance && Math.random() < creature.witnessChance) {
     extra = ' Someone may have seen you.';
   }
   if (player.isVampire && creature.requiresStalking) {

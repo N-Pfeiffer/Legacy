@@ -160,6 +160,7 @@
             <div class="stat-block">
               <div class="stat-field">
                 <label>Charisma</label>
+                <p class="field-note">2 points per increase</p>
                 <div class="cc-stepper" data-stepper="sl-charisma">
                   <button type="button" class="cc-stepper-btn" data-step="-1" aria-label="Decrease Charisma">−</button>
                   <span class="cc-stepper-value" id="lbl-charisma" aria-live="polite">0</span>
@@ -171,6 +172,7 @@
             <div class="stat-block">
               <div class="stat-field">
                 <label>Intelligence</label>
+                <p class="field-note">2 points per increase</p>
                 <div class="cc-stepper" data-stepper="sl-intelligence">
                   <button type="button" class="cc-stepper-btn" data-step="-1" aria-label="Decrease Intelligence">−</button>
                   <span class="cc-stepper-value" id="lbl-intelligence" aria-live="polite">0</span>
@@ -182,6 +184,7 @@
             <div class="stat-block">
               <div class="stat-field">
                 <label>Insight</label>
+                <p class="field-note">4 points per increase</p>
                 <div class="cc-stepper" data-stepper="sl-insight">
                   <button type="button" class="cc-stepper-btn" data-step="-1" aria-label="Decrease Insight">−</button>
                   <span class="cc-stepper-value" id="lbl-insight" aria-live="polite">0</span>
@@ -193,6 +196,7 @@
             <div class="stat-block">
               <div class="stat-field">
                 <label>Prowess</label>
+                <p class="field-note">4 points per increase</p>
                 <div class="cc-stepper" data-stepper="sl-prowess">
                   <button type="button" class="cc-stepper-btn" data-step="-1" aria-label="Decrease Prowess">−</button>
                   <span class="cc-stepper-value" id="lbl-prowess" aria-live="polite">0</span>
@@ -357,6 +361,10 @@
         </div>
         <div class="stat-bar stat-bar--hidden"><div class="stat-fill" id="sb-purse" style="background:var(--green)"></div></div>
         <div class="stat-tier" id="sv-purse-tier">—</div>
+        <div class="stat-tier watch-eye" id="sv-watch-eye" hidden>
+          <span class="watch-eye-glyph" aria-hidden="true">👁</span>
+          <span id="sv-watch-label">—</span>
+        </div>
       </div>
 
       <div class="stat">

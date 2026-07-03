@@ -171,7 +171,7 @@ export function tickEducation() {
       p.health = clamp(
         p.health - SCHOOL_WORK_HEALTH_COST_PER_YEAR,
         0,
-        statCap('health', p.isVampire),
+        statCap('health', p.isVampire, p),
       );
       proposeAnnals({
         msg: 'School and work together wore on you.',

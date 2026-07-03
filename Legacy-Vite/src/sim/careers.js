@@ -543,7 +543,7 @@ function tickPlayerCareerYearlyEffects(player) {
     }
   }
   if (effects.stdChance != null && Math.random() < effects.stdChance) {
-    const cap = statCap('health', !!player.isVampire);
+    const cap = statCap('health', !!player.isVampire, player);
     player.health = clamp((player.health ?? 0) - 15, 0, cap);
     proposeAnnals({
       msg: 'You have contracted a disease.',

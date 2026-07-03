@@ -9,6 +9,19 @@ import {
 } from '../sim/mudlarkLockbox.js';
 import { G } from '../state/gameState.js';
 import { recordSituationResolution } from '../sim/situationLog.js';
+import {
+  attemptMagistrateBribe,
+  computeBribeCosts,
+  ensureMagistrateForApproach,
+  isFirstMagistrateApproach,
+  magistrateIntroBody,
+  magistrateRepeatBody,
+  spendMagistrateApproachAp,
+} from '../sim/magistrate.js';
+import { getRelationshipOrDefault } from '../sim/relationships.js';
+import { suspicionTier } from '../sim/crime.js';
+import { formatMoney, getMoney } from '../sim/money.js';
+import { ANNALS_PRIORITY, proposeAnnals } from '../sim/annals.js';
 
 let _isOpen = false;
 let _wired = false;
@@ -166,6 +179,110 @@ export function openMudlarkLockboxPopup(player, { escapeHtml, year, onComplete }
         closeDecisionPopup();
         finish();
       }
+    });
+  });
+}
+
+export function openMagistrateBribePopup(player, { escapeHtml, onComplete } = {}) {
+  const overlay = getOverlayEl();
+  const modal = getModalEl();
+  if (!overlay || !modal || !player) return;
+  if (!spendMagistrateApproachAp(player)) return;
+
+  const first = isFirstMagistrateApproach();
+  const mag = ensureMagistrateForApproach(player);
+  const edge = getRelationshipOrDefault(player, mag.id);
+  const disp = edge?.disposition ?? 0;
+  const body = first ? magistrateIntroBody(mag) : magistrateRepeatBody(mag, disp);
+  const costs = computeBribeCosts(player);
+  const tier = suspicionTier(player);
+  const canModest = getMoney(player) >= costs.modest;
+  const canHeavy = getMoney(player) >= costs.heavy;
+
+  const choices = [
+    {
+      id: 'modest',
+      label: `A modest purse (${formatMoney(costs.modest)})`,
+      disabled: !canModest,
+      disabledReason: 'Not enough coin',
+    },
+    {
+      id: 'heavy',
+      label: `A heavy purse (${formatMoney(costs.heavy)})`,
+      disabled: !canHeavy,
+      disabledReason: 'Not enough coin',
+    },
+    {
+      id: 'withdraw',
+      label: 'Withdraw',
+    },
+  ];
+
+  modal.innerHTML = `
+    <button type="button" class="situation-popup-back" data-decision-popup-action="close">← Back</button>
+    <div class="situation-popup-title">Approach the Magistrate</div>
+    <div class="situation-popup-body">${formatBodyHtml(body, escapeHtml)}</div>
+    <div class="situation-choices situation-popup-choices">
+      ${choices.map((c) => renderChoiceButton(c, escapeHtml)).join('')}
+    </div>`;
+
+  overlay.dataset.dismissible = 'true';
+  overlay.classList.add('active');
+  _isOpen = true;
+
+  const finish = () => {
+    if (typeof onComplete === 'function') onComplete();
+  };
+
+  modal.querySelector('[data-decision-popup-action="close"]')?.addEventListener('click', () => {
+    closeDecisionPopup();
+    finish();
+  });
+
+  modal.querySelectorAll('[data-decision-choice]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      const choiceId = btn.getAttribute('data-decision-choice');
+      if (choiceId === 'withdraw') {
+        closeDecisionPopup();
+        finish();
+        return;
+      }
+
+      const heavy = choiceId === 'heavy';
+      const result = attemptMagistrateBribe(player, tier, { heavy });
+      if (!result.ok) {
+        if (result.reason === 'refused' || result.reason === 'refused_public') {
+          proposeAnnals({
+            msg: 'The magistrate would not be bought — not today, and perhaps not ever.',
+            type: 'bad',
+            priority: ANNALS_PRIORITY.FLAVOR,
+            category: 'crime',
+          });
+        }
+        closeDecisionPopup();
+        finish();
+        return;
+      }
+
+      recordSituationResolution(player, {
+        year: G.year,
+        templateId: 'approach_magistrate',
+        title: 'Approach the Magistrate',
+        choiceId,
+        choiceLabel: heavy ? 'A heavy purse' : 'A modest purse',
+        logText: heavy
+          ? 'You paid a heavy purse to quiet the magistrate\'s interest.'
+          : 'You paid a modest purse to quiet the magistrate\'s interest.',
+        domain: 'decisions',
+        logContext: 'Grey Boar',
+        age: player.age,
+        record: 'flavor',
+        apply: () => {},
+      });
+
+      closeDecisionPopup();
+      finish();
     });
   });
 }

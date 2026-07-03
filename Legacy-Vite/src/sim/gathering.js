@@ -127,7 +127,7 @@ export function runGather(player, hobbyId, zoneId) {
     const min = zone.healthRestore.min ?? 1;
     const max = zone.healthRestore.max ?? min;
     const gain = min + Math.floor(Math.random() * (max - min + 1));
-    const cap = statCap('health', !!player.isVampire);
+    const cap = statCap('health', !!player.isVampire, player);
     player.health = clamp((player.health ?? 0) + gain, 0, cap);
     healthLine = ` You feel somewhat restored (+${gain} Health).`;
   }

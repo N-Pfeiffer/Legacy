@@ -1,4 +1,5 @@
 import { clamp } from '../utils/index.js';
+import { G } from '../state/gameState.js';
 import { statCap } from '../utils/statCap.js';
 import { hasTrait } from '../sim/traits.js';
 import { hasItem, consumeSingleUseItem } from '../sim/playerItems.js';
@@ -23,7 +24,7 @@ function hasPendingSituation(player, templateId) {
 }
 
 function bumpHealth(player, delta) {
-  const cap = statCap('health', !!player.isVampire);
+  const cap = statCap('health', !!player.isVampire, player);
   player.health = clamp((player.health || 0) + delta, 0, cap);
 }
 
@@ -138,6 +139,7 @@ export function tickRookeriesSituations(player, fireSituation) {
     !hasPendingSituation(player, 'syndicate_collects')
     && Math.random() < SYNDICATE_COLLECT_CHANCE
   ) {
+    player._syndicateCollectsYear = G.year;
     fireSituation(player, 'syndicate_collects');
   }
 }

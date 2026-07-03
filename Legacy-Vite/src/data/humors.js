@@ -35,7 +35,7 @@ export const HUMORS = {
       'The Addictive Kiss. You transition into the Requiem with a larger maximum blood pool. ' +
       'However, your bite is intoxicating — mortals you feed upon become obsessed stalkers, ' +
       'appearing at your Haven and threatening the Masquerade if you do not deal with them.',
-    statMods: { health: 15 },
+    statMods: { health: 50 },
     personalityMods: {
       intimacyGainMult: 1.4,
       dispositionLossMult: 1.4,
@@ -47,7 +47,7 @@ export const HUMORS = {
     label: 'Choleric',
     color: '#b8860b',
     nameTextColor: '#1a1206',
-    tagline: 'The Swift Ascent.',
+    tagline: 'The Hasty.',
     mortalDescription:
       'You operate at a breakneck pace. Because you refuse to waste time, ' +
       'you complete goals and advance hobbies faster than anyone else. You are quick on your feet, ' +

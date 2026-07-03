@@ -53,7 +53,7 @@ export function effectiveStat(player, stat) {
   const vampire = !!player.isVampire;
   const base = player[stat] ?? 0;
   const bonus = itemBonus(player, stat);
-  const cap = statCap(stat, vampire);
+  const cap = statCap(stat, vampire, player);
   return clamp(base + bonus, 0, cap);
 }
 

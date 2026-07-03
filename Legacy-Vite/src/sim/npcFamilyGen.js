@@ -23,6 +23,8 @@ import { rollSiblingCount } from './familyGeneration.js';
 import { clamp } from '../utils/index.js';
 import { weightedPick } from '../utils/weightedPick.js';
 import { SOCIAL_CLASS_BY_ID } from '../data/socialClass.js';
+import { CAREERS_BY_ID } from '../data/careers.js';
+import { statCap } from '../utils/statCap.js';
 
 const PARENT_AGE_GAP_MIN = 20; // BALANCE: provisional
 const PARENT_AGE_GAP_MAX = 38;
@@ -125,4 +127,75 @@ export function generateNpcWithFamily({ age, sex, surname } = {}) {
 
   for (const m of members) G.people.push(m);
   return { focal, members };
+}
+
+function skewCareerStat(person, stat, career) {
+  const cap = statCap(stat, !!person.isVampire) || 100;
+  const base = stat === career.primary ? 55 : 35;
+  person[stat] = clamp(base + Math.floor(Math.random() * 30), 0, cap);
+}
+
+/**
+ * Focal adult + opposite-sex spouse + 1–3 children for important NPCs.
+ * @returns {{ focal: object, spouse: object, children: object[], members: object[] }}
+ */
+export function generateAdultWithHousehold({
+  age,
+  sex,
+  careerId,
+  wealth,
+  surname,
+  careerRank = 0,
+} = {}) {
+  const focalSex = sex || (Math.random() < 0.5 ? 'M' : 'F');
+  const fam = surname || randomSurname();
+  const household = wealth ?? rollHouseholdWealth();
+  const focal = makeAdult({ sex: focalSex, age, surname: fam, wealth: household });
+  const career = careerId ? CAREERS_BY_ID[careerId] : null;
+
+  if (career) {
+    skewCareerStat(focal, career.primary, career);
+    if (career.secondary) skewCareerStat(focal, career.secondary, career);
+    focal.career = {
+      id: careerId,
+      since: G.year - randInt(5, Math.min(20, Math.max(1, age - 25))),
+      rank: careerRank,
+      yearsAtRank: randInt(0, 5),
+    };
+  }
+
+  const spouseSex = focalSex === 'M' ? 'F' : 'M';
+  const spouseAge = clamp(age + randInt(-8, 8), 18, Math.max(18, age + 8));
+  const spouse = makeAdult({
+    sex: spouseSex,
+    age: spouseAge,
+    surname: focalSex === 'M' ? fam : randomSurname(),
+    maidenName: focalSex === 'M' ? randomSurname() : null,
+    wealth: household,
+  });
+  focal.spouseIds.push(spouse.id);
+  spouse.spouseIds.push(focal.id);
+
+  const children = [];
+  const members = [focal, spouse];
+  const childCount = randInt(1, 3);
+  const father = focalSex === 'M' ? focal : spouse;
+  const mother = focalSex === 'F' ? focal : spouse;
+
+  for (let i = 0; i < childCount; i++) {
+    const childAge = clamp(age - randInt(20, 38), 0, Math.max(0, age - 1));
+    const child = makeChild({
+      sex: Math.random() < 0.5 ? 'M' : 'F',
+      age: childAge,
+      surname: fam,
+      father,
+      mother,
+      generation: 0,
+    });
+    children.push(child);
+    members.push(child);
+  }
+
+  for (const m of members) G.people.push(m);
+  return { focal, spouse, children, members };
 }

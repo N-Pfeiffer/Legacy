@@ -63,12 +63,12 @@ function applyEffect(player, effect) {
 
   if (effect.stat && typeof effect.delta === 'number') {
     const stat = effect.stat;
-    const cap = statCap(stat, vampire);
+    const cap = statCap(stat, vampire, player);
     player[stat] = clamp((player[stat] ?? 0) + effect.delta, 0, cap);
   }
 
   if (effect.restore === 'health' && typeof effect.amount === 'number') {
-    const cap = statCap('health', vampire);
+    const cap = statCap('health', vampire, player);
     player.health = clamp((player.health ?? 0) + effect.amount, 0, cap);
   }
 }

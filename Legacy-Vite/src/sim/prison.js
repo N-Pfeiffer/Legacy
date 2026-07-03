@@ -24,7 +24,7 @@ const EARLY_ERA_YEAR_MAX = 1850;
 const VICTORIAN_ERA_YEAR_MIN = 1850;
 
 function bumpHealth(player, delta) {
-  const cap = statCap('health', !!player.isVampire);
+  const cap = statCap('health', !!player.isVampire, player);
   player.health = clamp((player.health || 0) + delta, 0, cap);
 }
 
@@ -177,10 +177,17 @@ export function incarceratePlayer(player, { years = 2, source = 'general' } = {}
   });
 }
 
+import { settleCrimeOnPrisonRelease } from './crime.js';
+
 export function releasePrison(player) {
   if (!player?.prison) return;
+  const source = player.prison.source;
   const cell = prisonCellLabel(player.prison.cellType);
   player.prison = null;
+
+  if (player.isPlayer) {
+    settleCrimeOnPrisonRelease(player, source);
+  }
 
   recordMilestone(player, {
     title: 'Released',

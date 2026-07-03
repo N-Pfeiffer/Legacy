@@ -17,6 +17,8 @@ export let G = {
   school: null,
   // Player workplace (boss/coworkers/peers). null until the player joins a career.
   workplace: null,
+  // Crime system magistrate state. null until first approach.
+  magistrate: null,
 };
 
 /** Which top-level section tab is active. */

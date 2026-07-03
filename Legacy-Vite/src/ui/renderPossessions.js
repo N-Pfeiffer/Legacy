@@ -48,15 +48,6 @@ const SLOT_DEFS = [
 const JEWELRY_LABELS = ['J1', 'J2', 'J3', 'J4'];
 const ARTIFACT_LABELS = ['A1', 'A2', 'A3', 'A4'];
 
-function playerHasAnyInventory(player) {
-  if (!player) return false;
-  const mats = player.materials || {};
-  if (Object.values(mats).some((n) => n > 0)) return true;
-  if (listEquipment(player).length > 0) return true;
-  if (Array.isArray(player.items) && player.items.length > 0) return true;
-  return false;
-}
-
 function isOffhandTwoHandLocked(player) {
   const eq = ensureEquippedSlots(player);
   const mainUid = eq.mainHand;
@@ -253,8 +244,10 @@ function renderEquipmentCard(entry, player, escapeHtml) {
 function renderFungibleCard(entry, escapeHtml) {
   const { item, itemId, count } = entry;
   const highlightClass = isEntryHighlighted(entry) ? ' has-unread' : '';
-  return `<button type="button" class="item-grid-card${highlightClass}" data-item-id="${escapeHtml(itemId)}" title="${escapeHtml(item.label)}">
+  const hotBadge = item.hotGoods ? '<span class="item-hot-badge" title="Hot goods">!</span>' : '';
+  return `<button type="button" class="item-grid-card${highlightClass}${item.hotGoods ? ' item-grid-card--hot' : ''}" data-item-id="${escapeHtml(itemId)}" title="${escapeHtml(item.label)}">
     <span class="item-stack-badge">×${count}</span>
+    ${hotBadge}
     ${renderEntryArt(item, { size: 28, className: 'item-grid-icon', escapeHtml })}
     <span class="item-grid-label">${escapeHtml(item.label)}</span>
     <span class="item-grid-type">${escapeHtml(itemTypeLabel(item.type))}</span>
@@ -424,16 +417,6 @@ export function renderPossessionsPanel(player, escapeHtml, itemPopupOptions = {}
   const onChange = typeof itemPopupOptions.onInventoryChange === 'function'
     ? itemPopupOptions.onInventoryChange
     : () => {};
-
-  if (!playerHasAnyInventory(player)) {
-    panel.innerHTML = `<div class="placeholder-card">
-      <div class="placeholder-emblem">♛</div>
-      <div class="placeholder-text" data-vocab="particulars.possessions_empty">
-        You own nothing yet. The world is still your parents'.
-      </div>
-    </div>`;
-    return { empty: true };
-  }
 
   const { sortMode } = possessionsPanelState;
   panel.innerHTML = `<div class="items-panel possessions-panel">

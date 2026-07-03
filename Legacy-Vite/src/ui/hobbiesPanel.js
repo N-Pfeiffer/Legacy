@@ -3,6 +3,7 @@ import { ITEMS_BY_ID } from '../data/items.js';
 
 import { getGatheringConfig, hobbyHasGathering } from '../data/gatheringZones.js';
 import { getHuntingConfig, hobbyHasHunting, isDeepWealdUnlocked } from '../data/huntingZones.js';
+import { getThievingConfig, hobbyHasThieving } from '../data/thievingDistricts.js';
 
 import { clamp } from '../utils/index.js';
 
@@ -40,7 +41,21 @@ import {
 } from '../sim/crafting.js';
 import { canGather, runGather } from '../sim/gathering.js';
 import { canHunt, runHunt } from '../sim/hunting.js';
+import {
+  canStartThievingJob,
+  startThievingJob,
+  canVisitFence,
+  visitFence,
+  countHotGoods,
+} from '../sim/thieving.js';
+import { suspicionTierLabel, suspicionTier, watchEyeVisible } from '../sim/crime.js';
+import { clearThievingUnseen } from '../sim/crimePath.js';
 
+import {
+  canCaseMark,
+  runCaseMark,
+  unlockedThievingDistricts,
+} from '../sim/stalking.js';
 import { canSpendActionPoints } from '../sim/actionPoints.js';
 
 import { proposeAnnals, ANNALS_PRIORITY } from '../sim/annals.js';
@@ -54,6 +69,8 @@ let hooks = {
   render: () => {},
 
   isTestingCheatsEnabled: () => false,
+
+  fireSituation: () => {},
 
 };
 
@@ -165,15 +182,17 @@ function renderListView(player, panel) {
 
     const lockedClass = unlocked ? '' : ' hobby-card--locked';
 
+    const pendingClass = h.id === 'thieving' && player.thievingUnseen ? ' has-pending' : '';
+
     const hint = unlocked ? '' : `<div class="hobby-card-lock-hint">${escapeHtml(getHobbyUnlockHint(h))}</div>`;
 
     const tag = unlocked ? 'button' : 'div';
 
     const attrs = unlocked
 
-      ? `type="button" class="hobby-card${lockedClass}" data-hobby-id="${escapeHtml(h.id)}"`
+      ? `type="button" class="hobby-card${lockedClass}${pendingClass}" data-hobby-id="${escapeHtml(h.id)}"`
 
-      : `class="hobby-card${lockedClass}" aria-disabled="true"`;
+      : `class="hobby-card${lockedClass}${pendingClass}" aria-disabled="true"`;
 
 
 
@@ -216,6 +235,8 @@ function renderListView(player, panel) {
     btn.addEventListener('click', () => {
 
       hobbiesPanelState.openHobbyId = btn.dataset.hobbyId;
+
+      if (btn.dataset.hobbyId === 'thieving') clearThievingUnseen(player);
 
       hobbiesPanelState.subTab = 'endeavors';
 
@@ -456,9 +477,109 @@ function renderHuntZonesBody(hobby, player) {
   return `<div class="hobby-tab-body"><div class="gather-zone-list">${rows}</div></div>`;
 }
 
+function renderThievingDistrictsBody(hobby, player) {
+  const config = getThievingConfig(hobby.id);
+  const districts = config?.districts ?? [];
+  if (!districts.length) {
+    return `<div class="hobby-tab-body"><div class="hobby-empty">No districts are open to you yet.</div></div>`;
+  }
+
+  const skill = getHobbyLevel(player, hobby.id);
+  const actionLabel = config.actionLabel || 'Work';
+  const watchLine = watchEyeVisible(player)
+    ? `<div class="thieving-watch-eye">👁 ${escapeHtml(suspicionTierLabel(suspicionTier(player)))}</div>`
+    : '';
+
+  const rows = districts.map((district) => {
+    const themeAttr = district.theme ? ` data-theme="${escapeHtml(district.theme)}"` : '';
+    const skillLocked = skill < (district.skillReq ?? 0);
+    const apCost = district.apCost ?? 1;
+
+    if (skillLocked) {
+      return `<div class="gather-zone-row gather-zone-row--locked"${themeAttr}>
+        <div class="gather-zone-main">
+          <span class="gather-zone-name">${escapeHtml(district.label)}</span>
+          <span class="gather-zone-meta">${apCost} AP · ${escapeHtml(district.jobLabel)}</span>
+        </div>
+        <span class="gather-zone-locked">🔒 Req ${district.skillReq}</span>
+      </div>`;
+    }
+
+    const canDo = canStartThievingJob(player, district.id);
+    const apDisabled = !canSpendActionPoints(player, apCost) ? ' disabled' : '';
+    const jobDisabled = !canDo.ok ? ' disabled' : '';
+    const title = district.flavor || district.label;
+
+    return `<div class="gather-zone-row"${themeAttr} title="${escapeHtml(title)}">
+      <div class="gather-zone-main">
+        <span class="gather-zone-name">${escapeHtml(district.label)}</span>
+        <span class="gather-zone-meta">${apCost} AP · £${district.takeMin}–${district.takeMax}</span>
+      </div>
+      <button type="button" class="career-confirm-btn gather-zone-btn thieve-district-btn${apDisabled}${jobDisabled}"
+        data-thieve-district="${escapeHtml(district.id)}">${escapeHtml(actionLabel)} ▸</button>
+    </div>`;
+  }).join('');
+
+  const fenceDisabled = !canVisitFence(player) ? ' disabled' : '';
+  const hotCount = countHotGoods(player);
+  const fenceHtml = `<div class="thieving-fence-row">
+    <button type="button" class="career-confirm-btn thieving-fence-btn${fenceDisabled}" data-thieving-fence="1">
+      Visit the Fence (1 AP)${hotCount ? ` · ${hotCount} hot` : ''}
+    </button>
+  </div>`;
+
+  return `<div class="hobby-tab-body">${watchLine}<div class="gather-zone-list">${rows}</div>${fenceHtml}</div>`;
+}
+
+
+
+function renderStalkingEndeavorsBody(hobby, player) {
+  const spy = (hobby.endeavors || []).find((e) => e.id === 'spy');
+  const spyHtml = spy
+    ? (() => {
+      const cost = spy.apCost ?? 1;
+      const disabled = canSpendActionPoints(player, cost) ? '' : ' disabled';
+      return `<button type="button" class="career-confirm-btn hobby-endeavor-btn${disabled}" data-hobby-endeavor="${escapeHtml(spy.id)}">${escapeHtml(spy.label)} (${cost} AP)</button>`;
+    })()
+    : '';
+
+  const districts = unlockedThievingDistricts(player);
+  const casedId = player._casedDistrict;
+  let caseHtml = '';
+
+  if (!districts.length) {
+    caseHtml = '<div class="hobby-empty">Open a Thieving district before you can case a mark.</div>';
+  } else {
+    caseHtml = districts.map((district) => {
+      const check = canCaseMark(player, district.id);
+      const apDisabled = !canSpendActionPoints(player, 2) ? ' disabled' : '';
+      const otherDisabled = !check.ok && check.reason !== 'no_action_points' ? ' disabled' : '';
+      const casedNote = casedId === district.id ? ' · cased' : '';
+      return `<button type="button" class="career-confirm-btn stalking-case-btn${apDisabled}${otherDisabled}"
+        data-case-district="${escapeHtml(district.id)}">Case ${escapeHtml(district.label)} (2 AP)${casedNote}</button>`;
+    }).join('');
+  }
+
+  return `<div class="hobby-tab-body">
+    <div class="hobby-endeavors">${spyHtml}</div>
+    <div class="stalking-case-block">
+      <div class="hobby-subheading">Case a Mark</div>
+      <div class="stalking-case-list">${caseHtml}</div>
+    </div>
+  </div>`;
+}
+
 
 
 function renderEndeavorsBody(hobby, player) {
+
+  if (hobbyHasThieving(hobby.id)) {
+    return renderThievingDistrictsBody(hobby, player);
+  }
+
+  if (hobby.id === 'stalking') {
+    return renderStalkingEndeavorsBody(hobby, player);
+  }
 
   if (hobbyHasHunting(hobby.id)) {
 
@@ -631,6 +752,76 @@ function wireGatherButtons(panel, player, hobby) {
 
 
 
+function wireThieveButtons(panel, player) {
+  panel.querySelectorAll('.thieve-district-btn[data-thieve-district]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      const districtId = btn.dataset.thieveDistrict;
+      const result = startThievingJob(player, districtId);
+      if (result.reason === 'no_action_points') {
+        proposeAnnals({
+          msg: 'You have no action points left this year.',
+          type: 'info',
+          priority: ANNALS_PRIORITY.FLAVOR,
+        });
+        hooks.render();
+        return;
+      }
+      if (result.ok && result.needsReveal && typeof hooks.fireSituation === 'function') {
+        hooks.fireSituation(player, 'thieving_pre_crime');
+      }
+      hooks.render();
+    });
+  });
+
+  panel.querySelector('.thieving-fence-btn[data-thieving-fence]')?.addEventListener('click', () => {
+    const result = visitFence(player);
+    if (result.reason === 'no_action_points') {
+      proposeAnnals({
+        msg: 'You have no action points left this year.',
+        type: 'info',
+        priority: ANNALS_PRIORITY.FLAVOR,
+      });
+    } else if (result.ok && result.message) {
+      proposeAnnals({
+        msg: result.message,
+        type: 'good',
+        priority: ANNALS_PRIORITY.FLAVOR,
+      });
+    }
+    hooks.render();
+  });
+}
+
+
+
+function wireStalkingButtons(panel, player) {
+  panel.querySelectorAll('.stalking-case-btn[data-case-district]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      const districtId = btn.dataset.caseDistrict;
+      const result = runCaseMark(player, districtId);
+      if (result.reason === 'no_action_points') {
+        proposeAnnals({
+          msg: 'You have no action points left this year.',
+          type: 'info',
+          priority: ANNALS_PRIORITY.FLAVOR,
+        });
+        hooks.render();
+        return;
+      }
+      if (result.ok && result.message) {
+        proposeAnnals({
+          msg: result.message,
+          type: result.type || 'info',
+          priority: ANNALS_PRIORITY.FLAVOR,
+        });
+      }
+      hooks.render();
+    });
+  });
+}
+
 function wireHuntButtons(panel, player) {
   panel.querySelectorAll('.hunt-zone-btn[data-hunt-zone]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -751,6 +942,10 @@ function renderDetailView(player, panel) {
   wireGatherButtons(panel, player, hobby);
 
   wireHuntButtons(panel, player);
+
+  wireThieveButtons(panel, player);
+
+  wireStalkingButtons(panel, player);
 
   wireCraftButtons(panel, player, hobby);
 

@@ -116,6 +116,43 @@
   color: var(--green);
 }
 
+.item-hot-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 1;
+  font-family: var(--display);
+  font-size: 9px;
+  font-weight: 700;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  text-align: center;
+  border-radius: 2px;
+  background: color-mix(in srgb, #c44 35%, var(--raised));
+  border: 1px solid #a33;
+  color: #fdd;
+}
+
+.item-grid-card--hot {
+  border-color: color-mix(in srgb, #a33 45%, var(--border-strong));
+}
+
+.thieving-watch-eye {
+  font-family: var(--heading);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--accent2);
+  margin-bottom: 10px;
+  text-align: right;
+}
+
+.thieving-fence-row {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
 .item-grid-card--equipped {
   border-color: color-mix(in srgb, var(--green) 45%, var(--border-strong));
 }

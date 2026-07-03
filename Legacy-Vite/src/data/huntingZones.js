@@ -56,7 +56,8 @@ export const HUNTING_CONFIG = {
           label: 'Mortal',
           weight: 4,
           requiresStalking: true,
-          witnessChance: 0.08, // TODO: witness event consequence
+          humanPrey: true,
+          witnessChance: 0.08,
           drops: [{ id: 'human_heart', n: 1 }, { id: 'vial_of_blood', n: 1 }],
         },
       ],
@@ -66,6 +67,8 @@ export const HUNTING_CONFIG = {
       label: 'The Forest',
       apCost: 2,
       skillReq: 25,
+      royalDomain: true,
+      witnessChance: 0.10,
       flavor: 'Deep timber where larger game roams.',
       art: { kind: 'svg', ref: 'zone-the_deep_forest' },
       theme: 'deep_forest',
@@ -104,6 +107,8 @@ export const HUNTING_CONFIG = {
           label: 'Bandit or Hunter',
           weight: 8,
           requiresStalking: true,
+          humanPrey: true,
+          witnessChance: 0.05,
           requiresAny: [{ prowess: 50 }, { cunning: 40 }],
           drops: [{ id: 'vial_of_blood', n: 1 }, { id: 'human_heart', n: 1 }],
           chanceDrops: [

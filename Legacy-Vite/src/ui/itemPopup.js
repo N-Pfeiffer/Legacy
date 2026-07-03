@@ -5,6 +5,7 @@ import {
 } from '../data/items.js';
 import { materialCount } from '../sim/personItems.js';
 import { canUse, itemHasUsableEffect, useConsumable } from '../sim/consumables.js';
+import { tryPassOffHotGoods } from '../sim/thieving.js';
 import { proposeAnnals, ANNALS_PRIORITY } from '../sim/annals.js';
 import { equipItem, unequipItem, isEquipped } from '../sim/equipment.js';
 import { renderEntryArt } from './renderArt.js';
@@ -104,6 +105,11 @@ export function openItemPopup(item, player, escapeHtml, options = {}) {
     useActionHtml = `<button type="button" class="item-popup-action-btn" data-item-popup-action="use-consumable"${disabled}${titleAttr}>${escapeHtml(useLabel)}</button>`;
   }
 
+  let passOffHtml = '';
+  if (item.hotGoods && materialCount(player, item.id) > 0) {
+    passOffHtml = `<button type="button" class="item-popup-action-btn" data-item-popup-action="pass-off-hot">Pass it off (Charisma)</button>`;
+  }
+
   modal.innerHTML = `
     <button type="button" class="item-popup-close" data-item-popup-action="close" aria-label="Close">×</button>
     <div class="item-popup-icon" aria-hidden="true">${renderEntryArt(item, { size: 40, className: 'item-popup-icon-art', escapeHtml })}</div>
@@ -115,6 +121,7 @@ export function openItemPopup(item, player, escapeHtml, options = {}) {
     </div>
     ${equipActionHtml}
     ${useActionHtml}
+    ${passOffHtml}
     ${decisionLinkHtml}
     ${useNoteHtml}
     ${vampireHtml}
@@ -152,6 +159,17 @@ export function openItemPopup(item, player, escapeHtml, options = {}) {
         priority: ANNALS_PRIORITY.FLAVOR,
       });
     }
+    if (typeof onInventoryChange === 'function') onInventoryChange();
+    if (materialCount(player, item.id) <= 0) {
+      closeItemPopup();
+    } else {
+      refreshOpenItemPopup(item, player, escapeHtml, options);
+    }
+  });
+
+  modal.querySelector('[data-item-popup-action="pass-off-hot"]')?.addEventListener('click', () => {
+    if (!player?.isPlayer) return;
+    tryPassOffHotGoods(player, item.id);
     if (typeof onInventoryChange === 'function') onInventoryChange();
     if (materialCount(player, item.id) <= 0) {
       closeItemPopup();

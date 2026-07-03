@@ -7,43 +7,25 @@ Notes/questions for Playtesting:
 	To Do:
 Later add mechanic (potion? 50 in any stat?) to increase AP cap
 
-
-
-Consider currency system
-	could keep class system in place for NPCs, replace it for players with actual $$
-
-	Keep plenty of hobby materials, but make the economy super punishing so player must sell refined high end products to make any
-	real money?
-
-General
-	Character Creation point buy should shows how many points each stat increase cost
-
-	rename cholerics "The Swift Ascent" to "The Hasty"
-
-	Sanguine Player should have 50 more max health
-
-	Show inventory UI even when player has no items
-
+Big
 	Write descriptions for careers and hobbies 
-
-	Criminal System 
-        Label near Wealth: Suspicion 
-        Minor crimes (pickpocketing, petty theft) 5 Suspicion 
-        Major Crimes (Murder, Grand Theft) 25 suspcision 
-
-        Reduce suspicion with 
-            Decision: Bribe a local Magistrate. Money to lower suspicion. 
-            Natural decay -5 a year
-
-		Poacher 
-			suspicion chance
-			hunting item drops
-
-		River Pirate
-			suspicion chance
-			theft item drops
 	
 	Item Icons and Descriptions
+
+
+
+General
+	Character Creation point buy should shows how many points each stat increase cost — done
+
+	rename cholerics "The Swift Ascent" to "The Hasty" — done
+
+	Sanguine Player should have 50 more max health — done
+
+	Show inventory UI even when player has no items — done
+
+	
+	
+	
 	
 	Material Gathering Balance
 
@@ -77,8 +59,6 @@ Change Focus -> Lifestyle
 
 
 NPCs
-	Witness Events for crimes (and hobby:hunting humans)
-		Crime/Bounty
 	
 	add autonomous NPC birthing for spouses naturally
 			
@@ -86,16 +66,6 @@ NPCs
 
 	NPC marriage with simple eligibility (age, sex, unmarried, not close kin)
 		
-			A natural place would be a new sim/npcMarriage.js called from runYearTick:
-			Eligible pool
-
-			getAlive().filter(p =>
-			!p.isPlayer &&
-			!p.spouseIds?.length &&
-			p.age >= 14 && p.age <= someMax &&
-			p.sex === 'M' || p.sex === 'F'
-			)
-
 		Pairing rules
 			Opposite sex (matches current conception/marriage conventions)
 			Not siblings/parent/child (check parentIds, shared parents)
@@ -104,9 +74,7 @@ NPCs
 			one pass with small chance that pairs random eligible m + f pairs
 		
 		Execute
-
-			marryPersons(male, female)
-			annals entry for journaled marriages the player would care about
+			annals entry for journaled marriages the player would care about (family, friends, minions, coworkers, etc)
 
 		NPC conception tick (married couples, fertility, tryConceive) — low chance
 

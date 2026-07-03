@@ -267,7 +267,9 @@ export function focalStatsHtml(p) {
   ];
 
   const rowsHtml = rows.map(r => {
-    const cap = r.key === 'wealth' && p.isPlayer ? 1 : statCap(r.key, p.isVampire);
+    const cap = r.key === 'wealth' && p.isPlayer
+      ? 1
+      : statCap(r.key, p.isVampire, r.key === 'health' ? p : null);
     const value = Math.max(0, Math.round(r.value));
     const pct = r.key === 'wealth' && p.isPlayer
       ? 0

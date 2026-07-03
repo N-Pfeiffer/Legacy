@@ -8,6 +8,7 @@ import { CAREERS_BY_ID } from '../data/careers.js';
 import { createPerson, snapshotBirthStats } from '../state/personFactory.js';
 import { randomName, randomSurname } from '../data/names.js';
 import { assignRandomHumor } from './humorPersonality.js';
+import { generateAdultWithHousehold } from './npcFamilyGen.js';
 import { ensureRelationship, getRelationshipOrDefault } from './relationships.js';
 import { careerLabel } from './careers.js';
 import { canSpendActionPoints, spendActionPoints } from './actionPoints.js';
@@ -103,7 +104,13 @@ function generateBoss(player, career) {
   const maxRank = career.rankLadder.length - 1;
   const rank = bossRankFor(player.career?.rank ?? 0, maxRank);
   const age = randInt(35, 55);
-  const boss = makeColleague({ player, career, age, rank, withCareer: true });
+  const { focal: boss } = generateAdultWithHousehold({
+    age,
+    careerId: career.id,
+    careerRank: rank,
+  });
+  const disposition = randInt(-5, 15);
+  ensureRelationship(player, boss.id, G.year, { disposition });
   ensureWorkplaceState();
   G.workplace.roleByPersonId[boss.id] = bossDisplayRole(career, rank);
   G.workplace.bossId = boss.id;

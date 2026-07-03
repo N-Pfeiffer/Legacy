@@ -2,6 +2,7 @@ import { HOBBIES, HOBBIES_BY_ID } from '../data/hobbies.js';
 
 import { clamp } from '../utils/index.js';
 
+import { effectiveStat } from './itemEffects.js';
 import { runStalkingSpy } from './stalking.js';
 import { runMysticismEndeavor } from './mysticism.js';
 import {
@@ -103,6 +104,12 @@ function checkHobbyRequirement(player, req) {
 
   }
 
+  if (req.stat) {
+
+    return effectiveStat(player, req.stat) >= (req.level ?? 0);
+
+  }
+
   return true;
 
 }
@@ -140,6 +147,14 @@ function formatRequirementPart(req) {
   if (req.hobbyId) {
 
     const label = HOBBIES_BY_ID[req.hobbyId]?.label || req.hobbyId;
+
+    return `${label} ${req.level ?? 0}`;
+
+  }
+
+  if (req.stat) {
+
+    const label = req.stat.charAt(0).toUpperCase() + req.stat.slice(1);
 
     return `${label} ${req.level ?? 0}`;
 
@@ -214,15 +229,22 @@ export function getHobbyAdvancedCraftHint(hobby) {
 
 /** Hobbies visible on the list for this player's age. Locked hobbies omitted unless includeLocked. */
 
+function isHobbyHiddenFromPlayer(player, hobby) {
+  if (!hobby?.hidden) return false;
+  return !player?.crimePath;
+}
+
 export function hobbiesVisibleToPlayer(player, options = {}) {
 
   if (!player) return [];
 
   const ageFiltered = HOBBIES.filter((h) => meetsAgeGate(player, h.id));
 
-  if (options.includeLocked) return ageFiltered;
+  const visible = ageFiltered.filter((h) => !isHobbyHiddenFromPlayer(player, h));
 
-  return ageFiltered.filter((h) => isHobbyUnlocked(player, h));
+  if (options.includeLocked) return visible;
+
+  return visible.filter((h) => isHobbyUnlocked(player, h));
 
 }
 
@@ -232,7 +254,7 @@ export function unlockedHobbies(player) {
 
   if (!player) return [];
 
-  return HOBBIES.filter((h) => isHobbyUnlocked(player, h));
+  return HOBBIES.filter((h) => !isHobbyHiddenFromPlayer(player, h) && isHobbyUnlocked(player, h));
 
 }
 

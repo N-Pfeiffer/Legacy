@@ -110,7 +110,7 @@ export function gradePassivePerYear(intelligence) {
 export function applyGradeReward(player, letter, statCap) {
   const reward = GRADE_REWARDS[letter] || {};
   for (const [stat, delta] of Object.entries(reward)) {
-    const cap = statCap ? statCap(stat, !!player.isVampire) : Infinity;
+    const cap = statCap ? statCap(stat, !!player.isVampire, stat === 'health' ? player : null) : Infinity;
     player[stat] = clamp((player[stat] || 0) + delta, 0, cap);
   }
 }

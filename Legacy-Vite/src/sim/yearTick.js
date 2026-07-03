@@ -3,6 +3,11 @@ import { refreshActionPoints } from './actionPoints.js';
 import { recomputeJournalFlags } from './journal.js';
 import { tickRelationshipDecay } from './relationshipDecay.js';
 import { deductCareerUpkeep } from './workplace.js';
+import { isInPrison } from './prison.js';
+import { tickSuspicion } from './crime.js';
+import { checkPovertyCrimePath } from './crimePath.js';
+import { tickSyndicateFenceJob } from './thieving.js';
+import { tickAssassinContracts } from './stalking.js';
 
 /**
  * Advance the simulation by one calendar year (no DOM).
@@ -49,9 +54,19 @@ export function runYearTick(deps) {
     processPlayerEvents(player);
   }
   checkMortality();
+  if (player?.isAlive && !isInPrison(player)) {
+    tickSuspicion(player, { fireSituation: deps.fireSituation });
+  }
   if (player?.isAlive) {
+    delete player._casedDistrict;
+    delete player._assassinContractOffer;
     refreshActionPoints(player);
     deductCareerUpkeep(player);
+    checkPovertyCrimePath(player, { fireSituation: deps.fireSituation });
+    if (!isInPrison(player)) {
+      tickSyndicateFenceJob(player, { fireSituation: deps.fireSituation });
+      tickAssassinContracts(player, { fireSituation: deps.fireSituation });
+    }
   }
   return true;
 }

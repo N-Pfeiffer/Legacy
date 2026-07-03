@@ -6,6 +6,7 @@ import { effectiveCharisma, effectiveCunning, effectiveInsight } from '../sim/it
 import { wealthTierLabel } from '../sim/careers.js';
 import { formatMoney, getMoney, moneyStandingLabel } from '../sim/money.js';
 import { isInPrison, prisonCellLabel } from '../sim/prison.js';
+import { suspicionTierLabel, watchEyeVisible, suspicionTier } from '../sim/crime.js';
 import { hasUnreadSituations, unreadPanelSituations } from '../sim/situationAttention.js';
 import { unreadEligibleDecisions } from '../sim/decisionAttention.js';
 import { renderMemoriesPanel } from './memoriesPanel.js';
@@ -48,7 +49,7 @@ export function renderGameHud() {
   document.getElementById('player-age-label').textContent = `Age: ${player.age ?? 0}`;
 
   const bar = (statKey, val) => {
-    const cap = statCap(statKey, player.isVampire);
+    const cap = statCap(statKey, player.isVampire, statKey === 'health' ? player : null);
     const pct = clamp((val / cap) * 100, 0, 100);
     document.getElementById(`sb-${statKey}`).style.width = `${pct}%`;
     document.getElementById(`sv-${statKey}`).textContent = `${Math.round(val)}`;
@@ -78,6 +79,16 @@ export function renderGameHud() {
   const tierEl = document.getElementById('sv-purse-tier');
   if (tierEl) tierEl.textContent = moneyStandingLabel(purseAmount);
 
+  const watchEl = document.getElementById('sv-watch-eye');
+  const watchLabelEl = document.getElementById('sv-watch-label');
+  if (watchEl && watchLabelEl) {
+    const show = watchEyeVisible(player);
+    watchEl.style.display = show ? '' : 'none';
+    if (show) {
+      watchLabelEl.textContent = suspicionTierLabel(suspicionTier(player));
+    }
+  }
+
   hooks.renderBloodline();
   if (getCurrentSection() === 'vocation') {
     hooks.renderVocation();
@@ -93,7 +104,7 @@ export function renderGameHud() {
     hooks.renderHobbiesPanel(player);
     renderEquipmentPanel(player, escapeHtml, hooks.getItemPopupOptions());
     const possessionsResult = renderPossessionsPanel(player, escapeHtml, hooks.getItemPopupOptions());
-    if (possessionsResult?.empty && typeof applyVocab === 'function') applyVocab();
+    if (typeof applyVocab === 'function') applyVocab();
   }
 
   hooks.tryShowImmersivePopup();
@@ -112,6 +123,12 @@ export function renderGameHud() {
   if (journalTab) journalTab.classList.toggle('has-pending', hasUnreadSituationAttention || unreadDecisions.length > 0);
   if (situationsBtn) situationsBtn.classList.toggle('has-pending', unreadPanel.length > 0);
   if (decisionsBtn) decisionsBtn.classList.toggle('has-pending', unreadDecisions.length > 0);
+
+  const particularsTab = document.querySelector('.section-tab[data-section="particulars"]');
+  const hobbiesBtn = document.querySelector('.sub-tab[data-subkey="hobbies"]');
+  const thievingPulse = !!(player?.thievingUnseen && player?.crimePath);
+  if (particularsTab) particularsTab.classList.toggle('has-pending', thievingPulse);
+  if (hobbiesBtn) hobbiesBtn.classList.toggle('has-pending', thievingPulse);
 
   const ageBtn = document.getElementById('btn-age-up');
   if (ageBtn && player.isAlive) {

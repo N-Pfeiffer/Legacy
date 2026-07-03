@@ -29,17 +29,19 @@ export function checkMortality() {
   }
 }
 
-export function killPerson(p) {
+export function killPerson(p, opts = {}) {
   p.isAlive  = false;
   p.yearDied = G.year;
   if (p.isPlayer) {
-    recordMilestone(p, {
-      title: 'Death',
-      narrative: `Your mortal life has ended at age ${p.age}. The bloodline endures.`,
-      memoryCategory: 'family_death',
-      type: 'bad',
-      year: G.year,
-    });
+    if (!opts.skipMilestone) {
+      recordMilestone(p, {
+        title: 'Death',
+        narrative: `Your mortal life has ended at age ${p.age}. The bloodline endures.`,
+        memoryCategory: 'family_death',
+        type: 'bad',
+        year: G.year,
+      });
+    }
     hooks.disableAgeUp();
   } else if (isJournaled(p)) {
     proposeAnnals({

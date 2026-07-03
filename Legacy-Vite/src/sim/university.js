@@ -6,10 +6,7 @@ import {
   DEGREES_BY_ID,
   CLASS_LOADS_BY_ID,
 } from '../data/education.js';
-import { createPerson } from '../state/personFactory.js';
-import { randomName, randomSurname } from '../data/names.js';
-import { assignRandomHumor } from './humorPersonality.js';
-import { snapshotBirthStats } from '../state/personFactory.js';
+import { generateAdultWithHousehold } from './npcFamilyGen.js';
 import { ensureRelationship, bumpDisposition, getRelationshipOrDefault } from './relationships.js';
 import { trySpendMoney, addMoney, getMoney, formatMoney } from './money.js';
 import { spendActionPoints, canSpendActionPoints } from './actionPoints.js';
@@ -70,26 +67,20 @@ export function declineUniversityOffer(player) {
 
 export function generateUniversityPatron(player) {
   const age = 45 + Math.floor(Math.random() * 16);
-  const professor = createPerson({
-    firstName: randomName('M'),
-    surname: randomSurname(),
-    sex: 'M',
+  const { focal: professor } = generateAdultWithHousehold({
     age,
-    generation: -1,
+    sex: 'M',
+    careerId: 'schoolmaster',
+    careerRank: 2,
+    wealth: 55,
   });
-  professor.yearBorn = G.year - age;
   professor.intelligence = clamp(65 + Math.floor(Math.random() * 25), 0, statCap('intelligence', false));
   professor.insight = clamp(20 + Math.floor(Math.random() * 25), 0, statCap('insight', false));
   professor.charisma = clamp(40 + Math.floor(Math.random() * 20), 0, 100);
-  professor.career = {
-    id: 'schoolmaster',
-    since: G.year - Math.min(15, age - 30),
-    rank: 2,
-    yearsAtRank: 4,
-  };
-  snapshotBirthStats(professor);
-  assignRandomHumor(professor);
-  G.people.push(professor);
+  if (professor.career) {
+    professor.career.rank = 2;
+    professor.career.yearsAtRank = 4;
+  }
   ensureRelationship(player, professor.id, G.year, { disposition: 30 });
   return professor;
 }

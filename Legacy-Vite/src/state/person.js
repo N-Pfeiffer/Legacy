@@ -3,6 +3,7 @@
 import { migrateLegacyItemAcquireBonuses } from '../sim/itemEffects.js';
 import { migrateTraitIds } from '../sim/traits.js';
 import { assignRandomHumor } from '../sim/humorPersonality.js';
+import { backfillCrimePath } from '../sim/crimePath.js';
 import { migrateStaleCareer } from '../sim/careers.js';
 import { ensureInventoryStores } from '../sim/personItems.js';
 
@@ -70,6 +71,13 @@ export const PERSON_DEFAULTS = {
   patronArc: null,
   mudlarkLockbox: null,
   prison: null,
+  crimePath: false,
+  thievingUnseen: false,
+  syndicateFencedBefore: false,
+  suspicion: 0,
+  crimeLedger: [],
+  suspicionEverPositive: false,
+  suspicionTiersSeen: {},
   actionPoints: 20,
   actionPointsMax: 20,
   hobbies: {},
@@ -124,12 +132,25 @@ export function migratePerson(p) {
   if (p.education && !('universityMatriculated' in p.education)) p.education.universityMatriculated = false;
   if (p.education && !('universityDeclinedYear' in p.education)) p.education.universityDeclinedYear = null;
   if (!Array.isArray(p.degrees)) p.degrees = [];
+  if (p.suspicion == null) p.suspicion = 0;
+  if (!Array.isArray(p.crimeLedger)) p.crimeLedger = [];
+  if (p.suspicionEverPositive == null) {
+    p.suspicionEverPositive = (p.suspicion ?? 0) > 0;
+  }
+  if (!p.suspicionTiersSeen || typeof p.suspicionTiersSeen !== 'object') {
+    p.suspicionTiersSeen = {};
+  }
+  if (p.crimePath == null) p.crimePath = false;
+  if (p.thievingUnseen == null) p.thievingUnseen = false;
+  if (p.syndicateFencedBefore == null) p.syndicateFencedBefore = false;
+  if (p._casedDistrict == null) p._casedDistrict = null;
   if (p.isPlayer && p.career && p.career.promotionProgress == null) {
     p.career.promotionProgress = 0;
   }
   migrateLegacyItemAcquireBonuses(p);
   migrateTraitIds(p);
   migrateStaleCareer(p);
+  if (p.isPlayer) backfillCrimePath(p);
   assignRandomHumor(p);
   return p;
 }

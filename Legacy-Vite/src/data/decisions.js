@@ -1,4 +1,5 @@
 import { mudlarkLockboxEligible } from '../sim/mudlarkLockbox.js';
+import { magistrateEligible } from '../sim/magistrate.js';
 import { addGrade, isGradedTier } from '../sim/grade.js';
 import { canSpendActionPoints, spendActionPoints } from '../sim/actionPoints.js';
 import { proposeAnnals, ANNALS_PRIORITY } from '../sim/annals.js';
@@ -55,6 +56,12 @@ export function buildDecisions() {
       title: "Open Mudlark's Lockbox",
       eligible: mudlarkLockboxEligible,
       popup: 'mudlark_lockbox',
+    },
+    {
+      id: 'approach_magistrate',
+      title: 'Approach the Magistrate',
+      eligible: magistrateEligible,
+      popup: 'magistrate_bribe',
     },
   ];
 }

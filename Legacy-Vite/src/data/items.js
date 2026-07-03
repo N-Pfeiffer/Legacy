@@ -5,6 +5,7 @@ import { CRAFT_CONSUMABLE_ITEMS } from './craftConsumableItems.js';
 import { CRAFT_EQUIPMENT_ITEMS } from './craftEquipmentItems.js';
 import { SCHOLARSHIP_ITEMS } from './scholarshipItems.js';
 import { HUNTING_MATERIAL_ITEMS } from './huntingMaterialItems.js';
+import { HOT_GOODS_ITEMS } from './hotGoodsItems.js';
 import { MATERIAL_ITEMS } from './materialItems.js';
 
 export const ITEM_TYPES = {
@@ -169,6 +170,7 @@ export const ITEMS = [
   },
   ...MATERIAL_ITEMS,
   ...HUNTING_MATERIAL_ITEMS,
+  ...HOT_GOODS_ITEMS,
   ...COMPONENT_ITEMS,
   ...CRAFT_CONSUMABLE_ITEMS,
   ...CRAFT_EQUIPMENT_ITEMS,

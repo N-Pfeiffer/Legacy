@@ -479,6 +479,19 @@ body.reduce-motion .player-section.is-flashing {
   letter-spacing: 0.04em;
 }
 
+.watch-eye {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35em;
+  color: var(--accent2);
+}
+
+.watch-eye-glyph {
+  font-style: normal;
+  opacity: 0.85;
+}
+
 /* Subgroup divider inside the Attributes panel. Splits "core" stats
    (Health, Prowess, etc.) from "circumstance" (Wealth, Fertility,
    Traits, Modifiers). The same panel-heading-ish styling but smaller

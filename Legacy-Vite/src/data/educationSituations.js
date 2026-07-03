@@ -36,7 +36,7 @@ import { getMoney, formatMoney } from '../sim/money.js';
 import { bumpDisposition } from '../sim/relationships.js';
 
 function bumpStat(player, stat, delta) {
-  const cap = statCap(stat, !!player.isVampire);
+  const cap = statCap(stat, !!player.isVampire, stat === 'health' ? player : null);
   player[stat] = clamp((player[stat] || 0) + delta, 0, cap);
 }
 
@@ -678,7 +678,7 @@ export function buildEducationSituations() {
             'You locked yourself in with ink and doubt: Exhaustion took its toll, but the stalled chapter finally turned.',
           apply: (player) => {
             bumpStat(player, 'intelligence', 3);
-            player.health = clamp(player.health - 5, 0, statCap('health', !!player.isVampire));
+            player.health = clamp(player.health - 5, 0, statCap('health', !!player.isVampire, player));
           },
         },
         {

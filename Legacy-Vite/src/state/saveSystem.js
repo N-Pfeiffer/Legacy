@@ -38,6 +38,7 @@ export function snapshotGame() {
     memories:      G.memories || [],
     school:        G.school || null,
     workplace:     G.workplace || null,
+    magistrate:    G.magistrate || null,
     nextId:        _id,
     meta: {
       playerName:    player ? `${player.firstName} ${player.surname}` : 'Unknown',
@@ -58,6 +59,7 @@ export function applySave(save) {
   G.memories        = save.memories || [];
   G.school          = save.school || null;
   G.workplace       = save.workplace || null;
+  G.magistrate      = save.magistrate ?? null;
   if (G.school) ensureSchoolState();
   if (G.workplace) ensureWorkplaceState();
   syncMemoryIdFromSave(G.memories);

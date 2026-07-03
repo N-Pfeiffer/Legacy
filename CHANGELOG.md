@@ -27,6 +27,13 @@ Flag changes that touch any of:
 
 ### Added
 
+- **Stalking & assassination contracts (Criminal Phase C)** — Stalking gated on Hunting 50 and Cunning 20 (equipment counts); **Case a Mark** boosts the next Thieving job in a cased district; yearly underworld assassination contracts with pre-crime reveal, fee payout, botched/witnessed outcomes, and capital hanging at trial (`sim/stalking.js`, `data/crimeSituations.js`, `sim/crime.js`, `ui/hobbiesPanel.js`).
+
+- **Thieving hobby (Criminal Phase B)** — hidden until `crimePath` unlocks (suspicion, poverty, criminal career / `marked_by_rookeries`, or pickpocket victim event); district jobs with pre-crime reveal, hot goods, fence, and syndicate fence errands (`sim/thieving.js`, `data/thievingDistricts.js`, `data/hotGoodsItems.js`, `sim/crimePath.js`, `ui/hobbiesPanel.js`).
+
+- **Criminal system — Suspicion & The Watch (Phase A)** — hidden Suspicion meter (`player.suspicion`, `crimeLedger`), yearly decay and passive Poacher/River Pirate feeds, tier situations (`watch_questions`, `watch_searches`), arrest trial at the Old Bailey (`crime_trial`), transportation vs gaol sentencing, **Watch's Eye** HUD label, royal-domain poaching on forest hunts, human-prey murder consequences, and **Approach the Magistrate** bribe decision with household NPC (`sim/crime.js`, `sim/magistrate.js`, `data/crimeSituations.js`, `sim/hunting.js`).
+- **`generateAdultWithHousehold`** — shared important-NPC generator (focal + spouse + children) wired into university patron, workplace boss, and magistrate (`sim/npcFamilyGen.js`).
+
 - **Workplace & player promotion (Phase 4)** — joining a career spawns boss/coworkers/peers (`G.workplace`, `sim/workplace.js`); player promotion uses boss disposition + Promotion Chance bar; **Work Hard** (5 AP → +5%); 5 AP yearly career upkeep after AP refresh (`sim/careers.js`, `sim/yearTick.js`, `legacy.js`).
 
 - **Career catalog replacement (Phase 3)** — Victorian social-class careers (Elite / Rich / Middle / Poor / Criminal + NPC-only destitute/poor/rich roles), requirements engine, £ pay tiers, yearly salary annals, hobby yearly effects, and Courtesan STD hook (`data/careers.js`, `sim/careers.js`, `legacy.js`).
@@ -36,6 +43,15 @@ Flag changes that touch any of:
 - **Marriage dowry** — player marriage no longer pools spouse wealth; a one-time dowry is paid from the spouse's social standing (`sim/marriage.js`).
 
 ### Changed
+
+- **Character creation & particulars** — stat steppers show per-stat point costs (2 for Charisma/Intelligence, 4 for Insight/Prowess); Choleric tagline renamed to **The Hasty**; Sanguine humor grants **+50 max Health** (trait `statMods.health` now raises the health ceiling via `statCap`); Items panel always shows inventory UI even when empty (`index.html`, `data/humors.js`, `utils/statCap.js`, `ui/renderPossessions.js`).
+
+- **Stalking hobby** — reframed as predator recon; requires Cunning 20 alongside Hunting 50; stat requirements respect equipped gear (`data/hobbies.js`, `sim/hobbies.js`).
+
+- ⚠ **High impact** — **`player.crimePath` / `thievingUnseen` on load** — backfills from suspicion, criminal career, or `marked_by_rookeries` without firing `the_trade_opens`; new unlocks still get the one-time popup (`sim/crimePath.js`, `state/person.js`).
+
+- ⚠ **High impact** — **`player.suspicion` / `crimeLedger` / `G.magistrate` on load** — schema 30 saves backfill via `migratePerson`; no schema bump. *Watch for:* existing patron/boss singletons keep no retroactive family; new generations get households.
+- ⚠ **High impact** — **Prison release cools Suspicion** — non-transportation release sets `suspicion = min(suspicion, 20)`; transportation clears ledger and resets suspicion to 0 (`sim/prison.js`, `sim/crime.js`).
 
 - ⚠ **High impact** — **`G.workplace` persisted in saves** — boss, coworkers, peer roles, and `promotionProgress` round-trip with schema 30 saves; missing workplace backfills on load (`state/saveSystem.js`, `sim/workplace.js`). *Watch for:* first load after update may generate fresh colleagues.
 - **Player career shape** — `promotionProgress` replaces `yearsAtRank` for the player; NPCs keep the old promotion cadence (`sim/careers.js`).

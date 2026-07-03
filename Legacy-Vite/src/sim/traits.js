@@ -98,7 +98,7 @@ function applyTraitStatModsDelta(person, traitId, sign = 1) {
       continue;
     }
     if (!(stat in person)) continue;
-    const cap = statCap(stat, vampire);
+    const cap = statCap(stat, vampire, person);
     person[stat] = clamp((person[stat] || 0) + mod, 0, cap);
   }
 }
@@ -138,7 +138,7 @@ export function applyTraitStatMods(person) {
         continue;
       }
       if (!(stat in person)) continue;
-      const cap = statCap(stat, vampire);
+      const cap = statCap(stat, vampire, person);
       person[stat] = clamp((person[stat] || 0) + delta, 0, cap);
     }
   }

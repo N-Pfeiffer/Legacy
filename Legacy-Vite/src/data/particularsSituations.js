@@ -50,7 +50,7 @@ const PATRON_MAGISTRATE_BODY =
   'The magistrate fixes you with a cold stare. Give up the identity of your employer, or rot in Newgate.';
 
 function bumpHealth(player, delta) {
-  const cap = statCap('health', !!player.isVampire);
+  const cap = statCap('health', !!player.isVampire, player);
   player.health = clamp((player.health || 0) + delta, 0, cap);
 }
 

@@ -50,6 +50,7 @@ import {
   closeAnnalsYear,
   recordAnnalsImmediate,
 } from './sim/annals.js';
+import { unlockCrimePathFromCareer, backfillCrimePath } from './sim/crimePath.js';
 import { runYearTick } from './sim/yearTick.js';
 import { recomputeJournalFlags } from './sim/journal.js';
 import {
@@ -115,6 +116,8 @@ import { buildImmersiveEvents, isImmersiveTemplate } from './data/immersiveEvent
 import { buildParticularsSituations, buildParticularsImmersiveEvents, tickParticularsSituations, processParticularsFollowUp } from './data/particularsSituations.js';
 import { buildRookeriesSituations } from './data/rookeriesSituations.js';
 import { buildPrisonSituations } from './data/prisonSituations.js';
+import { buildCrimeSituations } from './data/crimeSituations.js';
+import { flushCrimeSituationQueue } from './sim/crime.js';
 import {
   incarceratePlayer,
   isInPrison,
@@ -178,6 +181,7 @@ import {
   closeDecisionPopup,
   isDecisionPopupOpen,
   openMudlarkLockboxPopup,
+  openMagistrateBribePopup,
   wireDecisionPopupOverlay,
 } from './ui/decisionPopup.js';
 import {
@@ -2265,6 +2269,7 @@ export function loadLegacyIntoDocument() {
       // before anything (events, ageing) can shift the live numbers.
       snapshotBirthStats(player);
       syncSovereignMirror(player);
+      backfillCrimePath(player);
       G.people.push(player);
       refreshActionPoints(player);
 
@@ -2620,6 +2625,7 @@ export function loadLegacyIntoDocument() {
         tickEducation,
         processPlayerEvents,
         checkMortality,
+        fireSituation,
         onPlayerCareerNudge(player) {
           if (!player.career) {
             if (player.age === 18) {
@@ -3275,6 +3281,7 @@ export function loadLegacyIntoDocument() {
 
       player.career = { id: careerId, since: G.year, rank: 0, promotionProgress: 0 };
       generateWorkplace(player, careerId);
+      unlockCrimePathFromCareer(player, careerId, { fireSituation });
       const name = careerLabel(career, player);
       recordMilestone(player, {
         title: 'Career Begun',
@@ -3708,6 +3715,7 @@ export function loadLegacyIntoDocument() {
       ...buildParticularsSituations(),
       ...buildRookeriesSituations(),
       ...buildPrisonSituations(),
+      ...buildCrimeSituations(),
     ];
 
     const SITUATIONS_BY_ID = Object.fromEntries(SITUATIONS.map(s => [s.id, s]));
@@ -4192,6 +4200,13 @@ export function loadLegacyIntoDocument() {
         });
         return;
       }
+      if (d.popup === 'magistrate_bribe') {
+        openMagistrateBribePopup(player, {
+          escapeHtml,
+          onComplete: () => render(),
+        });
+        return;
+      }
       decisionsPanelState.viewingId = decisionId;
       render();
     }
@@ -4321,6 +4336,13 @@ export function loadLegacyIntoDocument() {
             });
             return;
           }
+          if (d?.popup === 'magistrate_bribe') {
+            openMagistrateBribePopup(player, {
+              escapeHtml,
+              onComplete: () => render(),
+            });
+            return;
+          }
           decisionsPanelState.viewingId = decisionId;
           render();
         })
@@ -4371,6 +4393,8 @@ export function loadLegacyIntoDocument() {
     }
 
     function render() {
+      const player = getPlayer();
+      if (player) flushCrimeSituationQueue(player, fireSituation);
       renderGameHud();
     }
 
@@ -4406,6 +4430,7 @@ export function loadLegacyIntoDocument() {
     registerHobbiesHooks({
       render,
       isTestingCheatsEnabled: () => !!G_SETTINGS.testingCheats,
+      fireSituation,
     });
     registerSearchHooks({
       portrait,

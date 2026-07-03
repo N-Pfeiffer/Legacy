@@ -2,6 +2,7 @@
 import { clamp, pick } from '../utils/index.js';
 import { statCap } from '../utils/statCap.js';
 import { addMoney, getMoney } from '../sim/money.js';
+import { unlockCrimePath } from '../sim/crimePath.js';
 
     export const PLAYER_EVENTS = [
       // ─── HEALTH: a healthy year ──────────────────────────────
@@ -11,9 +12,9 @@ import { addMoney, getMoney } from '../sim/money.js';
       {
         id: 'health_good_year',
         weight: 20,
-        cond: p => p.health < statCap('health', p.isVampire) - 5,
+        cond: p => p.health < statCap('health', p.isVampire, p) - 5,
         apply: p => {
-          p.health = clamp(p.health + pick([5,8,10]), 0, statCap('health', p.isVampire));
+          p.health = clamp(p.health + pick([5,8,10]), 0, statCap('health', p.isVampire, p));
         },
         flavor: {
           1800: {
@@ -50,7 +51,7 @@ import { addMoney, getMoney } from '../sim/money.js';
         apply: p => {
           const d = pick([5,10,15]);
           p._lastIllnessSeverity = d;   // stashed for flavor text below
-          p.health = clamp(p.health - d, 0, statCap('health', p.isVampire));
+          p.health = clamp(p.health - d, 0, statCap('health', p.isVampire, p));
         },
         flavor: {
           1800: {
@@ -195,6 +196,46 @@ import { addMoney, getMoney } from '../sim/money.js';
           2000: { mortal: { log: 'School life carries on.' } },
         },
         apply: () => {},
+      },
+
+      // ─── CRIME: pickpocket victim (Thieving unlock) ───────────
+      {
+        id: 'pickpocket_victim',
+        weight: 4,
+        cond: (p) => p.isPlayer && (p.age ?? 0) >= 12 && !p.crimePath,
+        apply: (p) => {
+          const loss = pick([1, 2, 3]);
+          const cur = getMoney(p);
+          addMoney(p, -Math.min(cur, loss));
+          unlockCrimePath(p);
+        },
+        flavor: {
+          1800: {
+            mortal: {
+              log: 'A dip took your coin in the crowd at Covent Garden. You spent the walk home reconstructing exactly how it was done.',
+            },
+          },
+          1850: {
+            mortal: {
+              log: 'A dip took your coin in the crowd at Covent Garden. You spent the walk home reconstructing exactly how it was done.',
+            },
+          },
+          1900: {
+            mortal: {
+              log: 'A dip took your coin in the crowd at Covent Garden. You spent the walk home reconstructing exactly how it was done.',
+            },
+          },
+          1950: {
+            mortal: {
+              log: 'A dip took your coin in the crowd at Covent Garden. You spent the walk home reconstructing exactly how it was done.',
+            },
+          },
+          2000: {
+            mortal: {
+              log: 'A dip took your coin in the crowd at Covent Garden. You spent the walk home reconstructing exactly how it was done.',
+            },
+          },
+        },
       },
 
       // ─── ERA-LOCKED PROOF-OF-CONCEPT ─────────────────────────

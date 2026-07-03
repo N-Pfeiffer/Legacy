@@ -132,11 +132,17 @@ export const HOBBIES = [
 
     icon: '🎯',
 
-    description: 'Stalk and kill people and monsters, spy on NPCs.',
+    description:
+      'Stalk people and intelligent creatures — learn their habits, their routes, and the moment they are most alone.',
 
     tags: ['gathering'],
 
-    requires: { hobbyId: 'hunting', level: 50 },
+    requires: {
+      all: [
+        { hobbyId: 'hunting', level: 50 },
+        { stat: 'cunning', level: 20 },
+      ],
+    },
 
     endeavors: [
       {
@@ -145,8 +151,24 @@ export const HOBBIES = [
         apCost: 1,
         skillGain: 0.5,
       },
+      {
+        id: 'case_mark',
+        label: 'Case a Mark',
+        apCost: 2,
+        skillGain: 0.5,
+      },
     ],
 
+  },
+
+  {
+    id: 'thieving',
+    label: 'Thieving',
+    icon: '🗝️',
+    description: 'Pockets, locks, and ledgers — relieve London of what it will not miss.',
+    tags: ['gathering'],
+    hidden: true,
+    endeavors: [],
   },
 
   {
