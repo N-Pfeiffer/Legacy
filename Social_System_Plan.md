@@ -43,6 +43,12 @@ set, so S1 builds the scaffolding first.
    `householdPending`, `education.universityFunded`, `degrees` on NPC children — get
    silent backfill defaults; no `SAVE_SCHEMA` bump.
 8. **S1 ships alone** in its own Composer session before any S2+ content lands.
+9. **NPC↔NPC disposition does not exist and must not be invented.** The relationship
+   graph is strictly player↔NPC. Whenever a design reads as "NPC X now thinks less of
+   NPC Y," translate it into observable state the sim already tracks: career
+   rank/demotion, marriage bonds (`spouseIds`/`exSpouseIds`), friend/enemy id arrays,
+   wealth, or an eligibility marker (e.g. `disgracedUntilYear`). S2.3 is the template
+   for this translation.
 
 ---
 
@@ -168,12 +174,22 @@ The class-flavored sibling of Attack — formal, consensual, and the law winks.
   **generically** (severity drives sentencing, type is flavor/capital-flagging only),
   so new types never require crime.js changes.
 
-### S2.3 Spread a Rumor (Hostile, AP 1)
+### S2.3 Spread a Rumor (Hostile, AP 1, once per target per year)
 
-- `flatCheck(effectiveCunning, 25)`. Success: pick the target's highest-disposition
-  living relation (spouse first, then boss, then a parent/child) — that relation's
-  disposition toward the **target** drops −15; annals is vague by design. Failure: it
-  traces back — target learns (disposition −20 toward player) and gains a `grievance`.
+**There is no NPC↔NPC disposition** (locked decision #9) — a rumor doesn't lower an
+opinion score, it inflicts the *consequence* a ruined reputation would have. Sub-choice
+menu (S1.3 pattern) filtered by what the target actually has; each is a
+`flatCheck(effectiveCunning, DC)`:
+
+| Rumor | Shows when | DC | On success |
+|---|---|---|---|
+| **Whisper of incompetence** | target holds a career, rank > 0 | 25 | target `career.rank −1` (annals if journaled). If target is the player's **coworker**: player promotionProgress +10 (you shine by comparison). If target is the player's **boss** and margin ≥ 5: the boss is disgraced and **replaced** (workplace regenerates him per careers 4.2 — new man, fresh disposition; the counterplay to a boss who blocks promotion) |
+| **Whisper of infidelity** | target is married | 30 | the marriage dissolves through the real machinery — both parties `spouseIds` → `exSpouseIds`; both are now single (and courtable, including by the player) |
+| **Whisper of ruin** | target wealth ≥ 26 | 25 | target wealth −12 (credit dries up) — cascades into every band-driven system (duel acceptance, matchmaking rank, wealth gravity) |
+| **Whisper of disgrace** | anyone (fallback) | 20 | target gains `disgracedUntilYear = G.year + 3`: excluded from matchmaking candidate pools (S4.6), treated one wealth band lower for duel acceptance (S2.2) — social exile, ideal against a rival suitor |
+
+- **Failure (any kind)**: it traces back — target learns (disposition −20 toward the
+  player) and gains a `grievance`. Annals stays vague on success by design.
 - Cannot target someone who holds a `secret` hook on the player (S3.4's passive
   protection — they know too much).
 
@@ -184,8 +200,12 @@ The class-flavored sibling of Attack — formal, consensual, and the law winks.
   disposition.
 - Duel declined by a poor non-military NPC, accepted by a soldier; first-blood duel
   ends with mutual +5; to-the-death win writes severity 4, not 8.
-- Rumor success damages the target's marriage, not the player's edge; failure creates
-  the grievance on the player's own edge.
+- Rumor menu filters by target state (no incompetence option against the careerless;
+  no infidelity against the single); incompetence against the player's own boss can
+  replace him; infidelity moves both spouses to `exSpouseIds`; disgrace excludes the
+  target from Seek-a-Match results for 3 years; failure creates the grievance on the
+  player's own edge; second rumor against the same target in one year is blocked.
+- Nothing anywhere writes an NPC↔NPC disposition value (locked decision #9).
 - All suspicion/ledger writes route through `sim/crime.js`.
 
 ---
@@ -241,9 +261,9 @@ player** (permanent, 5-year reuse cooldown). The target becomes a **confidant**:
 - **Passive (their grip on you)**: the player cannot Spread Rumors about them (S2.3),
   and Attacking them carries a 100% exposure clause — if they survive, the secret
   spills (below).
-- **Passive (their loyalty to you)**: rumors against the player automatically fail if
-  the chosen relation is a confidant; if a `crime`-secret confidant would be the trial
-  witness context, evidence −2 (*they saw nothing, your honor*).
+- **Passive (their loyalty to you)**: a confidant's yearly demand roll is 5% instead
+  of 10% (loyalty is cheaper to keep), and if the player holds any `crime`-secret
+  confidant at trial time, evidence −2 (*they saw nothing, your honor*).
 - **NPC demands** (in `tickHooks`, 10%/year per NPC-held usable hook): a situation
   fires — they want **£ by their wealth band**, or **a favor_owed hook** on the
   player. Refuse: disposition −20 and a spill roll (40%): `crime` secret → suspicion
