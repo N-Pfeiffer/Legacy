@@ -158,18 +158,27 @@ Implementation notes:
 
 The class-flavored sibling of Attack — formal, consensual, and the law winks.
 
-- **Acceptance**: target accepts if their **wealth band** is Rich or Wealthy (per
-  `wealthTierLabel` — NOT career socialGroup: dueling is about perceived station, and
-  the wealthy poacher who will meet you at dawn is a feature), OR they hold a
-  military-category career, OR prowess ≥ 40; otherwise they decline (annals: *"He
-  laughed in your face. Gentlemen duel; dockworkers simply hit you."* — small mutual
-  disposition loss and nothing else).
+- **Acceptance — two doors** (note: there is no "military career" concept in the new
+  catalog — do not gate on careers at all):
+  - **Honor demands it**: wealth band Rich or Wealthy (per `wealthTierLabel`) — a
+    gentleman cannot be seen to refuse.
+  - **Hatred accepts**: ANY target whose disposition toward the player is **≤ −30** —
+    they want you dead badly enough to do it lawfully.
+  - Otherwise they decline (annals: *"He laughed in your face. Gentlemen duel;
+    dockworkers simply hit you."* — small mutual disposition loss and nothing else).
+- **This is the legal-murder pipeline, by design**: insults, intimidation, and traced
+  rumors all push disposition toward the −30 door — the player can *invest* in a
+  grudge until the target will meet them at dawn, then kill at severity 4 instead of
+  murder's 8. The investment (years, AP, and every one of those acts carries its own
+  risks) is the price of the law's half-closed eye.
 - **Terms sub-choice at challenge**: *first blood* or *to the death*.
-- Contested prowess roll. First blood: loser health −15, and — dueling culture —
-  **both** parties gain +5 disposition toward each other (honor satisfied). To the
-  death: loser dies via `killPerson`; the winner takes a `duel_death` ledger entry
-  `{ severity: 4 }` and suspicion +6 — society winks, the law only half-looks.
-- Player may lose either duel — the same consequences apply to the player.
+- Contested prowess roll — **no player bias of any kind**: at equal prowess a duel is
+  a coin flip, and a to-the-death duel is a genuine coin-weighted death. First blood:
+  loser health −15, winner −5, and — dueling culture — **both** parties gain +5
+  disposition toward each other (honor satisfied). To the death: loser dies via
+  `killPerson` — the player included, ending the run; the winner takes health −15
+  (nobody walks away from pistols at dawn untouched), a `duel_death` ledger entry
+  `{ severity: 4 }`, and suspicion +6 — society winks, the law only half-looks.
 - `duel_death` is a new ledger `type`; `sim/crime.js` must treat ledger types
   **generically** (severity drives sentencing, type is flavor/capital-flagging only),
   so new types never require crime.js changes.
@@ -198,8 +207,12 @@ menu (S1.3 pattern) filtered by what the target actually has; each is a
 - Attack success presents exactly three outcomes; Slay kills through the normal death
   machinery (widowing, inheritance); injuring a father drops his whole household's
   disposition.
-- Duel declined by a poor non-military NPC, accepted by a soldier; first-blood duel
-  ends with mutual +5; to-the-death win writes severity 4, not 8.
+- Duel declined by a poor NPC at neutral disposition; accepted by the same NPC at
+  disposition −35; accepted by a Wealthy NPC regardless of disposition; no career
+  field is consulted anywhere in acceptance.
+- First-blood duel ends loser −15 / winner −5 with mutual +5 disposition; a
+  to-the-death win writes severity 4 (not 8) and costs the winner 15 health; a
+  to-the-death loss as the player ends the run.
 - Rumor menu filters by target state (no incompetence option against the careerless;
   no infidelity against the single); incompetence against the player's own boss can
   replace him; infidelity moves both spouses to `exSpouseIds`; disgrace excludes the
