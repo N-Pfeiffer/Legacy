@@ -1,7 +1,9 @@
 import { isImmersiveTemplate } from '../data/immersiveEvents.js';
 import { HUMORS, HUMOR_IDS } from '../data/humors.js';
+import { ITEMS_BY_ID } from '../data/items.js';
 import { markSituationRead } from './situationAttention.js';
 import { recordSituationResolution, formatChoiceEffectsLine } from './situationLog.js';
+import { openItemPopup } from '../ui/itemPopup.js';
 
 let _activeInstanceId = null;
 let _isOpen = false;
@@ -96,9 +98,12 @@ function closeImmersivePopup() {
   _activeInstanceId = null;
 }
 
-function formatBodyHtml(body, escapeHtml) {
+function formatBodyHtml(body, escapeHtml, isHtml = false) {
   const text = String(body || '');
-  return escapeHtml(text)
+  // isHtml bodies are trusted static template content (may embed item links);
+  // they must arrive pre-escaped except for their intentional markup.
+  const safe = isHtml ? text : escapeHtml(text);
+  return safe
     .replace(/\n\n/g, '</p><p>')
     .replace(/^/, '<p>')
     .replace(/$/, '</p>');
@@ -136,8 +141,13 @@ function renderChoicesHtml(step, player, escapeHtml) {
 
 function wireChoiceHandlers(modal, step, tpl, inst, player, ctx, escapeHtml, onAdvance, onComplete) {
   const choices = resolveChoices(step, player);
+  // Buttons from a superseded step must go inert: if a transition ever stalls,
+  // a second click would otherwise resolve against the advanced stepIndex and
+  // silently complete the situation on the wrong step.
+  const wiredStepIndex = ctx.stepIndex;
   modal.querySelectorAll('[data-immersive-choice]').forEach((btn) => {
     btn.addEventListener('click', () => {
+      if (ctx.stepIndex !== wiredStepIndex) return;
       const choiceId = btn.getAttribute('data-immersive-choice');
       const choice = choices.find((c) => c.id === choiceId);
       if (!choice) return;
@@ -175,12 +185,22 @@ function renderStepContent(modal, tpl, inst, player, ctx, escapeHtml, onAdvance,
     <div class="immersive-step immersive-step--visible">
       ${eyebrow ? `<div class="immersive-eyebrow">${escapeHtml(eyebrow)}</div>` : ''}
       <div class="immersive-title">${escapeHtml(title)}</div>
-      <div class="immersive-body">${formatBodyHtml(body, escapeHtml)}</div>
+      <div class="immersive-body">${formatBodyHtml(body, escapeHtml, step.bodyHtml === true)}</div>
       ${acquisition ? `<div class="immersive-acquisition">${escapeHtml(acquisition)}</div>` : ''}
       ${renderChoicesHtml(step, player, escapeHtml)}
     </div>`;
 
   wireChoiceHandlers(modal, step, tpl, inst, player, ctx, escapeHtml, onAdvance, onComplete);
+
+  // Item mentions in bodyHtml steps open the item popup overlay (stacks above
+  // the immersive overlay) rather than navigating to the inventory.
+  modal.querySelectorAll('[data-immersive-item-link]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const item = ITEMS_BY_ID[el.getAttribute('data-immersive-item-link')];
+      if (item) openItemPopup(item, player, escapeHtml);
+    });
+  });
 }
 
 function transitionToStep(modal, tpl, inst, player, ctx, escapeHtml, onAdvance, onComplete) {
@@ -190,14 +210,27 @@ function transitionToStep(modal, tpl, inst, player, ctx, escapeHtml, onAdvance, 
     return;
   }
 
+  // The fade-in class from the previous transition must come off first: with
+  // both classes present the later-declared fade-in rule wins the cascade, no
+  // new animation starts, and animationend never fires (popup stalls). The
+  // reflow read restarts the fade-out animation cleanly.
+  current.classList.remove('immersive-step--fade-in');
+  void current.offsetWidth;
   current.classList.add('immersive-step--fade-out');
-  current.addEventListener('animationend', () => {
+
+  let advanced = false;
+  const proceed = () => {
+    if (advanced) return;
+    advanced = true;
     renderStepContent(modal, tpl, inst, player, ctx, escapeHtml, onAdvance, onComplete);
     const next = modal.querySelector('.immersive-step');
     if (next) {
       next.classList.add('immersive-step--fade-in');
     }
-  }, { once: true });
+  };
+  current.addEventListener('animationend', proceed, { once: true });
+  // Never strand the popup on a skipped/interrupted animation (350ms nominal).
+  setTimeout(proceed, 450);
 }
 
 function openImmersivePopup(player, inst, tpl, deps) {

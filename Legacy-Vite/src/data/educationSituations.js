@@ -155,8 +155,9 @@ export function buildEducationImmersiveEvents() {
       steps: [
         {
           id: 'office',
+          bodyHtml: true,
           body:
-            'While doing chores, you notice the Headmaster has left the door to his private study ajar. Sitting on his mahogany desk is a Mysterious Relic — a heavy, strangely shaped silver and deep crimson heirloom.\n\n' +
+            'While doing chores, you notice the Headmaster has left the door to his private study ajar. Sitting on his mahogany desk is a <a class="log-item-link" href="#" data-immersive-item-link="mysterious_relic">Mysterious Relic</a> — a heavy, strangely shaped silver and deep crimson heirloom.\n\n' +
             'Stealing it would be incredibly dangerous. The Headmaster is known for brutal discipline.',
           choices: [
             { id: 'leave', label: 'Leave it be', complete: true },
@@ -189,7 +190,6 @@ export function buildEducationImmersiveEvents() {
             {
               id: 'silent',
               label: 'Stay silent',
-              effects: [{ kind: 'stat', stat: 'cunning', delta: 5 }],
             },
           ],
         },
@@ -233,9 +233,6 @@ export function buildEducationImmersiveEvents() {
           if (choice.id === 'confess' && ctx.stoleRelic) {
             bumpStat(player, 'health', -15);
             removeItem(player, 'mysterious_relic');
-          }
-          if (choice.id === 'silent') {
-            bumpStat(player, 'cunning', 5);
           }
           return;
         }
